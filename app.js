@@ -1,10 +1,10 @@
 // =============================================
-// QUINIELA FIFA 2026 — app.js
-// Compatible con Supabase (opcional)
-// Si no hay conexión, usa localStorage
+// QUINIELA FIFA 2026 - app.js
 // =============================================
 
-// ---- DATOS ----
+
+const SB_URL = "https://zriyqyeoiommrnyvwjto.supabase.co";
+const SB_KEY = "sb_publishable_a0rpBgT8_WJURAlIDsW5BQ_1nd3PkqW";
 const GRUPOS = {
   'A': ['México','EEUU','Canadá','Polonia'],
   'B': ['Argentina','Chile','Bolivia','Perú'],
@@ -439,12 +439,11 @@ function mostrarAlerta(id, tipo, msg) {
 }
 
 // ---- INIT ----
-function init() {
+async function init() {
   calcDias();
   renderCampeon();
   renderPartidos();
   renderClasificados();
-  cargarParticipantes();
 
   // Restaurar config guardada
   const emp = localStorage.getItem('cfg_empresa');
@@ -452,13 +451,24 @@ function init() {
   if (emp) { document.getElementById('empresa-label').textContent = emp; document.getElementById('cfg-empresa').value = emp; }
   if (col) { document.documentElement.style.setProperty('--verde', col); document.getElementById('cfg-color').value = col; }
 
-  // Restaurar credenciales de Supabase si ya fueron ingresadas antes
-  const sbUrl = localStorage.getItem('sb_url');
-  const sbKey = localStorage.getItem('sb_key');
-  if (sbUrl && sbKey) {
-    document.getElementById('sb-url').value = sbUrl;
-    document.getElementById('sb-key').value = sbKey;
-    conectarSupabase();
+  // Auto-conectar Supabase con credenciales hardcodeadas
+  await autoConectar();
+}
+
+async function autoConectar() {
+  const sbStatus = document.getElementById('sb-status');
+  try {
+    const client = window.supabase;
+    if (!client || !client.createClient) throw new Error('SDK no cargado');
+    supabase = client.createClient(SB_URL, SB_KEY);
+    const { error } = await supabase.from('participantes').select('id').limit(1);
+    if (error) throw error;
+    if (sbStatus) sbStatus.innerHTML = '<span class="connected-badge"><span class="dot"></span> Conectado a Supabase</span>';
+    await cargarParticipantes();
+  } catch(e) {
+    supabase = null;
+    if (sbStatus) sbStatus.textContent = 'Modo local — ' + (e.message || e);
+    cargarParticipantes();
   }
 }
 
