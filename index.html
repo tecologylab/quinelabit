@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiniela FIFA 2026 — Mi Empresa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --verde: #0a5c2e;
+    --verde-claro: #1a8c48;
+    --oro: #c9a84c;
+    --oro-claro: #f0cb6a;
+    --bg: #f5f3ef;
+    --bg-card: #ffffff;
+    --texto: #1a1a1a;
+    --texto-muted: #6b6b6b;
+    --borde: rgba(0,0,0,0.1);
+    --radio: 12px;
+    --radio-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--bg);
+    color: var(--texto);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--verde);
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header-logo {
+    width: 32px;
+    height: 32px;
+    background: var(--oro);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .header-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: #fff;
+    letter-spacing: .02em;
+  }
+  .header-empresa {
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    font-weight: 400;
+    background: rgba(255,255,255,0.1);
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .user-chip {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.8);
+  }
+  .user-chip.visible { display: flex; }
+  .user-avatar {
+    width: 28px; height: 28px;
+    background: var(--oro);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--verde);
+  }
+
+  /* HERO */
+  .hero {
+    background: var(--verde);
+    padding: 2.5rem 1.5rem 3.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      45deg, transparent, transparent 40px,
+      rgba(255,255,255,0.015) 40px, rgba(255,255,255,0.015) 80px
+    );
+  }
+  .hero-badge {
+    display: inline-block;
+    background: var(--oro);
+    color: var(--verde);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+  }
+  .hero h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.2rem, 6vw, 3.5rem);
+    color: #fff;
+    line-height: 1;
+    letter-spacing: -.01em;
+    margin-bottom: .5rem;
+  }
+  .hero h1 span { color: var(--oro-claro); }
+  .hero p {
+    color: rgba(255,255,255,0.65);
+    font-size: 15px;
+    margin-bottom: 2rem;
+  }
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    color: var(--oro-claro);
+    line-height: 1;
+  }
+  .hero-stat-lbl { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+  /* NAV */
+  .nav-wrap {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--borde);
+    position: sticky;
+    top: 60px;
+    z-index: 90;
+    overflow-x: auto;
+  }
+  .nav {
+    display: flex;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+  .nav-btn {
+    padding: 0 1.25rem;
+    height: 48px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--texto-muted);
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s;
+  }
+  .nav-btn:hover { color: var(--verde); }
+  .nav-btn.active { color: var(--verde); border-bottom-color: var(--oro); }
+
+  /* MAIN */
+  .main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--borde);
+  }
+  .card-icon {
+    width: 36px; height: 36px;
+    background: #f0f8f4;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--texto);
+  }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media(max-width:560px){ .form-grid { grid-template-columns: 1fr; } }
+  .form-group { margin-bottom: 0; }
+  .form-group.full { grid-column: 1 / -1; }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--texto-muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 6px;
+  }
+  input[type=text], input[type=email], input[type=tel], select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--borde);
+    border-radius: var(--radio-sm);
+    background: #fafafa;
+    color: var(--texto);
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    transition: border-color .15s;
+    appearance: none;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--verde);
+    background: #fff;
+  }
+
+  /* BOTONES */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--verde);
+    color: #fff;
+    border: none;
+    border-radius: var(--radio-sm);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+    width: 100%;
+    margin-top: 1.25rem;
+  }
+  .btn-primary:hover { background: #084a25; }
+  .btn-primary:active { transform: scale(.98); }
+  .btn-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 20px;
+    background: var(--verde);
+    color: #fff;
+    border: none;
+    border-radius: var(--radio-sm);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-save:hover { background: #084a25; }
+
+  /* ALERT */
+  .alert {
+    padding: 12px 16px;
+    border-radius: var(--radio-sm);
+    font-size: 13px;
+    margin-top: 1rem;
+    display: none;
+  }
+  .alert.success {
+    background: #eaf5ee;
+    color: #0a5c2e;
+    border: 1px solid #9fd4b0;
+    display: block;
+  }
+  .alert.error {
+    background: #fef0f0;
+    color: #c0392b;
+    border: 1px solid #f5b7b1;
+    display: block;
+  }
+
+  /* PARTIDOS */
+  .grupo-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--oro);
+    padding: 1rem 0 .5rem;
+    border-top: 1px solid var(--borde);
+    margin-top: .75rem;
+  }
+  .grupo-label:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+  .partido-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
+  .partido-row:last-child { border-bottom: none; }
+  .equipo-local { font-size: 13px; font-weight: 600; }
+  .equipo-visita { font-size: 13px; font-weight: 600; text-align: right; }
+  .pred-wrap { display: flex; gap: 4px; justify-content: center; }
+  .pred-btn {
+    width: 34px; height: 28px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    border: 1.5px solid var(--borde);
+    border-radius: 6px;
+    background: #fafafa;
+    color: var(--texto-muted);
+    cursor: pointer;
+    transition: all .12s;
+  }
+  .pred-btn:hover { border-color: var(--verde); color: var(--verde); }
+  .pred-btn.sel-L { background: var(--verde); color: #fff; border-color: var(--verde); }
+  .pred-btn.sel-E { background: #888; color: #fff; border-color: #888; }
+  .pred-btn.sel-V { background: #c0392b; color: #fff; border-color: #c0392b; }
+
+  /* PROGRESS */
+  .prog-wrap { margin-bottom: 1rem; }
+  .prog-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--texto-muted); margin-bottom: 6px; }
+  .prog-bar { height: 5px; background: #e8e8e8; border-radius: 3px; }
+  .prog-fill { height: 100%; background: var(--verde); border-radius: 3px; transition: width .3s; }
+
+  /* CAMPEÓN */
+  .campeon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+    margin-top: .75rem;
+  }
+  .camp-btn {
+    padding: 10px 8px;
+    border: 1.5px solid var(--borde);
+    border-radius: var(--radio-sm);
+    background: #fafafa;
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: all .12s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .camp-btn .flag-txt { font-size: 22px; }
+  .camp-btn:hover { border-color: var(--verde); }
+  .camp-btn.sel { background: var(--verde); color: #fff; border-color: var(--verde); }
+
+  /* CLASIFICADOS */
+  .clas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+    margin-top: .75rem;
+  }
+  .clas-grupo {
+    background: #fafafa;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-sm);
+    padding: 10px;
+  }
+  .clas-grupo-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--oro);
+    margin-bottom: 8px;
+  }
+  .clas-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    padding: 3px 0;
+    cursor: pointer;
+  }
+  .clas-check input { width: auto; cursor: pointer; accent-color: var(--verde); }
+
+  /* SAVE BAR */
+  .save-bar {
+    background: var(--bg-card);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-sm);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+  }
+  .save-status { font-size: 13px; color: var(--texto-muted); }
+
+  /* RANKING */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 1.25rem;
+  }
+  .stat-box {
+    background: var(--bg-card);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    padding: 1rem;
+    text-align: center;
+  }
+  .stat-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    color: var(--verde);
+    line-height: 1;
+  }
+  .stat-lbl { font-size: 11px; color: var(--texto-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .05em; }
+
+  .ranking-row {
+    display: grid;
+    grid-template-columns: 36px 36px 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
+  .ranking-row:last-child { border-bottom: none; }
+  .rank-pos {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--texto-muted);
+    text-align: center;
+  }
+  .rank-pos.medal { color: var(--oro); }
+  .rank-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: #f0f8f4;
+    border: 1.5px solid #9fd4b0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--verde);
+  }
+  .rank-name { font-size: 14px; font-weight: 500; }
+  .rank-camp { font-size: 12px; color: var(--texto-muted); text-align: right; }
+  .rank-pts {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--verde);
+    min-width: 52px;
+    text-align: right;
+  }
+  .pts-lbl { font-size: 10px; color: var(--texto-muted); display: block; font-weight: 400; }
+
+  /* SUPABASE SETUP */
+  .setup-box {
+    background: #fffbf0;
+    border: 1px solid #f0cb6a;
+    border-radius: var(--radio);
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .setup-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #7a5500;
+    margin-bottom: .75rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .setup-input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .setup-input-row input {
+    flex: 1;
+    font-size: 13px;
+    padding: 8px 12px;
+    background: #fff;
+  }
+  .btn-connect {
+    padding: 8px 16px;
+    background: var(--oro);
+    color: var(--verde);
+    border: none;
+    border-radius: var(--radio-sm);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-connect:hover { background: var(--oro-claro); }
+  .connected-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #eaf5ee;
+    color: var(--verde);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid #9fd4b0;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--verde-claro); }
+
+  /* LOADING */
+  .loading {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* TOOLTIP */
+  .tooltip {
+    position: absolute;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 200;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <div class="header-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" stroke="#0a5c2e" stroke-width="2"/>
+        <path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4" stroke="#0a5c2e" stroke-width="1.2"/>
+      </svg>
+    </div>
+    <div>
+      <div class="header-title">Quiniela FIFA 2026</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="user-chip" id="user-chip">
+      <div class="user-avatar" id="user-initials">--</div>
+      <span id="user-name-header"></span>
+    </div>
+    <span class="header-empresa" id="empresa-label">Mi Empresa</span>
+  </div>
+</header>
+
+<div class="hero" id="hero-section">
+  <div class="hero-badge">Campaña de clientes 2026</div>
+  <h1>La gran<br><span>quiniela</span> mundialista</h1>
+  <p>Predice, compite y gana con tus colegas</p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num" id="hero-participantes">0</div>
+      <div class="hero-stat-lbl">Participantes</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">48</div>
+      <div class="hero-stat-lbl">Partidos</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num" id="dias-restantes">—</div>
+      <div class="hero-stat-lbl">Días al inicio</div>
+    </div>
+  </div>
+</div>
+
+<div class="nav-wrap">
+  <nav class="nav">
+    <button class="nav-btn active" onclick="goSection('registro')">Registro</button>
+    <button class="nav-btn" onclick="goSection('quiniela')">Mis predicciones</button>
+    <button class="nav-btn" onclick="goSection('clasificados')">Clasificados</button>
+    <button class="nav-btn" onclick="goSection('ranking')">Ranking</button>
+    <button class="nav-btn" onclick="goSection('admin')">Admin</button>
+  </nav>
+</div>
+
+<main class="main">
+
+  <!-- REGISTRO -->
+  <section id="sec-registro" class="section active">
+    <div class="setup-box" id="setup-box">
+      <div class="setup-title">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="#b8860b"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 1.5a6.5 6.5 0 110 13 6.5 6.5 0 010-13zM10 6a.75.75 0 01.75.75v3.5h2a.75.75 0 010 1.5h-2.75A.75.75 0 019.25 11V6.75A.75.75 0 0110 6z"/></svg>
+        Conectar Supabase (opcional para demo)
+      </div>
+      <div class="setup-input-row">
+        <input type="text" id="sb-url" placeholder="https://xxxxxx.supabase.co">
+        <input type="text" id="sb-key" placeholder="anon key...">
+        <button class="btn-connect" onclick="conectarSupabase()">Conectar</button>
+      </div>
+      <div id="sb-status" style="font-size:12px;color:var(--texto-muted)">
+        Sin conexión — los datos se guardan localmente en el navegador
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-6 8a6 6 0 1112 0H4z"/></svg>
+        </div>
+        <div class="card-title">Registro de participante</div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre completo</label>
+          <input type="text" id="r-nombre" placeholder="Juan Pérez">
+        </div>
+        <div class="form-group">
+          <label>Correo electrónico</label>
+          <input type="email" id="r-email" placeholder="juan@correo.com">
+        </div>
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input type="tel" id="r-tel" placeholder="+507 6000-0000">
+        </div>
+        <div class="form-group">
+          <label>Número de cliente</label>
+          <input type="text" id="r-cliente" placeholder="CLI-00000">
+        </div>
+        <div class="form-group full">
+          <label>País que te gusta para ganar</label>
+          <select id="r-favorito">
+            <option value="">Seleccionar...</option>
+            <option>Argentina</option><option>Brasil</option><option>Francia</option>
+            <option>España</option><option>Alemania</option><option>Portugal</option>
+            <option>Inglaterra</option><option>México</option><option>Países Bajos</option>
+            <option>Uruguay</option><option>Colombia</option><option>Panamá</option>
+            <option>EEUU</option><option>Otro</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-primary" id="btn-registro" onclick="registrar()">
+        Registrarme en la quiniela
+      </button>
+      <div class="alert" id="reg-alert"></div>
+    </div>
+  </section>
+
+  <!-- QUINIELA -->
+  <section id="sec-quiniela" class="section">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M10 2l2.39 4.84 5.34.78-3.87 3.77.91 5.32L10 14.27 5.23 16.71l.91-5.32L2.27 7.62l5.34-.78L10 2z"/></svg>
+        </div>
+        <div class="card-title">Campeón del Mundial</div>
+      </div>
+      <p style="font-size:13px;color:var(--texto-muted)">¿Quién se llevará la copa en 2026?</p>
+      <div class="campeon-grid" id="campeon-grid"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M3 5h14v2H3V5zm0 4h14v2H3V9zm0 4h8v2H3v-2z"/></svg>
+        </div>
+        <div class="card-title">Resultados de grupos</div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-meta">
+          <span id="prog-txt">0 de 12 partidos predichos</span>
+          <span style="font-size:11px">L = Local · E = Empate · V = Visita</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      </div>
+      <div id="partidos-container"></div>
+    </div>
+    <div class="save-bar">
+      <span class="save-status" id="q-save-status">Completa tus predicciones para guardar</span>
+      <button class="btn-save" onclick="guardarQuiniela()">Guardar quiniela</button>
+    </div>
+    <div class="alert" id="q-alert"></div>
+  </section>
+
+  <!-- CLASIFICADOS -->
+  <section id="sec-clasificados" class="section">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm5 3a3 3 0 110 6 3 3 0 010-6zm-4 8a4 4 0 018 0H6z"/></svg>
+        </div>
+        <div class="card-title">¿Quiénes clasifican?</div>
+      </div>
+      <p style="font-size:13px;color:var(--texto-muted);margin-bottom:.75rem">Selecciona los 2 equipos que pasan de cada grupo a octavos de final.</p>
+      <div class="clas-grid" id="clas-grid"></div>
+    </div>
+    <div class="save-bar">
+      <span class="save-status">Predicción de clasificados por grupo</span>
+      <button class="btn-save" onclick="guardarClasificados()">Guardar</button>
+    </div>
+    <div class="alert" id="clas-alert"></div>
+  </section>
+
+  <!-- RANKING -->
+  <section id="sec-ranking" class="section">
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-val" id="stat-total">0</div>
+        <div class="stat-lbl">Participantes</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="stat-mi-pos">—</div>
+        <div class="stat-lbl">Tu posición</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="stat-dias">—</div>
+        <div class="stat-lbl">Días al inicio</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="#c9a84c"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"/></svg>
+        </div>
+        <div class="card-title">Tabla de posiciones</div>
+      </div>
+      <div id="ranking-container"></div>
+    </div>
+  </section>
+
+  <!-- ADMIN -->
+  <section id="sec-admin" class="section">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 6a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zm0 6a1 1 0 011-1h6a1 1 0 010 2H4a1 1 0 01-1-1z"/></svg>
+        </div>
+        <div class="card-title">Panel de administrador</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <span style="font-size:13px;color:var(--texto-muted)">Participantes registrados</span>
+        <button class="btn-save" onclick="exportarCSV()">Exportar CSV</button>
+      </div>
+      <div id="admin-table" style="overflow-x:auto"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-2.207 2.207L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+        </div>
+        <div class="card-title">Personalización</div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre de la empresa</label>
+          <input type="text" id="cfg-empresa" placeholder="Mi Empresa S.A.">
+        </div>
+        <div class="form-group">
+          <label>Color principal (hex)</label>
+          <input type="text" id="cfg-color" placeholder="#0a5c2e">
+        </div>
+      </div>
+      <button class="btn-primary" style="margin-top:1rem" onclick="aplicarConfig()">Aplicar cambios</button>
+    </div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
