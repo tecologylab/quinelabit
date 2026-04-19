@@ -68,7 +68,7 @@ let participantes = [];
 async function conectarSupabase() {
   const url = document.getElementById('sb-url').value.trim();
   const key = document.getElementById('sb-key').value.trim();
-  if (!url || !key) { alert('Ingresa la URL y la anon key de Supabase.'); return; }
+  if (!url || !key) { alert('Ingresa la URL y la Publishable key de Supabase.'); return; }
 
   // Cargar SDK de Supabase dinámicamente
   if (!window.supabaseLib) {
@@ -82,14 +82,20 @@ async function conectarSupabase() {
   }
 
   try {
+    // Compatible con anon key clásica (eyJ...) y nueva publishable key (sb_publishable_...)
     supabase = window.supabaseLib.createClient(url, key);
     // Test conexión
-    await supabase.from('participantes').select('id').limit(1);
+    const { error } = await supabase.from('participantes').select('id').limit(1);
+    if (error) throw error;
     document.getElementById('sb-status').innerHTML =
       '<span class="connected-badge"><span class="dot"></span> Conectado a Supabase</span>';
+    // Guardar credenciales en localStorage para no tener que volver a ingresarlas
+    localStorage.setItem('sb_url', url);
+    localStorage.setItem('sb_key', key);
     await cargarParticipantes();
   } catch(e) {
-    document.getElementById('sb-status').textContent = 'Error: ' + e.message;
+    document.getElementById('sb-status').textContent = 'Error al conectar: ' + (e.message || e);
+    supabase = null;
   }
 }
 
@@ -454,6 +460,15 @@ function init() {
   const col = localStorage.getItem('cfg_color');
   if (emp) { document.getElementById('empresa-label').textContent = emp; document.getElementById('cfg-empresa').value = emp; }
   if (col) { document.documentElement.style.setProperty('--verde', col); document.getElementById('cfg-color').value = col; }
+
+  // Restaurar credenciales de Supabase si ya fueron ingresadas antes
+  const sbUrl = localStorage.getItem('sb_url');
+  const sbKey = localStorage.getItem('sb_key');
+  if (sbUrl && sbKey) {
+    document.getElementById('sb-url').value = sbUrl;
+    document.getElementById('sb-key').value = sbKey;
+    conectarSupabase();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
