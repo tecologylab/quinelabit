@@ -57,7 +57,7 @@ const FLAGS = {
 const FECHA_INICIO = new Date('2026-06-11');
 
 // ---- ESTADO ----
-let supabase = null;
+let sbClient = null;
 let usuarioActual = null;
 let predicciones = {};
 let campeon = null;
@@ -74,9 +74,9 @@ async function conectarSupabase() {
     // SDK cargado en el HTML — compatible con publishable key y anon key
     const client = window.supabase || window.supabaseJs;
     if (!client) throw new Error('SDK de Supabase no disponible');
-    supabase = client.createClient(url, key);
+    sbClient = client.createClient(url, key);
     // Test conexión
-    const { error } = await supabase.from('participantes').select('id').limit(1);
+    const { error } = await sbClient.from('participantes').select('id').limit(1);
     if (error) throw error;
     document.getElementById('sb-status').innerHTML =
       '<span class="connected-badge"><span class="dot"></span> Conectado a Supabase</span>';
@@ -86,7 +86,7 @@ async function conectarSupabase() {
     await cargarParticipantes();
   } catch(e) {
     document.getElementById('sb-status').textContent = 'Error al conectar: ' + (e.message || e);
-    supabase = null;
+    sbClient = null;
   }
 }
 
@@ -128,8 +128,8 @@ async function registrar() {
 
   const datos = { nombre, email, tel, cliente, favorito, fecha: new Date().toISOString() };
 
-  if (supabase) {
-    const { data, error } = await supabase.from('participantes').insert([datos]).select();
+  if (sbClient) {
+    const { data, error } = await sbClient.from('participantes').insert([datos]).select();
     if (error) {
       mostrarAlerta('reg-alert', 'error', 'Error al registrar: ' + error.message);
       btn.innerHTML = 'Registrarme en la quiniela'; btn.disabled = false; return;
@@ -160,8 +160,8 @@ function mostrarUsuario(nombre) {
 
 // ---- CARGAR PARTICIPANTES ----
 async function cargarParticipantes() {
-  if (supabase) {
-    const { data } = await supabase.from('participantes').select('*');
+  if (sbClient) {
+    const { data } = await sbClient.from('participantes').select('*');
     participantes = data || [];
   } else {
     participantes = JSON.parse(localStorage.getItem('participantes') || '[]');
@@ -255,8 +255,8 @@ async function guardarQuiniela() {
     fecha: new Date().toISOString(),
   };
 
-  if (supabase) {
-    const { error } = await supabase.from('quinielas').upsert([datos]);
+  if (sbClient) {
+    const { error } = await sbClient.from('quinielas').upsert([datos]);
     if (error) { mostrarAlerta('q-alert', 'error', 'Error: ' + error.message); return; }
   } else {
     localStorage.setItem('quiniela_' + usuarioActual.id, JSON.stringify(datos));
@@ -313,8 +313,8 @@ async function guardarClasificados() {
     fecha: new Date().toISOString(),
   };
 
-  if (supabase) {
-    const { error } = await supabase.from('clasificados').upsert([datos]);
+  if (sbClient) {
+    const { error } = await sbClient.from('clasificados').upsert([datos]);
     if (error) { mostrarAlerta('clas-alert', 'error', 'Error: ' + error.message); return; }
   } else {
     localStorage.setItem('clasificados_' + usuarioActual.id, JSON.stringify(datos));
@@ -336,8 +336,8 @@ const RANKING_DEMO = [
 async function renderRanking() {
   let data = RANKING_DEMO;
 
-  if (supabase) {
-    const { data: rows } = await supabase
+  if (sbClient) {
+    const { data: rows } = await sbClient
       .from('ranking_view')
       .select('*')
       .order('pts', { ascending: false })
@@ -460,13 +460,13 @@ async function autoConectar() {
   try {
     const client = window.supabase;
     if (!client || !client.createClient) throw new Error('SDK no cargado');
-    supabase = client.createClient(SB_URL, SB_KEY);
-    const { error } = await supabase.from('participantes').select('id').limit(1);
+    sbClient = client.createClient(SB_URL, SB_KEY);
+    const { error } = await sbClient.from('participantes').select('id').limit(1);
     if (error) throw error;
     if (sbStatus) sbStatus.innerHTML = '<span class="connected-badge"><span class="dot"></span> Conectado a Supabase</span>';
     await cargarParticipantes();
   } catch(e) {
-    supabase = null;
+    sbClient = null;
     if (sbStatus) sbStatus.textContent = 'Modo local — ' + (e.message || e);
     cargarParticipantes();
   }
