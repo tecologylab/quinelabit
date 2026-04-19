@@ -4,7 +4,7 @@
 
 
 const SB_URL = "https://zriyqyeoiommrnyvwjto.supabase.co";
-const SB_KEY = "sb_publishable_a0rpBgT8_WJURAlIDsW5BQ_1nd3PkqW";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpyaXlxeWVvaW9tbXJueXZ3anRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NzQ1ODMsImV4cCI6MjA5MjE1MDU4M30.fylrPptB3VpnkXw2qMxh2PgLPBpt5OvIjoPgOzTTjog";
 const GRUPOS = {
   'A': ['México','EEUU','Canadá','Polonia'],
   'B': ['Argentina','Chile','Bolivia','Perú'],
