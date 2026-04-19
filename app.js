@@ -451,23 +451,36 @@ async function init() {
   if (emp) { document.getElementById('empresa-label').textContent = emp; document.getElementById('cfg-empresa').value = emp; }
   if (col) { document.documentElement.style.setProperty('--verde', col); document.getElementById('cfg-color').value = col; }
 
-  // Auto-conectar Supabase con credenciales hardcodeadas
+  // Cargar SDK de Supabase y auto-conectar
+  await cargarSDK();
   await autoConectar();
 }
 
+async function cargarSDK() {
+  return new Promise((resolve) => {
+    if (window._sbSDK) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+    s.onload = () => {
+      // El SDK UMD expone createClient en window.supabase
+      window._sbSDK = window.supabase || window.supabaseJs;
+      resolve();
+    };
+    s.onerror = () => resolve();
+    document.head.appendChild(s);
+  });
+}
+
 async function autoConectar() {
-  const sbStatus = document.getElementById('sb-status');
   try {
-    const client = window.supabase;
-    if (!client || !client.createClient) throw new Error('SDK no cargado');
-    sbClient = client.createClient(SB_URL, SB_KEY);
+    const sdk = window._sbSDK;
+    if (!sdk || !sdk.createClient) throw new Error('SDK no cargado');
+    sbClient = sdk.createClient(SB_URL, SB_KEY);
     const { error } = await sbClient.from('participantes').select('id').limit(1);
     if (error) throw error;
-    if (sbStatus) sbStatus.innerHTML = '<span class="connected-badge"><span class="dot"></span> Conectado a Supabase</span>';
     await cargarParticipantes();
   } catch(e) {
     sbClient = null;
-    if (sbStatus) sbStatus.textContent = 'Modo local — ' + (e.message || e);
     cargarParticipantes();
   }
 }
