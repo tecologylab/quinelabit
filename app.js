@@ -70,20 +70,11 @@ async function conectarSupabase() {
   const key = document.getElementById('sb-key').value.trim();
   if (!url || !key) { alert('Ingresa la URL y la Publishable key de Supabase.'); return; }
 
-  // Cargar SDK de Supabase dinámicamente
-  if (!window.supabaseLib) {
-    await new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
-      s.onload = res; s.onerror = rej;
-      document.head.appendChild(s);
-    });
-    window.supabaseLib = window.supabase;
-  }
-
   try {
-    // Compatible con anon key clásica (eyJ...) y nueva publishable key (sb_publishable_...)
-    supabase = window.supabaseLib.createClient(url, key);
+    // SDK cargado en el HTML — compatible con publishable key y anon key
+    const client = window.supabase || window.supabaseJs;
+    if (!client) throw new Error('SDK de Supabase no disponible');
+    supabase = client.createClient(url, key);
     // Test conexión
     const { error } = await supabase.from('participantes').select('id').limit(1);
     if (error) throw error;
