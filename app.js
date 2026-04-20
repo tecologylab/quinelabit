@@ -12,41 +12,27 @@ const FECHA_INICIO = new Date('2026-06-11');
 // Sin CDN, sin emojis, funciona en todos los navegadores
 // =============================================
 const ISO2 = {
-  'Mexico':'MX','Sudafrica':'ZA','Rep. Checa':'CZ','Corea del Sur':'KR',
-  'Canada':'CA','Bosnia-Herzegovina':'BA','Qatar':'QA','Suiza':'CH',
-  'Brasil':'BR','Marruecos':'MA','Haiti':'HT','Escocia':'SCO',
-  'EEUU':'US','Paraguay':'PY','Australia':'AU','Turkiye':'TR',
-  'Alemania':'DE','Curazao':'CW','Costa de Marfil':'CI','Ecuador':'EC',
-  'Paises Bajos':'NL','Japon':'JP','Suecia':'SE','Tunez':'TN',
-  'Belgica':'BE','Egipto':'EG','Iran':'IR','Nueva Zelanda':'NZ',
-  'Espana':'ES','Cabo Verde':'CV','Arabia Saudita':'SA','Uruguay':'UY',
-  'Francia':'FR','Senegal':'SN','Iraq':'IQ','Noruega':'NO',
-  'Argentina':'AR','Argelia':'DZ','Austria':'AT','Jordania':'JO',
-  'Portugal':'PT','DR Congo':'CD','Uzbekistan':'UZ','Colombia':'CO',
-  'Inglaterra':'ENG','Croacia':'HR','Ghana':'GH','Panama':'PA',
+  'Mexico':'mx','Sudafrica':'za','Rep. Checa':'cz','Corea del Sur':'kr',
+  'Canada':'ca','Bosnia-Herzegovina':'ba','Qatar':'qa','Suiza':'ch',
+  'Brasil':'br','Marruecos':'ma','Haiti':'ht','Escocia':'gb-sct',
+  'EEUU':'us','Paraguay':'py','Australia':'au','Turkiye':'tr',
+  'Alemania':'de','Curazao':'cw','Costa de Marfil':'ci','Ecuador':'ec',
+  'Paises Bajos':'nl','Japon':'jp','Suecia':'se','Tunez':'tn',
+  'Belgica':'be','Egipto':'eg','Iran':'ir','Nueva Zelanda':'nz',
+  'Espana':'es','Cabo Verde':'cv','Arabia Saudita':'sa','Uruguay':'uy',
+  'Francia':'fr','Senegal':'sn','Iraq':'iq','Noruega':'no',
+  'Argentina':'ar','Argelia':'dz','Austria':'at','Jordania':'jo',
+  'Portugal':'pt','DR Congo':'cd','Uzbekistan':'uz','Colombia':'co',
+  'Inglaterra':'gb-eng','Croacia':'hr','Ghana':'gh','Panama':'pa',
 };
 
-// Colores de fondo por código para las banderas visuales
-const FLAG_COLORS = {
-  'MX':'#006847','ZA':'#007A4D','CZ':'#D7141A','KR':'#CD2E3A',
-  'CA':'#FF0000','BA':'#002395','QA':'#8D1B3D','CH':'#FF0000',
-  'BR':'#009C3B','MA':'#C1272D','HT':'#00209F','SCO':'#003366',
-  'US':'#3C3B6E','PY':'#D52B1E','AU':'#00008B','TR':'#E30A17',
-  'DE':'#000000','CW':'#002B7F','CI':'#F77F00','EC':'#FFD100',
-  'NL':'#AE1C28','JP':'#BC002D','SE':'#006AA7','TN':'#E70013',
-  'BE':'#000000','EG':'#CE1126','IR':'#239F40','NZ':'#00247D',
-  'ES':'#AA151B','CV':'#003893','SA':'#006C35','UY':'#5EB6E4',
-  'FR':'#002395','SN':'#00853F','IQ':'#CE1126','NO':'#EF2B2D',
-  'AR':'#74ACDF','DZ':'#006233','AT':'#ED2939','JO':'#007A3D',
-  'PT':'#006600','CD':'#007FFF','UZ':'#1EB53A','CO':'#FCD116',
-  'ENG':'#CF091B','HR':'#FF0000','GH':'#006B3F','PA':'#005293',
-};
 
 function flagBadge(pais, size=20) {
-  const code = ISO2[pais] || '??';
-  const color = FLAG_COLORS[code] || '#888';
-  const fs = Math.round(size * 0.45);
-  return `<span style="display:inline-flex;align-items:center;justify-content:center;background:${color};color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:${fs}px;letter-spacing:.02em;width:${size*1.5}px;height:${size}px;border-radius:3px;flex-shrink:0;line-height:1">${code}</span>`;
+  const code = ISO2[pais];
+  if (!code) return '<span style="width:'+Math.round(size*1.4)+'px;height:'+size+'px;background:#ccc;border-radius:3px;display:inline-block"></span>';
+  const h = Math.round(size * 0.7);
+  const w = Math.round(size * 1.4);
+  return '<img src="https://flagcdn.com/w40/'+code+'.png" alt="'+pais+'" style="width:'+w+'px;height:'+h+'px;object-fit:cover;border-radius:2px;vertical-align:middle;box-shadow:0 0 0 1px rgba(0,0,0,0.1);flex-shrink:0" loading="lazy">';
 }
 
 // =============================================
