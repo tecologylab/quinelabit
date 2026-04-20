@@ -186,6 +186,37 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 .demo-fab-wrap{position:fixed;bottom:20px;right:20px;z-index:999}
 .demo-fab{background:var(--oro);color:var(--verde);border:none;border-radius:25px;padding:10px 20px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:.06em;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
 .demo-fab:hover{background:var(--oro2)}
+
+.bcheck{color:#0a5c2e;font-size:14px;font-weight:900;margin-left:2px;flex-shrink:0}
+.bteam.winner .btn{color:#0a5c2e;font-weight:700}
+.bteam.winner{background:rgba(10,92,46,0.04);border-radius:4px;margin:0 -4px;padding:3px 4px}
+.bpen-badge{display:flex;align-items:center;gap:4px;margin-top:4px;padding:3px 6px;background:#fff3e0;border-radius:5px;font-size:10px;color:#c0392b;font-weight:600;border:1px solid #f0cb6a}
+
+/* TABLA DE POSICIONES POR GRUPO */
+.grupo-layout{display:grid;grid-template-columns:1fr 280px;gap:1rem;align-items:start}
+@media(max-width:700px){.grupo-layout{grid-template-columns:1fr}}
+.grupo-partidos{min-width:0}
+.grupo-tabla{min-width:0}
+.gtabla-wrap{background:#fafafa;border:1.5px solid var(--borde);border-radius:var(--rs);padding:10px;position:sticky;top:120px}
+.gtabla-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--oro);margin-bottom:8px}
+.gtabla{width:100%;border-collapse:collapse;font-size:11px}
+.gtabla thead th{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:3px 4px;border-bottom:1.5px solid var(--borde);text-align:center}
+.gtabla thead th:nth-child(2){text-align:left}
+.gtabla tbody td{padding:5px 4px;text-align:center;border-bottom:1px solid rgba(0,0,0,0.04)}
+.gtabla tbody tr:last-child td{border-bottom:none}
+.pais-cell{display:flex;align-items:center;gap:4px;text-align:left;white-space:nowrap}
+.pais-cell span{font-size:11px;font-weight:500}
+.pos-num{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--muted)}
+.pts-num{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;color:var(--verde)}
+.dif-pos{color:#0a5c2e;font-weight:700}
+.dif-neg{color:#c0392b;font-weight:700}
+.gtabla tbody tr.clasif{background:rgba(10,92,46,0.04)}
+.gtabla tbody tr.clasif .pos-num{color:var(--verde)}
+.gtabla tbody tr.tercero{background:rgba(201,168,76,0.06)}
+.gtabla-legend{display:flex;flex-direction:column;gap:3px;margin-top:8px;padding-top:6px;border-top:1px solid var(--borde)}
+.legend-clasif,.legend-tercero{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.legend-clasif::before{content:'';width:10px;height:10px;border-radius:2px;background:rgba(10,92,46,0.15);flex-shrink:0}
+.legend-tercero::before{content:'';width:10px;height:10px;border-radius:2px;background:rgba(201,168,76,0.2);flex-shrink:0}
 </style>
 </head>
 <body>
