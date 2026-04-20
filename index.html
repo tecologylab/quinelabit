@@ -6,11 +6,7 @@
 <title>Quiniela FIFA 2026 — Business IT</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root {
-  --verde:#0a5c2e; --verde2:#1a8c48; --oro:#c9a84c; --oro2:#f0cb6a;
-  --bg:#f5f3ef; --card:#ffffff; --text:#1a1a1a; --muted:#6b6b6b;
-  --borde:rgba(0,0,0,0.1); --r:12px; --rs:8px;
-}
+:root{--verde:#0a5c2e;--verde2:#1a8c48;--oro:#c9a84c;--oro2:#f0cb6a;--bg:#f5f3ef;--card:#fff;--text:#1a1a1a;--muted:#6b6b6b;--borde:rgba(0,0,0,0.1);--r:12px;--rs:8px}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
@@ -24,12 +20,12 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
 .uavatar{width:28px;height:28px;background:var(--oro);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--verde)}
 
 /* HERO */
-.hero{background:var(--verde);padding:2.5rem 1.5rem 3rem;text-align:center;position:relative;overflow:hidden}
+.hero{background:var(--verde);padding:2rem 1.5rem 2.5rem;text-align:center;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,0.015) 40px,rgba(255,255,255,0.015) 80px)}
-.hero-badge{display:inline-block;background:var(--oro);color:var(--verde);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:1rem}
-.hero h1{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:clamp(2rem,6vw,3.2rem);color:#fff;line-height:1;margin-bottom:.5rem}
+.hero-badge{display:inline-block;background:var(--oro);color:var(--verde);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:.75rem}
+.hero h1{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:clamp(2rem,6vw,3.2rem);color:#fff;line-height:1;margin-bottom:.4rem}
 .hero h1 span{color:var(--oro2)}
-.hero p{color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:1.5rem}
+.hero p{color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:1.25rem}
 .hstats{display:flex;justify-content:center;gap:2rem;flex-wrap:wrap}
 .hstat-num{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:2rem;color:var(--oro2);line-height:1}
 .hstat-lbl{font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px}
@@ -37,17 +33,17 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
 /* DEMO BANNER */
 .demo-banner{background:var(--oro);color:var(--verde);padding:8px 1.5rem;display:none;align-items:center;justify-content:space-between;font-size:13px;font-weight:600}
 .demo-banner.on{display:flex}
-.btn-exit-demo{background:var(--verde);color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:.05em}
+.btn-exit-demo{background:var(--verde);color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif}
 
 /* NAV */
 .nav-wrap{background:var(--card);border-bottom:1px solid var(--borde);position:sticky;top:60px;z-index:90;overflow-x:auto}
-.nav{display:flex;max-width:960px;margin:0 auto;padding:0 1rem}
-.nav-btn{padding:0 1rem;height:48px;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;transition:all .15s}
+.nav{display:flex;max-width:1000px;margin:0 auto;padding:0 1rem}
+.nav-btn{padding:0 .9rem;height:48px;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;transition:all .15s}
 .nav-btn:hover{color:var(--verde)}
 .nav-btn.active{color:var(--verde);border-bottom-color:var(--oro)}
 
 /* MAIN */
-.main{max-width:960px;margin:0 auto;padding:1.5rem 1rem}
+.main{max-width:1000px;margin:0 auto;padding:1.5rem 1rem}
 .section{display:none}
 .section.active{display:block}
 
@@ -60,32 +56,32 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
 /* FORM */
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:560px){.fgrid{grid-template-columns:1fr}}
-.fg{margin-bottom:0}
 .fg.full{grid-column:1/-1}
 label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
-input[type=text],input[type=email],input[type=tel],input[type=password],select{width:100%;padding:9px 13px;border:1.5px solid var(--borde);border-radius:var(--rs);background:#fafafa;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;transition:border-color .15s}
+input[type=text],input[type=email],input[type=tel],input[type=password],input[type=number],select{width:100%;padding:9px 13px;border:1.5px solid var(--borde);border-radius:var(--rs);background:#fafafa;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;transition:border-color .15s}
 input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 .btn-primary{width:100%;padding:11px;background:var(--verde);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-top:1rem;transition:background .15s}
 .btn-primary:hover{background:#084a25}
-.btn-primary:active{transform:scale(.98)}
-.btn-sec{padding:9px 20px;background:transparent;color:var(--verde);border:1.5px solid var(--verde);border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.btn-sec{padding:9px 18px;background:transparent;color:var(--verde);border:1.5px solid var(--verde);border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .15s}
 .btn-sec:hover{background:var(--verde);color:#fff}
-.btn-save{padding:9px 20px;background:var(--verde);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:background .15s}
+.btn-save{padding:9px 20px;background:var(--verde);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
 .btn-save:hover{background:#084a25}
+.btn-oro{padding:9px 18px;background:var(--oro);color:var(--verde);border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.btn-oro:hover{background:var(--oro2)}
 
 /* ALERT */
 .alert{padding:11px 15px;border-radius:var(--rs);font-size:13px;margin-top:.75rem;display:none}
 .alert.success{background:#eaf5ee;color:#0a5c2e;border:1px solid #9fd4b0;display:block}
 .alert.error{background:#fef0f0;color:#c0392b;border:1px solid #f5b7b1;display:block}
 
-/* LOGIN/REGISTER TABS */
+/* AUTH TABS */
 .auth-tabs{display:flex;gap:0;margin-bottom:1.25rem;border:1.5px solid var(--borde);border-radius:var(--rs);overflow:hidden}
 .auth-tab{flex:1;padding:9px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;background:#fafafa;color:var(--muted);border:none;cursor:pointer;transition:all .15s}
 .auth-tab.active{background:var(--verde);color:#fff}
 
 /* GRUPO TABS */
 .gtabs{display:flex;flex-wrap:wrap;gap:5px;margin:1rem 0 .75rem}
-.gtab{padding:5px 11px;border-radius:20px;border:1.5px solid var(--borde);background:var(--bg);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;cursor:pointer;transition:all .12s}
+.gtab{padding:5px 11px;border-radius:20px;border:1.5px solid var(--borde);background:var(--bg);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .12s}
 .gtab:hover{border-color:var(--verde);color:var(--verde)}
 .gtab.active{background:var(--verde);color:#fff;border-color:var(--verde)}
 .gtab.done{border-color:#9fd4b0}
@@ -97,21 +93,20 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 .prow{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
 .ecol{display:flex;align-items:center;gap:6px}
 .ecol.r{justify-content:flex-end;flex-direction:row-reverse}
-.eflag img{width:22px;height:15px;object-fit:cover;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,0.08);vertical-align:middle}
+.eflag{font-size:20px;line-height:1}
 .ename{font-size:12px;font-weight:600}
 .sinputs{display:flex;align-items:center;gap:5px;justify-content:center}
-.sinput{width:42px;height:34px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;border:2px solid var(--borde);border-radius:6px;background:#fff;color:var(--muted);-moz-appearance:textfield}
+.sinput{width:42px;height:34px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;border:2px solid var(--borde);border-radius:6px;background:#fff;color:var(--muted);-moz-appearance:textfield;padding:0}
 .sinput::-webkit-outer-spin-button,.sinput::-webkit-inner-spin-button{-webkit-appearance:none}
 .sinput:focus{outline:none;border-color:var(--verde);color:var(--text)}
 .sinput.v{color:var(--verde);border-color:#9fd4b0;font-weight:800}
 .ssep{font-size:16px;font-weight:700;color:var(--muted)}
-.flbl{font-size:10px;color:var(--muted);padding:.6rem 0 .2rem;border-top:1px solid var(--borde);margin-top:.4rem;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--oro)}
+.flbl{font-size:10px;color:var(--oro);padding:.6rem 0 .2rem;border-top:1px solid var(--borde);margin-top:.4rem;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
 .flbl:first-child{border-top:none;padding-top:0;margin-top:0}
 .gequipos{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:.75rem}
 .ebadge{background:var(--bg);border:1px solid var(--borde);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:500;display:flex;align-items:center;gap:4px}
-.ebadge img{width:16px;height:11px;object-fit:cover;border-radius:1px}
 
-/* PUNTOS INFO */
+/* PUNTOS */
 .pinfo{display:flex;gap:7px;flex-wrap:wrap;margin:.5rem 0}
 .pbadge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
 .pbadge.ex{background:#eaf5ee;color:#0a5c2e;border:1px solid #9fd4b0}
@@ -120,7 +115,7 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 
 /* PROG */
 .progwrap{margin:.75rem 0}
-.progmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px}
+.progmeta{font-size:12px;color:var(--muted);margin-bottom:5px}
 .progbar{height:5px;background:#e8e8e8;border-radius:3px}
 .progfill{height:100%;background:var(--verde);border-radius:3px;transition:width .3s}
 
@@ -128,31 +123,59 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 .savebar{background:var(--card);border:1px solid var(--borde);border-radius:var(--rs);padding:11px 15px;display:flex;justify-content:space-between;align-items:center;margin-top:.75rem}
 .savestatus{font-size:13px;color:var(--muted)}
 
-/* CAMPEÓN GOLEADOR */
-.camp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:7px;margin-top:.75rem}
-.camp-btn{padding:8px 6px;border:1.5px solid var(--borde);border-radius:var(--rs);background:#fafafa;font-family:'Barlow',sans-serif;font-size:11px;font-weight:500;cursor:pointer;text-align:center;transition:all .12s;display:flex;flex-direction:column;align-items:center;gap:5px}
-.camp-btn img{width:36px;height:24px;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,0.1)}
+/* GOLEADOR */
+.camp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px;margin-top:.75rem}
+.camp-btn{padding:7px 5px;border:1.5px solid var(--borde);border-radius:var(--rs);background:#fafafa;font-size:11px;font-weight:500;cursor:pointer;text-align:center;transition:all .12s;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:'Barlow',sans-serif}
+.camp-btn .ef{font-size:24px;line-height:1}
 .camp-btn:hover{border-color:var(--verde)}
 .camp-btn.sel{background:var(--verde);color:#fff;border-color:var(--verde)}
 
-/* BRACKET */
-.bracket-wrap{overflow-x:auto;padding:.5rem 0}
-.bracket-info{font-size:12px;color:var(--muted);margin-bottom:.75rem;line-height:1.6}
-.ronda-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--oro);margin:1.25rem 0 .5rem;padding-top:1rem;border-top:1px solid var(--borde)}
-.ronda-title:first-of-type{border-top:none;padding-top:0;margin-top:0}
-.bmatch{background:#fafafa;border:1.5px solid var(--borde);border-radius:var(--rs);padding:10px 12px;margin-bottom:8px}
+/* ================================
+   BRACKET VISUAL
+   ================================ */
+.bracket-outer{overflow-x:auto;padding:1rem 0}
+.bracket-scroll{min-width:900px}
+.bracket-grid{display:grid;grid-template-columns:200px 160px 130px 110px 100px 110px 130px 160px 200px;gap:0;align-items:center;position:relative}
+
+.bslot{padding:3px 4px;position:relative}
+.bslot.center-cup{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1rem .5rem}
+.cup-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;color:var(--oro);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem}
+.cup-icon{font-size:2.5rem;line-height:1}
+
+.bmatch{background:var(--card);border:1.5px solid var(--borde);border-radius:8px;padding:6px 8px;margin:3px 0;position:relative;transition:border-color .15s;cursor:default}
 .bmatch.ok{border-color:#9fd4b0;background:#f8fdf9}
-.bmatch-label{font-size:10px;color:var(--muted);margin-bottom:7px;font-weight:600}
-.bmatch-row{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
-.bselect{width:100%;padding:6px 8px;border:1.5px solid var(--borde);border-radius:6px;background:#fff;color:var(--text);font-size:12px;font-family:'Barlow',sans-serif}
-.bselect:focus{outline:none;border-color:var(--verde)}
-.bsinputs{display:flex;align-items:center;gap:4px;justify-content:center}
-.bsinput{width:38px;height:30px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;border:1.5px solid var(--borde);border-radius:5px;background:#fff;color:var(--muted);-moz-appearance:textfield}
-.bsinput::-webkit-outer-spin-button,.bsinput::-webkit-inner-spin-button{-webkit-appearance:none}
-.bsinput:focus{outline:none;border-color:var(--verde)}
-.bsinput.v{color:var(--verde);border-color:#9fd4b0;font-weight:800}
-.bsep{font-size:14px;font-weight:700;color:var(--muted)}
-.pts-chip{font-size:10px;background:var(--oro);color:var(--verde);padding:2px 7px;border-radius:10px;font-weight:700;margin-left:6px}
+.bmatch-lbl{font-size:9px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.bteam-row{display:flex;align-items:center;gap:4px;padding:2px 0}
+.bteam-flag{font-size:14px;line-height:1;min-width:18px}
+.bteam-name{font-size:11px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bteam-score{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;color:var(--verde);min-width:16px;text-align:right}
+.bteam-row.empty .bteam-name{color:var(--muted);font-weight:400;font-size:10px;font-style:italic}
+.bsep-line{height:1px;background:var(--borde);margin:2px 0}
+
+/* Connector lines */
+.bconn{display:flex;align-items:center;justify-content:center}
+.bconn-r{border-right:2px solid var(--borde);height:100%;min-height:30px}
+.bconn-l{border-left:2px solid var(--borde);height:100%;min-height:30px}
+.bconn-h{width:100%;height:2px;background:var(--borde)}
+
+/* Modal para seleccionar equipo */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.on{display:flex}
+.modal{background:var(--card);border-radius:var(--r);padding:1.25rem;width:100%;max-width:400px;max-height:80vh;overflow-y:auto}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:1rem;color:var(--verde)}
+.modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);margin-top:-4px}
+.modal-group-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 3px;border-top:1px solid var(--borde);margin-top:4px}
+.modal-group-title:first-child{border-top:none;padding-top:0;margin-top:0}
+.modal-opt{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--rs);cursor:pointer;transition:background .1s;font-size:13px}
+.modal-opt:hover{background:var(--bg)}
+.modal-opt.sel{background:#eaf5ee;color:var(--verde);font-weight:600}
+.modal-opt .ef{font-size:18px;line-height:1}
+.modal-score{display:flex;align-items:center;gap:8px;margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--borde)}
+.modal-score label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;width:auto;margin:0}
+.mscore{width:50px;height:38px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;border:2px solid var(--borde);border-radius:6px;background:#fff;color:var(--text);-moz-appearance:textfield;padding:0}
+.mscore::-webkit-outer-spin-button,.mscore::-webkit-inner-spin-button{-webkit-appearance:none}
+.mscore:focus{outline:none;border-color:var(--verde)}
+.modal-actions{display:flex;gap:8px;margin-top:1rem}
 
 /* RANKING */
 .statsrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
@@ -164,37 +187,32 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 .rankpos{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:var(--muted);text-align:center}
 .rankpos.med{color:var(--oro)}
 .rankavatar{width:30px;height:30px;border-radius:50%;background:#f0f8f4;border:1.5px solid #9fd4b0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--verde)}
-.rankname{font-size:13px;font-weight:500}
-.rankalias{font-size:11px;color:var(--muted)}
+.rankname{font-size:13px;font-weight:600;color:var(--verde)}
+.rankreal{font-size:11px;color:var(--muted)}
 .rankcamp{font-size:12px;color:var(--muted);text-align:right}
 .rankpts{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;color:var(--verde);text-align:right;min-width:52px}
 .ptslbl{font-size:10px;color:var(--muted);display:block;font-weight:400}
+
+/* CODIGOS ADMIN */
+.codigo-chip{display:inline-flex;align-items:center;gap:5px;margin:3px;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:.05em}
+.codigo-chip.libre{background:#eaf5ee;color:#0a5c2e;border:1px solid #9fd4b0}
+.codigo-chip.usado{background:#fef0f0;color:#c0392b;border:1px solid #f5b7b1;text-decoration:line-through;opacity:.7}
 
 /* LOADING */
 .loading{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* DEMO MODE */
-.demo-overlay{position:fixed;bottom:20px;right:20px;z-index:999}
-.demo-fab{background:var(--oro);color:var(--verde);border:none;border-radius:25px;padding:10px 20px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:.06em;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:all .15s}
-.demo-fab:hover{background:var(--oro2);transform:translateY(-1px)}
-
-/* CLAS GRID */
-.clas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:.5rem}
-.clas-grupo{background:#fafafa;border:1px solid var(--borde);border-radius:var(--rs);padding:10px}
-.clas-grupo-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--oro);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
-.clas-count{font-size:11px;color:var(--muted);font-weight:500}
-.clas-count.ok{color:var(--verde2)}
-.clas-check{display:flex;align-items:center;gap:5px;font-size:12px;padding:3px 0;cursor:pointer}
-.clas-check input{width:auto;accent-color:var(--verde)}
-.clas-check img{width:16px;height:11px;object-fit:cover;border-radius:1px}
+/* DEMO FAB */
+.demo-fab-wrap{position:fixed;bottom:20px;right:20px;z-index:999}
+.demo-fab{background:var(--oro);color:var(--verde);border:none;border-radius:25px;padding:10px 20px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:.06em;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+.demo-fab:hover{background:var(--oro2)}
 </style>
 </head>
 <body>
 
 <header class="header">
   <div class="hbrand">
-    <img src="LOGO BIT-02.png" alt="Business IT" style="height:36px;width:auto;object-fit:contain">
+    <img src="LOGO BIT-02.png" alt="Business IT" style="height:36px;width:auto;object-fit:contain" onerror="this.style.display='none'">
     <div class="htitle">Quiniela FIFA 2026</div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
@@ -207,7 +225,7 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 </header>
 
 <div class="demo-banner" id="demo-banner">
-  MODO DEMO — Datos de ejemplo para presentación
+  MODO DEMO — Datos de ejemplo para presentación a ejecutivos
   <button class="btn-exit-demo" onclick="salirDemo()">Salir del demo</button>
 </div>
 
@@ -225,7 +243,7 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 <div class="nav-wrap">
   <nav class="nav">
     <button class="nav-btn active" onclick="goSec('registro')">Registro</button>
-    <button class="nav-btn" onclick="goSec('quiniela')">Predicciones</button>
+    <button class="nav-btn" onclick="goSec('quiniela')">1era Ronda</button>
     <button class="nav-btn" onclick="goSec('segunda')">2da Ronda</button>
     <button class="nav-btn" onclick="goSec('goleador')">País Goleador</button>
     <button class="nav-btn" onclick="goSec('ranking')">Ranking</button>
@@ -235,7 +253,7 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 
 <main class="main">
 
-<!-- REGISTRO / LOGIN -->
+<!-- REGISTRO -->
 <section id="sec-registro" class="section active">
   <div class="card">
     <div class="card-hdr">
@@ -243,49 +261,29 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
       <div class="card-title">Acceso a la quiniela</div>
     </div>
     <div class="auth-tabs">
-      <button class="auth-tab active" onclick="showAuth('reg')">Registrarse</button>
-      <button class="auth-tab" onclick="showAuth('login')">Ya tengo cuenta</button>
+      <button class="auth-tab active" onclick="showAuth('reg',this)">Registrarse</button>
+      <button class="auth-tab" onclick="showAuth('login',this)">Ya tengo cuenta</button>
     </div>
-
-    <!-- REGISTRO -->
     <div id="form-reg">
       <div class="fgrid">
         <div class="fg"><label>Nombre completo</label><input type="text" id="r-nombre" placeholder="Juan Pérez"></div>
-        <div class="fg"><label>Alias público (aparece en ranking)</label><input type="text" id="r-alias" placeholder="Ej: Juancho2026"></div>
+        <div class="fg"><label>Alias público (sale en ranking)</label><input type="text" id="r-alias" placeholder="Ej: Juancho2026"></div>
         <div class="fg"><label>Correo electrónico</label><input type="email" id="r-email" placeholder="juan@correo.com"></div>
         <div class="fg"><label>Teléfono</label><input type="tel" id="r-tel" placeholder="+507 6000-0000"></div>
-        <div class="fg"><label>Código de participante</label><input type="text" id="r-codigo" placeholder="BIT-0000" style="text-transform:uppercase"></div>
+        <div class="fg"><label>Código de participante</label><input type="text" id="r-codigo" placeholder="BIT-XXXXX" style="text-transform:uppercase;letter-spacing:.05em;font-weight:600"></div>
         <div class="fg"><label>País favorito</label>
-          <select id="r-favorito">
-            <option value="">Seleccionar...</option>
-            <option>Argentina</option><option>Alemania</option><option>Australia</option>
-            <option>Arabia Saudita</option><option>Argelia</option><option>Austria</option>
-            <option>Belgica</option><option>Bosnia-Herzegovina</option><option>Brasil</option>
-            <option>Canada</option><option>Cabo Verde</option><option>Chequia</option>
-            <option>Corea del Sur</option><option>Colombia</option><option>Costa de Marfil</option>
-            <option>Croacia</option><option>Curazao</option><option>DR Congo</option>
-            <option>Ecuador</option><option>EEUU</option><option>Egipto</option>
-            <option>Escocia</option><option>Espana</option><option>Francia</option>
-            <option>Ghana</option><option>Haiti</option><option>Inglaterra</option>
-            <option>Iran</option><option>Iraq</option><option>Japon</option>
-            <option>Jordania</option><option>Marruecos</option><option>Mexico</option>
-            <option>Noruega</option><option>Nueva Zelanda</option><option>Paises Bajos</option>
-            <option>Panama</option><option>Paraguay</option><option>Portugal</option>
-            <option>Qatar</option><option>Senegal</option><option>Sudafrica</option>
-            <option>Suecia</option><option>Suiza</option><option>Tunez</option>
-            <option>Turkiye</option><option>Uruguay</option><option>Uzbekistan</option>
+          <select id="r-favorito"><option value="">Seleccionar...</option>
+            <option>Argentina</option><option>Alemania</option><option>Australia</option><option>Arabia Saudita</option><option>Argelia</option><option>Austria</option><option>Belgica</option><option>Bosnia-Herzegovina</option><option>Brasil</option><option>Canada</option><option>Cabo Verde</option><option>Chequia</option><option>Corea del Sur</option><option>Colombia</option><option>Costa de Marfil</option><option>Croacia</option><option>Curazao</option><option>DR Congo</option><option>Ecuador</option><option>EEUU</option><option>Egipto</option><option>Escocia</option><option>Espana</option><option>Francia</option><option>Ghana</option><option>Haiti</option><option>Inglaterra</option><option>Iran</option><option>Iraq</option><option>Japon</option><option>Jordania</option><option>Marruecos</option><option>Mexico</option><option>Noruega</option><option>Nueva Zelanda</option><option>Paises Bajos</option><option>Panama</option><option>Paraguay</option><option>Portugal</option><option>Qatar</option><option>Senegal</option><option>Sudafrica</option><option>Suecia</option><option>Suiza</option><option>Tunez</option><option>Turkiye</option><option>Uruguay</option><option>Uzbekistan</option>
           </select>
         </div>
       </div>
       <button class="btn-primary" id="btn-reg" onclick="registrar()">Registrarme en la quiniela</button>
       <div class="alert" id="reg-alert"></div>
     </div>
-
-    <!-- LOGIN -->
     <div id="form-login" style="display:none">
       <div class="fgrid">
         <div class="fg"><label>Correo electrónico</label><input type="email" id="l-email" placeholder="juan@correo.com"></div>
-        <div class="fg"><label>Código de participante</label><input type="text" id="l-codigo" placeholder="BIT-0000" style="text-transform:uppercase"></div>
+        <div class="fg"><label>Código de participante</label><input type="text" id="l-codigo" placeholder="BIT-XXXXX" style="text-transform:uppercase;letter-spacing:.05em;font-weight:600"></div>
       </div>
       <button class="btn-primary" id="btn-login" onclick="login()">Entrar a mi quiniela</button>
       <div class="alert" id="login-alert"></div>
@@ -293,12 +291,12 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
   </div>
 </section>
 
-<!-- PREDICCIONES GRUPOS -->
+<!-- 1ERA RONDA -->
 <section id="sec-quiniela" class="section">
   <div class="card">
     <div class="card-hdr">
       <div class="card-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M3 5h14v2H3V5zm0 4h14v2H3V9zm0 4h8v2H3v-2z"/></svg></div>
-      <div class="card-title">Fase de grupos — 72 partidos</div>
+      <div class="card-title">1era Ronda — Fase de grupos (72 partidos)</div>
     </div>
     <div class="pinfo">
       <span class="pbadge ex">5 pts marcador exacto</span>
@@ -318,20 +316,22 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
   <div class="alert" id="q-alert"></div>
 </section>
 
-<!-- SEGUNDA RONDA / BRACKET -->
+<!-- 2DA RONDA BRACKET -->
 <section id="sec-segunda" class="section">
   <div class="card">
     <div class="card-hdr">
-      <div class="card-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M9 4a1 1 0 012 0v5h5a1 1 0 010 2h-5v5a1 1 0 01-2 0v-5H4a1 1 0 010-2h5V4z"/></svg></div>
-      <div class="card-title">Segunda Ronda — Bracket oficial FIFA 2026</div>
+      <div class="card-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M2 10a8 8 0 1116 0A8 8 0 012 10zm8-5l5 5-5 5-1.4-1.4L12.2 11H5V9h7.2L8.6 6.4 10 5z"/></svg></div>
+      <div class="card-title">2da Ronda — Bracket oficial FIFA 2026</div>
     </div>
     <div class="pinfo">
-      <span class="pbadge ex">10 pts marcador exacto</span>
-      <span class="pbadge re">4 pts resultado correcto</span>
-      <span class="pbadge ca">2 pts equipo correcto avanza</span>
+      <span class="pbadge ex">Marcador exacto: 6→8→10→12→15 pts por ronda</span>
+      <span class="pbadge re">Resultado correcto: 3→4→5→6→8 pts</span>
+      <span class="pbadge ca">Equipo avanza: 2 pts</span>
     </div>
-    <p class="bracket-info">Selecciona qué equipo va en cada posición del bracket y predice el marcador de cada partido. Las posiciones de "mejor 3ro" muestran todos los equipos posibles de esos grupos.</p>
-    <div id="bracket-container"></div>
+    <p style="font-size:12px;color:var(--muted);margin:.5rem 0 1rem">Haz clic en cualquier casilla para seleccionar el equipo y el marcador. Los dropdowns solo muestran los equipos posibles para cada posición.</p>
+    <div class="bracket-outer">
+      <div id="bracket-container"></div>
+    </div>
   </div>
   <div class="savebar">
     <span class="savestatus" id="b-status">Llena el bracket para guardar</span>
@@ -344,7 +344,7 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 <section id="sec-goleador" class="section">
   <div class="card">
     <div class="card-hdr">
-      <div class="card-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 1.5a6.5 6.5 0 110 13 6.5 6.5 0 010-13z"/></svg></div>
+      <div class="card-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2z"/></svg></div>
       <div class="card-title">País goleador del torneo</div>
     </div>
     <p style="font-size:13px;color:var(--muted);margin-bottom:.25rem">¿Qué selección meterá más goles en todo el Mundial 2026?</p>
@@ -378,15 +378,33 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 <section id="sec-admin" class="section">
   <div class="card">
     <div class="card-hdr">
-      <div class="card-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2H3V4zm0 4h14v8a1 1 0 01-1 1H4a1 1 0 01-1-1V8z"/></svg></div>
-      <div class="card-title">Panel de administrador</div>
+      <div class="card-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg></div>
+      <div class="card-title">Participantes registrados</div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
       <button class="btn-save" onclick="exportarCSV()">Exportar CSV</button>
-      <button class="btn-sec" onclick="activarDemo()">Activar demo</button>
+      <button class="btn-oro" onclick="activarDemo()">Activar demo</button>
     </div>
     <div id="admin-table"></div>
   </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm1 11H9v-2h2v2zm0-4H9V7h2v2z"/></svg></div>
+      <div class="card-title">Gestión de códigos de participante</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:.75rem">Los códigos son alfanuméricos únicos. Genera y distribuye a tus clientes antes de lanzar la campaña.</p>
+    <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:1rem;flex-wrap:wrap">
+      <div class="fg" style="flex:1;min-width:120px">
+        <label>Cantidad a generar</label>
+        <input type="number" id="cant-codigos" value="10" min="1" max="200" style="width:100%">
+      </div>
+      <button class="btn-save" onclick="generarCodigos()">Generar códigos</button>
+      <button class="btn-sec" onclick="exportarCodigos()">Exportar CSV</button>
+    </div>
+    <div id="codigos-list" style="font-size:13px;color:var(--muted)">Cargando...</div>
+  </div>
+
   <div class="card">
     <div class="card-hdr">
       <div class="card-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M13.586 3.586a2 2 0 112.828 2.828l-8 8a2 2 0 01-.707.464l-3 1a1 1 0 01-1.272-1.272l1-3a2 2 0 01.464-.707l8-8z"/></svg></div>
@@ -398,24 +416,31 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
     </div>
     <button class="btn-primary" style="margin-top:.75rem" onclick="aplicarConfig()">Aplicar cambios</button>
   </div>
-  <div class="card">
-    <div class="card-hdr">
-      <div class="card-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm1 11H9v-2h2v2zm0-4H9V7h2v2z"/></svg></div>
-      <div class="card-title">Gestión de códigos de participante</div>
-    </div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:.75rem">Agrega los códigos válidos que se asignarán a los clientes antes de lanzar la campaña.</p>
-    <div style="display:flex;gap:8px;margin-bottom:.75rem">
-      <input type="text" id="nuevo-codigo" placeholder="BIT-0001" style="text-transform:uppercase;flex:1">
-      <button class="btn-save" onclick="agregarCodigo()">Agregar</button>
-    </div>
-    <div id="codigos-list" style="font-size:13px;color:var(--muted)">Cargando códigos...</div>
-  </div>
 </section>
 
 </main>
 
-<div class="demo-overlay">
-  <button class="demo-fab" onclick="activarDemo()" id="demo-fab">Ver demo</button>
+<!-- MODAL BRACKET -->
+<div class="modal-overlay" id="bracket-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="cerrarModal()">×</button>
+    <div class="modal-title" id="modal-title">Seleccionar equipo</div>
+    <div id="modal-opts"></div>
+    <div class="modal-score">
+      <label>Marcador:</label>
+      <input type="number" class="mscore" id="modal-gl" min="0" max="20" placeholder="0">
+      <span style="font-size:18px;font-weight:700;color:var(--muted)">–</span>
+      <input type="number" class="mscore" id="modal-gv" min="0" max="20" placeholder="0">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-save" style="flex:1" onclick="confirmarModal()">Confirmar</button>
+      <button class="btn-sec" onclick="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="demo-fab-wrap">
+  <button class="demo-fab" id="demo-fab" onclick="activarDemo()">Ver demo</button>
 </div>
 
 <script src="app.js"></script>
