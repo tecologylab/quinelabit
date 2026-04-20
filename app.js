@@ -23,28 +23,27 @@ const GRUPOS = {
 };
 
 const FLAGS = {
-  'Mexico':'MX','Sudafrica':'ZA','Corea del Sur':'KR','Chequia':'CZ',
-  'Canada':'CA','Bosnia-Herzegovina':'BA','Qatar':'QA','Suiza':'CH',
-  'Brasil':'BR','Marruecos':'MA','Haiti':'HT','Escocia':'GB-SCT',
-  'EEUU':'US','Paraguay':'PY','Australia':'AU','Turkiye':'TR',
-  'Alemania':'DE','Curazao':'CW','Costa de Marfil':'CI','Ecuador':'EC',
-  'Paises Bajos':'NL','Japon':'JP','Suecia':'SE','Tunez':'TN',
-  'Belgica':'BE','Egipto':'EG','Iran':'IR','Nueva Zelanda':'NZ',
-  'Espana':'ES','Cabo Verde':'CV','Arabia Saudita':'SA','Uruguay':'UY',
-  'Francia':'FR','Senegal':'SN','Iraq':'IQ','Noruega':'NO',
-  'Argentina':'AR','Argelia':'DZ','Austria':'AT','Jordania':'JO',
-  'Portugal':'PT','DR Congo':'CD','Uzbekistan':'UZ','Colombia':'CO',
-  'Inglaterra':'GB-ENG','Croacia':'HR','Ghana':'GH','Panama':'PA',
+  'Mexico':'mx','Sudafrica':'za','Corea del Sur':'kr','Chequia':'cz',
+  'Canada':'ca','Bosnia-Herzegovina':'ba','Qatar':'qa','Suiza':'ch',
+  'Brasil':'br','Marruecos':'ma','Haiti':'ht','Escocia':'gb-sct',
+  'EEUU':'us','Paraguay':'py','Australia':'au','Turkiye':'tr',
+  'Alemania':'de','Curazao':'cw','Costa de Marfil':'ci','Ecuador':'ec',
+  'Paises Bajos':'nl','Japon':'jp','Suecia':'se','Tunez':'tn',
+  'Belgica':'be','Egipto':'eg','Iran':'ir','Nueva Zelanda':'nz',
+  'Espana':'es','Cabo Verde':'cv','Arabia Saudita':'sa','Uruguay':'uy',
+  'Francia':'fr','Senegal':'sn','Iraq':'iq','Noruega':'no',
+  'Argentina':'ar','Argelia':'dz','Austria':'at','Jordania':'jo',
+  'Portugal':'pt','DR Congo':'cd','Uzbekistan':'uz','Colombia':'co',
+  'Inglaterra':'gb-eng','Croacia':'hr','Ghana':'gh','Panama':'pa',
 };
 
 function flag(pais) {
   const code = FLAGS[pais];
   if (!code) return '';
-  if (code.includes('-')) {
-    const map = {'GB-SCT':'🏴󠁧󠁢󠁳󠁣󠁴󠁿','GB-ENG':'🏴󠁧󠁢󠁥󠁮󠁧󠁿'};
-    return map[code] || '';
-  }
-  return code.split('').map(c => String.fromCodePoint(c.charCodeAt(0)+127397)).join('');
+  const iso = code.toLowerCase().replace('gb-sct','gb-sct').replace('gb-eng','gb-eng');
+  return `<img src="https://flagcdn.com/w40/${iso}.png"
+    srcset="https://flagcdn.com/w80/${iso}.png 2x"
+    alt="${pais}" style="width:22px;height:15px;object-fit:cover;border-radius:2px;vertical-align:middle;box-shadow:0 0 0 1px rgba(0,0,0,0.08)">`;
 }
 
 const PARTIDOS = [
@@ -123,11 +122,11 @@ const PARTIDOS = [
 ];
 
 const FAVORITOS_CAMP = [
-  {n:'Argentina',f:'AR'},{n:'Brasil',f:'BR'},{n:'Francia',f:'FR'},
-  {n:'Espana',f:'ES'},{n:'Alemania',f:'DE'},{n:'Portugal',f:'PT'},
-  {n:'Inglaterra',f:'GB-ENG'},{n:'Paises Bajos',f:'NL'},{n:'Uruguay',f:'UY'},
-  {n:'Colombia',f:'CO'},{n:'Mexico',f:'MX'},{n:'EEUU',f:'US'},
-  {n:'Belgica',f:'BE'},{n:'Croacia',f:'HR'},{n:'Marruecos',f:'MA'},{n:'Japon',f:'JP'},
+  {n:'Argentina',f:'ar'},{n:'Brasil',f:'br'},{n:'Francia',f:'fr'},
+  {n:'Espana',f:'es'},{n:'Alemania',f:'de'},{n:'Portugal',f:'pt'},
+  {n:'Inglaterra',f:'gb-eng'},{n:'Paises Bajos',f:'nl'},{n:'Uruguay',f:'uy'},
+  {n:'Colombia',f:'co'},{n:'Mexico',f:'mx'},{n:'EEUU',f:'us'},
+  {n:'Belgica',f:'be'},{n:'Croacia',f:'hr'},{n:'Marruecos',f:'ma'},{n:'Japon',f:'jp'},
 ];
 
 // ESTADO
@@ -251,9 +250,11 @@ function renderCampeon() {
   const g = document.getElementById('campeon-grid');
   if (!g) return;
   g.innerHTML = FAVORITOS_CAMP.map(eq => {
-    const f = eq.f.includes('-') ? ({'GB-ENG':'🏴󠁧󠁢󠁥󠁮󠁧󠁿'}[eq.f]||'') : eq.f.split('').map(c=>String.fromCodePoint(c.charCodeAt(0)+127397)).join('');
+    const iso = eq.f.toLowerCase();
+    const imgUrl = `https://flagcdn.com/w80/${iso}.png`;
     return `<button class="camp-btn${campeon===eq.n?' sel':''}" onclick="selCampeon('${eq.n}')">
-      <span class="flag-txt">${f}</span><span>${eq.n}</span>
+      <img src="${imgUrl}" alt="${eq.n}" style="width:36px;height:24px;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,0.1)">
+      <span>${eq.n}</span>
     </button>`;
   }).join('');
 }
