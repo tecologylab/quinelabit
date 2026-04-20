@@ -191,6 +191,57 @@ const BRACKET_RONDAS = [
   },
 ];
 
+
+// Mapa de progresion del bracket: bid -> {siguiente_bid, slot}
+// Indica a qué partido avanza el ganador y en qué slot (l o v)
+const PROGRESION = {
+  // R32 -> R16
+  73:{sig:89,slot:'l'}, 74:{sig:89,slot:'v'},
+  75:{sig:90,slot:'l'}, 76:{sig:90,slot:'v'},
+  77:{sig:91,slot:'l'}, 78:{sig:91,slot:'v'},
+  79:{sig:92,slot:'l'}, 80:{sig:92,slot:'v'},
+  81:{sig:93,slot:'l'}, 82:{sig:93,slot:'v'},
+  83:{sig:94,slot:'l'}, 84:{sig:94,slot:'v'},
+  85:{sig:95,slot:'l'}, 86:{sig:95,slot:'v'},
+  87:{sig:96,slot:'l'}, 88:{sig:96,slot:'v'},
+  // R16 -> QF
+  89:{sig:97,slot:'l'}, 90:{sig:97,slot:'v'},
+  91:{sig:98,slot:'l'}, 92:{sig:98,slot:'v'},
+  93:{sig:99,slot:'l'}, 94:{sig:99,slot:'v'},
+  95:{sig:100,slot:'l'},96:{sig:100,slot:'v'},
+  // QF -> SF
+  97:{sig:101,slot:'l'},98:{sig:101,slot:'v'},
+  99:{sig:102,slot:'l'},100:{sig:102,slot:'v'},
+  // SF -> Final
+  101:{sig:104,slot:'l'},102:{sig:104,slot:'v'},
+  // SF perdedores -> 3er lugar
+};
+
+// Obtener ganador de un partido del bracket
+function getGanador(bid) {
+  const b = bracket[bid] || {};
+  if (!b.l || !b.v || b.gl === undefined || b.gv === undefined) return null;
+  if (b.gl > b.gv) return b.l;
+  if (b.gv > b.gl) return b.v;
+  // Empate — retornar quien gano penales
+  return b.penales || null;
+}
+
+// Propagar ganador hacia adelante en cascada
+function propagarGanador(bid) {
+  const prog = PROGRESION[bid];
+  if (!prog) return;
+  const ganador = getGanador(bid);
+  const sigBid = prog.sig;
+  const slot = prog.slot;
+  if (!bracket[sigBid]) bracket[sigBid] = {};
+  if (ganador) {
+    bracket[sigBid][slot] = ganador;
+    // Propagar recursivamente
+    propagarGanador(sigBid);
+  }
+}
+
 // ESTADO
 let sbClient=null, usuarioActual=null, modoDemo=false;
 let predicciones={}, bracket={}, goleador=null;
@@ -344,14 +395,14 @@ function renderPartidosGrupo(){
   const c=document.getElementById('partidos-container');if(!c)return;
   const ps=PARTIDOS.filter(p=>p.g===grupoActivo);
   const eqs=GRUPOS[grupoActivo];
-  let html=`<div class="gequipos">${eqs.map(eq=>`<span class="ebadge">${flagBadge(eq,16)} ${eq}</span>`).join('')}</div>`;
+  let partidosHtml='';
   let fa='';
   ps.forEach(p=>{
-    if(p.f!==fa){fa=p.f;html+=`<div class="flbl">${fmtFecha(p.f)} · ${p.h} ET</div>`;}
+    if(p.f!==fa){fa=p.f;partidosHtml+=`<div class="flbl">${fmtFecha(p.f)} · ${p.h} ET</div>`;}
     const pr=predicciones[p.id]||{};
     const lv=pr.l!==undefined?pr.l:'';const vv=pr.v!==undefined?pr.v:'';
     const ok=pr.l!==undefined&&pr.v!==undefined;
-    html+=`<div class="pcard${ok?' ok':''}">
+    partidosHtml+=`<div class="pcard${ok?' ok':''}">
       <div class="psede">${p.s}</div>
       <div class="prow">
         <div class="ecol">${flagBadge(p.l,20)}<span class="ename">${p.l}</span></div>
@@ -364,7 +415,83 @@ function renderPartidosGrupo(){
       </div>
     </div>`;
   });
-  c.innerHTML=html;actualizarProgreso();
+  const tablaHtml = renderTablaGrupo(grupoActivo);
+  // Layout: partidos a la izquierda, tabla a la derecha en pantallas grandes
+  c.innerHTML=`<div class="grupo-layout">
+    <div class="grupo-partidos">${partidosHtml}</div>
+    <div class="grupo-tabla" id="tabla-grupo">${tablaHtml}</div>
+  </div>`;
+  actualizarProgreso();
+}
+
+
+// TABLA DE POSICIONES POR GRUPO
+function calcTablaGrupo(grupo) {
+  const eqs = GRUPOS[grupo];
+  const ps = PARTIDOS.filter(p => p.g === grupo);
+  // Inicializar tabla
+  const tabla = {};
+  eqs.forEach(eq => {
+    tabla[eq] = {pj:0, g:0, e:0, p:0, gf:0, gc:0, dif:0, pts:0};
+  });
+  // Calcular con predicciones actuales
+  ps.forEach(p => {
+    const pr = predicciones[p.id];
+    if (!pr || pr.l === undefined || pr.v === undefined) return;
+    const gl = pr.l, gv = pr.v;
+    tabla[p.l].pj++; tabla[p.v].pj++;
+    tabla[p.l].gf += gl; tabla[p.l].gc += gv;
+    tabla[p.v].gf += gv; tabla[p.v].gc += gl;
+    tabla[p.l].dif = tabla[p.l].gf - tabla[p.l].gc;
+    tabla[p.v].dif = tabla[p.v].gf - tabla[p.v].gc;
+    if (gl > gv) {
+      tabla[p.l].g++; tabla[p.l].pts += 3;
+      tabla[p.v].p++;
+    } else if (gv > gl) {
+      tabla[p.v].g++; tabla[p.v].pts += 3;
+      tabla[p.l].p++;
+    } else {
+      tabla[p.l].e++; tabla[p.l].pts++;
+      tabla[p.v].e++; tabla[p.v].pts++;
+    }
+  });
+  // Ordenar: pts desc, dif desc, gf desc
+  return eqs.map(eq => ({eq, ...tabla[eq]}))
+    .sort((a,b) => b.pts-a.pts || b.dif-a.dif || b.gf-a.gf);
+}
+
+function renderTablaGrupo(grupo) {
+  const rows = calcTablaGrupo(grupo);
+  const hayDatos = PARTIDOS.filter(p=>p.g===grupo).some(p=>{
+    const pr=predicciones[p.id]; return pr&&pr.l!==undefined&&pr.v!==undefined;
+  });
+  if (!hayDatos) return '';
+  return `<div class="gtabla-wrap">
+    <div class="gtabla-title">Tabla — Grupo ${grupo}</div>
+    <table class="gtabla">
+      <thead>
+        <tr>
+          <th>Pos</th><th style="text-align:left">País</th>
+          <th>PJ</th><th>G</th><th>E</th><th>P</th>
+          <th>GF</th><th>GC</th><th>DIF</th><th>Pts</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map((r,i) => `<tr class="${i<2?'clasif':''}${i===2?' tercero':''}">
+          <td class="pos-num">${i+1}</td>
+          <td class="pais-cell">${flagBadge(r.eq,16)} <span>${r.eq}</span></td>
+          <td>${r.pj}</td><td>${r.g}</td><td>${r.e}</td><td>${r.p}</td>
+          <td>${r.gf}</td><td>${r.gc}</td>
+          <td class="${r.dif>0?'dif-pos':r.dif<0?'dif-neg':''}">${r.dif>0?'+'+r.dif:r.dif}</td>
+          <td class="pts-num">${r.pts}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="gtabla-legend">
+      <span class="legend-clasif">■ Clasifican directamente</span>
+      <span class="legend-tercero">■ Posible mejor 3ro</span>
+    </div>
+  </div>`;
 }
 
 function setPred(id,lado,val){
@@ -373,6 +500,9 @@ function setPred(id,lado,val){
   if(!isNaN(num)&&num>=0)predicciones[id][lado]=num;
   else delete predicciones[id][lado];
   actualizarProgreso();renderGrupoTabs();
+  // Actualizar tabla en tiempo real
+  const tablaEl=document.getElementById('tabla-grupo');
+  if(tablaEl)tablaEl.innerHTML=renderTablaGrupo(grupoActivo);
 }
 
 function actualizarProgreso(){
@@ -409,19 +539,30 @@ function matchCard(m, ronda){
   const lN=b.l||null;const vN=b.v||null;
   const gl=b.gl!==undefined?b.gl:null;const gv=b.gv!==undefined?b.gv:null;
   const ok=lN&&vN&&gl!==null&&gv!==null;
+  const ganador=getGanador(m.bid);
+  const esEmpate=ok&&gl===gv;
+  const penales=b.penales||null;
+  // Checkmark verde al ganador
+  const lCheck=(ganador===lN)?'<span class="bcheck">✓</span>':'';
+  const vCheck=(ganador===vN)?'<span class="bcheck">✓</span>':'';
+  // Badge de penales si hay empate
+  const penalesBadge=esEmpate&&penales?`<span class="bpen-badge">Penales: ${flagBadge(penales,14)} ${penales}</span>`:'';
   return `<div class="bmatch${ok?' ok':''}" onclick="abrirModal(${m.bid})" title="Clic para editar">
     <div class="bmlbl">${m.desc} <span class="pts-pill">${ronda.pts_ex}pts</span></div>
-    <div class="bteam${!lN?' empty':''}">
+    <div class="bteam${!lN?' empty':''}${ganador===lN?' winner':''}">
       ${lN?flagBadge(lN,18):'<span class="bq">?</span>'}
       <span class="btn">${lN||'Seleccionar'}</span>
       <span class="bsc">${gl!==null?gl:''}</span>
+      ${lCheck}
     </div>
     <div class="bdiv"></div>
-    <div class="bteam${!vN?' empty':''}">
+    <div class="bteam${!vN?' empty':''}${ganador===vN?' winner':''}">
       ${vN?flagBadge(vN,18):'<span class="bq">?</span>'}
       <span class="btn">${vN||'Seleccionar'}</span>
       <span class="bsc">${gv!==null?gv:''}</span>
+      ${vCheck}
     </div>
+    ${penalesBadge}
   </div>`;
 }
 
@@ -501,6 +642,22 @@ function abrirModal(bid){
     });
   }
 
+  // Penales — mostrar siempre en rondas eliminatorias para poder seleccionar
+  const b2=bracket[bid]||{};
+  const gl2=b2.gl!==undefined?b2.gl:null;
+  const gv2=b2.gv!==undefined?b2.gv:null;
+  const esEmpate=gl2!==null&&gv2!==null&&gl2===gv2;
+  const lTeam=b2.l||null;const vTeam=b2.v||null;
+  if(lTeam&&vTeam){
+    html+=`<div style="height:1px;background:var(--borde);margin:.75rem 0"></div>`;
+    html+=`<div class="modal-sec-title" style="color:#c0392b">En caso de empate — ¿Quién gana en penales?</div>`;
+    html+=`<div style="font-size:11px;color:var(--muted);margin-bottom:.5rem">Solo aplica si el marcador queda igual</div>`;
+    [lTeam,vTeam].forEach(eq=>{
+      html+=`<div class="modal-opt${b2.penales===eq?' sel':''}" data-lado="pen" data-eq="${eq}" onclick="selOpt(this)">
+        ${flagBadge(eq,20)} <span>${eq}</span>
+      </div>`;
+    });
+  }
   document.getElementById('modal-opts').innerHTML=html;
   document.getElementById('bracket-modal').classList.add('on');
 }
@@ -523,6 +680,12 @@ function confirmarModal(){
   const gv=parseInt(document.getElementById('modal-gv').value);
   if(!isNaN(gl)&&gl>=0)bracket[bid].gl=gl;
   if(!isNaN(gv)&&gv>=0)bracket[bid].gv=gv;
+  // Penales
+  const selPen=document.querySelector('.modal-opt[data-lado="pen"].sel');
+  if(selPen)bracket[bid].penales=selPen.dataset.eq;
+  else if(gl!==gv)delete bracket[bid].penales; // no hay penales si no hay empate
+  // Propagar ganador al siguiente partido
+  propagarGanador(bid);
   cerrarModal();renderBracket();
 }
 
