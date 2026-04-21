@@ -528,8 +528,11 @@ function setPred(id,lado,val){
   else delete predicciones[id][lado];
   actualizarProgreso();renderGrupoTabs();
   const te=document.getElementById('tabla-grupo');if(te)te.innerHTML=renderTablaGrupo(grupoActivo);
-  // Auto-rellenar bracket desde tabla de posiciones
+  // Auto-rellenar bracket en tiempo real
   autoRellenarBracketDesdeGrupos();
+  // Si ya estamos viendo el bracket, actualizarlo
+  const bracketEl=document.getElementById('bracket-container');
+  if(bracketEl&&bracketEl.children.length>0)renderBracket();
 }
 
 function actualizarProgreso(){
@@ -545,13 +548,12 @@ async function guardarQuiniela(){
   if(estaCerrada()){alerta('q-alert','error','La quiniela esta cerrada.');return;}
   if(!usuarioActual&&!modoDemo){alerta('q-alert','error','Primero registrate.');return;}
   const done=PARTIDOS.filter(p=>{const pr=predicciones[p.id];return pr&&pr.l!==undefined&&pr.v!==undefined;}).length;
-  if(done<PARTIDOS.length){alerta('q-alert','error','Faltan '+(PARTIDOS.length-done)+' partidos.');return;}
+  if(done<PARTIDOS.length){alerta('q-alert','error','Faltan '+(PARTIDOS.length-done)+' partidos por completar.');return;}
   try{
-    await guardarQuinielaCompleta();
-    // Rellenar bracket con clasificados de grupos
+    // Rellenar bracket con clasificados ANTES de guardar
     autoRellenarBracketDesdeGrupos();
-    renderBracket();
-    alerta('q-alert','success','Predicciones guardadas. Los clasificados se precargaron en la 2da Ronda.');
+    await guardarQuinielaCompleta();
+    alerta('q-alert','success','Predicciones guardadas. Ve a 2da Ronda para ver los clasificados precargados.');
   }
   catch(e){alerta('q-alert','error','Error: '+e.message);}
 }
@@ -570,14 +572,8 @@ function autoRellenarBracketDesdeGrupos(){
       const tabla=calcTablaGrupo(s.g);
       if(tabla.length>s.p){
         const equipoClasificado=tabla[s.p].eq;
-        // Solo rellenar si no hay datos validos aun o si el equipo cambio
-        if(!bracket[bidN][lado]||bracket[bidN][lado]!==equipoClasificado){
-          // Solo actualizar si el usuario no habia seleccionado manualmente
-          // (se considera manual si tiene gl/gv definidos)
-          if(bracket[bidN].gl===undefined){
-            bracket[bidN][lado]=equipoClasificado;
-          }
-        }
+        // Siempre actualizar el recomendado — el usuario puede sobreescribir manualmente despues
+        bracket[bidN][lado]=equipoClasificado;
       }
     });
   });
