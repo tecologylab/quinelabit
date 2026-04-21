@@ -950,15 +950,8 @@ function salirDemo(){
 // ADMIN
 // ============================================================
 function verificarAdmin(callback){
-  if(adminAutenticado){callback();return;}
-  const guardado=localStorage.getItem('admin_auth');
-  if(guardado===ADMIN_PASS){adminAutenticado=true;callback();return;}
-  // Mostrar modal de admin en lugar de prompt()
-  document.getElementById('admin-pass-modal').classList.add('on');
-  document.getElementById('admin-pass-input').value='';
-  document.getElementById('admin-pass-error').style.display='none';
-  document.getElementById('admin-pass-input').focus();
-  window._adminCallback=callback;
+  // Password temporalmente desactivado
+  callback();
 }
 
 function confirmarAdminPass(){
