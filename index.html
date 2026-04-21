@@ -482,6 +482,26 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
   <button class="demo-fab" id="demo-fab" onclick="activarDemo()">Ver demo</button>
 </div>
 
+
+<!-- MODAL ADMIN PASSWORD -->
+<div class="modal-overlay" id="admin-pass-modal">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-title">Panel de Administrador</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">Ingresa la contraseña para acceder.</p>
+    <label>Contraseña</label>
+    <input type="password" id="admin-pass-input" placeholder="••••••••••••"
+      onkeydown="if(event.key==='Enter')confirmarAdminPass()"
+      style="margin-bottom:.5rem">
+    <div id="admin-pass-error" style="display:none;color:#c0392b;font-size:12px;margin-bottom:.5rem">
+      Contraseña incorrecta. Intenta de nuevo.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-save" style="flex:1" onclick="confirmarAdminPass()">Entrar</button>
+      <button class="btn-sec" onclick="cerrarAdminModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script src="app.js"></script>
 </body>
 </html>
