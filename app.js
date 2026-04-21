@@ -546,7 +546,13 @@ async function guardarQuiniela(){
   if(!usuarioActual&&!modoDemo){alerta('q-alert','error','Primero registrate.');return;}
   const done=PARTIDOS.filter(p=>{const pr=predicciones[p.id];return pr&&pr.l!==undefined&&pr.v!==undefined;}).length;
   if(done<PARTIDOS.length){alerta('q-alert','error','Faltan '+(PARTIDOS.length-done)+' partidos.');return;}
-  try{await guardarQuinielaCompleta();alerta('q-alert','success','Predicciones de grupos guardadas.');}
+  try{
+    await guardarQuinielaCompleta();
+    // Rellenar bracket con clasificados de grupos
+    autoRellenarBracketDesdeGrupos();
+    renderBracket();
+    alerta('q-alert','success','Predicciones guardadas. Los clasificados se precargaron en la 2da Ronda.');
+  }
   catch(e){alerta('q-alert','error','Error: '+e.message);}
 }
 
@@ -675,7 +681,7 @@ function renderBracket(){
 }
 
 function abrirModal(bid){
-  if(estaCerrada())return;
+  if(estaCerrada()){alert('La quiniela esta cerrada.');return;}
   let m=null,ronda=null;
   for(const r of BRACKET_RONDAS){const f=r.partidos.find(x=>x.bid===bid);if(f){m={...f,pts_ex:r.pts_ex};ronda=r;break;}}
   if(!m)return;
@@ -943,17 +949,42 @@ function salirDemo(){
 // ============================================================
 // ADMIN
 // ============================================================
-function verificarAdmin(){
-  if(adminAutenticado)return true;
+function verificarAdmin(callback){
+  if(adminAutenticado){callback();return;}
   const guardado=localStorage.getItem('admin_auth');
-  if(guardado===ADMIN_PASS){adminAutenticado=true;return true;}
-  const pass=prompt('Contrasena de administrador:');
-  if(pass===ADMIN_PASS){adminAutenticado=true;localStorage.setItem('admin_auth',pass);return true;}
-  alert('Acceso denegado.');return false;
+  if(guardado===ADMIN_PASS){adminAutenticado=true;callback();return;}
+  // Mostrar modal de admin en lugar de prompt()
+  document.getElementById('admin-pass-modal').classList.add('on');
+  document.getElementById('admin-pass-input').value='';
+  document.getElementById('admin-pass-error').style.display='none';
+  document.getElementById('admin-pass-input').focus();
+  window._adminCallback=callback;
+}
+
+function confirmarAdminPass(){
+  const val=document.getElementById('admin-pass-input').value;
+  if(val===ADMIN_PASS){
+    adminAutenticado=true;
+    localStorage.setItem('admin_auth',val);
+    document.getElementById('admin-pass-modal').classList.remove('on');
+    if(window._adminCallback)window._adminCallback();
+  } else {
+    document.getElementById('admin-pass-error').style.display='block';
+    document.getElementById('admin-pass-input').value='';
+    document.getElementById('admin-pass-input').focus();
+  }
+}
+
+function cerrarAdminModal(){
+  document.getElementById('admin-pass-modal').classList.remove('on');
+  window._adminCallback=null;
 }
 
 function renderAdmin(){
-  if(!verificarAdmin())return;
+  verificarAdmin(()=>{_renderAdminContent();});
+}
+
+function _renderAdminContent(){
   const loc=JSON.parse(localStorage.getItem('participantes')||'[]');
   const data=participantes.length?participantes:loc;
   const c=document.getElementById('admin-table');if(!c)return;
@@ -977,7 +1008,7 @@ function renderAdmin(){
     </tr>`).join('')}</tbody>
   </table>`;
   cargarCodigos();
-}
+} // end _renderAdminContent
 
 async function verPerfil(pid){
   const p=participantes.find(x=>String(x.id)===String(pid));
