@@ -187,6 +187,9 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 .demo-fab{background:var(--oro);color:var(--verde);border:none;border-radius:25px;padding:10px 20px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:.06em;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
 .demo-fab:hover{background:var(--oro2)}
 
+.pen-msg{color:#c0392b;font-size:12px;margin-top:8px;padding:8px 12px;background:#fef0f0;border:1px solid #f5b7b1;border-radius:6px}
+.lock-banner{background:#c0392b;color:#fff;padding:8px 1.5rem;display:none;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.lock-banner.on{display:flex}
 .bcheck{color:#0a5c2e;font-size:14px;font-weight:900;margin-left:2px;flex-shrink:0}
 .bteam.winner .btn{color:#0a5c2e;font-weight:700}
 .bteam.winner{background:rgba(10,92,46,0.04);border-radius:4px;margin:0 -4px;padding:3px 4px}
@@ -245,6 +248,10 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
     <span class="hbadge" id="empresa-label">Business IT</span>
   </div>
 </header>
+
+<div class="lock-banner" id="lock-banner">
+  La quiniela está cerrada. Ya no se pueden editar predicciones.
+</div>
 
 <div class="demo-banner" id="demo-banner">
   MODO DEMO — Datos de ejemplo para presentación ejecutivos
@@ -447,9 +454,9 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
       <span style="font-size:20px;font-weight:700;color:var(--muted)">–</span>
       <input type="number" class="mscore" id="modal-gv" min="0" max="20" placeholder="0">
     </div>
-    <div id="modal-error" style="display:none;background:#fef0f0;color:#c0392b;border:1px solid #f5b7b1;border-radius:6px;padding:8px 12px;font-size:12px;margin-top:.5rem"></div>
+    <div id="modal-pen-msg" class="pen-msg" style="display:none">Selecciona el ganador en penales para continuar.</div>
     <div class="modal-actions">
-      <button class="btn-save" style="flex:1" onclick="confirmarModal()">Confirmar</button>
+      <button class="btn-save" style="flex:1" id="modal-confirm-btn" onclick="confirmarModal()">Confirmar</button>
       <button class="btn-sec" onclick="cerrarModal()">Cancelar</button>
     </div>
   </div>
