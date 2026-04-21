@@ -691,22 +691,29 @@ function abrirModal(bid){
   let html='';
   // EQUIPOS LOCALES
   html+=`<div class="modal-sec-title">Equipo local${slotL?` — ${m.tipo_l==='1'?'1ro':m.tipo_l==='2'?'2do':'Mejor 3ro'} del grupo`:''}</div>`;
+  // Equipos ya usados en otros partidos de R32
+  const r32bids=[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88];
+  const usadosR32={};
+  r32bids.forEach(otherBid=>{
+    if(otherBid===bid)return;
+    const ob=bracket[otherBid]||{};
+    if(ob.l)usadosR32[ob.l]=otherBid;
+    if(ob.v)usadosR32[ob.v]=otherBid;
+  });
+
   const renderOpts=(grupos,lado)=>{
-    if(grupos){
-      grupos.forEach(g=>{
-        html+=`<div class="modal-grupo-lbl">Grupo ${g}</div>`;
-        GRUPOS[g].forEach(eq=>{
-          html+=`<div class="modal-opt${b[lado]===eq?' sel':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">${flagBadge(eq,20)} <span>${g} — ${eq}</span></div>`;
-        });
+    const listaGrupos=grupos||Object.keys(GRUPOS);
+    listaGrupos.forEach(g=>{
+      html+=`<div class="modal-grupo-lbl">Grupo ${g}</div>`;
+      GRUPOS[g].forEach(eq=>{
+        const yaUsado=usadosR32[eq];
+        const esSel=b[lado]===eq;
+        const usadoLabel=yaUsado?`<span class="opt-usado-tag">Ya en partido ${yaUsado}</span>`:'';
+        html+=`<div class="modal-opt${esSel?' sel':''}${yaUsado?' opt-usado':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
+          ${flagBadge(eq,20)} <span>${g} — ${eq}</span>${usadoLabel}
+        </div>`;
       });
-    } else {
-      Object.keys(GRUPOS).forEach(g=>{
-        html+=`<div class="modal-grupo-lbl">Grupo ${g}</div>`;
-        GRUPOS[g].forEach(eq=>{
-          html+=`<div class="modal-opt${b[lado]===eq?' sel':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">${flagBadge(eq,20)} <span>${g} — ${eq}</span></div>`;
-        });
-      });
-    }
+    });
   };
   renderOpts(slotL?slotL.grupos:null,'l');
   html+=`<div style="height:1px;background:var(--borde);margin:.75rem 0"></div>`;
