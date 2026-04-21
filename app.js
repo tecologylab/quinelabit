@@ -335,15 +335,6 @@ function setMiPosicionDesdeRanking(data) {
   stat.textContent = idx >= 0 ? (idx + 1) : '—';
 }
 
-function getFaseByBid(bid) {
-  const n = Number(bid);
-  if (n >= 73 && n <= 88) return 'r32';
-  if (n >= 89 && n <= 96) return 'r16';
-  if (n >= 97 && n <= 100) return 'qf';
-  if (n >= 101 && n <= 102) return 'sf';
-  return 'final';
-}
-
 // =============================================
 // CONFIG
 // =============================================
@@ -366,9 +357,7 @@ async function cargarConfiguracion() {
       const local = parseMaybeJSON(localStorage.getItem('configuracion_local'), null);
       if (local) configGlobal = local;
     }
-  } catch (e) {
-    // fallback silencioso
-  }
+  } catch (e) {}
 
   const fechaInput = document.getElementById('cfg-fecha-cierre');
   const editInput = document.getElementById('cfg-permitir-edicion');
