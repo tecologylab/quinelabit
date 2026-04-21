@@ -126,22 +126,22 @@ const PARTIDOS = [
 
 const BRACKET_RONDAS = [
   { id:'r32', nombre:'Ronda de 32', pts_ex:6, pts_res:3, partidos:[
-    {bid:73,desc:'1E vs 3ABCDF',grupos_l:['E'],tipo_l:'1',grupos_v:['A','B','C','D','F'],tipo_v:'3'},
-    {bid:74,desc:'1I vs 3CDFGH',grupos_l:['I'],tipo_l:'1',grupos_v:['C','D','F','G','H'],tipo_v:'3'},
-    {bid:75,desc:'2A vs 2B',grupos_l:['A'],tipo_l:'2',grupos_v:['B'],tipo_v:'2'},
-    {bid:76,desc:'1F vs 2C',grupos_l:['F'],tipo_l:'1',grupos_v:['C'],tipo_v:'2'},
-    {bid:77,desc:'2K vs 2L',grupos_l:['K'],tipo_l:'2',grupos_v:['L'],tipo_v:'2'},
-    {bid:78,desc:'1H vs 2J',grupos_l:['H'],tipo_l:'1',grupos_v:['J'],tipo_v:'2'},
-    {bid:79,desc:'1D vs 3BEFIJ',grupos_l:['D'],tipo_l:'1',grupos_v:['B','E','F','I','J'],tipo_v:'3'},
-    {bid:80,desc:'1G vs 3AEHIJ',grupos_l:['G'],tipo_l:'1',grupos_v:['A','E','H','I','J'],tipo_v:'3'},
-    {bid:81,desc:'1C vs 2F',grupos_l:['C'],tipo_l:'1',grupos_v:['F'],tipo_v:'2'},
-    {bid:82,desc:'2E vs 2I',grupos_l:['E'],tipo_l:'2',grupos_v:['I'],tipo_v:'2'},
-    {bid:83,desc:'1A vs 3CEFHI',grupos_l:['A'],tipo_l:'1',grupos_v:['C','E','F','H','I'],tipo_v:'3'},
-    {bid:84,desc:'1L vs 3EHIJK',grupos_l:['L'],tipo_l:'1',grupos_v:['E','H','I','J','K'],tipo_v:'3'},
-    {bid:85,desc:'1J vs 2H',grupos_l:['J'],tipo_l:'1',grupos_v:['H'],tipo_v:'2'},
-    {bid:86,desc:'2D vs 2G',grupos_l:['D'],tipo_l:'2',grupos_v:['G'],tipo_v:'2'},
-    {bid:87,desc:'1B vs 3EFGIJ',grupos_l:['B'],tipo_l:'1',grupos_v:['E','F','G','I','J'],tipo_v:'3'},
-    {bid:88,desc:'1K vs 3DEIJL',grupos_l:['K'],tipo_l:'1',grupos_v:['D','E','I','J','L'],tipo_v:'3'},
+    {bid:73,desc:'2A vs 2B',    grupos_l:['A'],tipo_l:'2',grupos_v:['B'],tipo_v:'2'},
+    {bid:74,desc:'1E vs 3ABCDF',grupos_l:['E'],tipo_l:'1',grupos_v:['A','B','C','D','F'],tipo_v:'3'},
+    {bid:75,desc:'1F vs 2C',    grupos_l:['F'],tipo_l:'1',grupos_v:['C'],tipo_v:'2'},
+    {bid:76,desc:'1C vs 2F',    grupos_l:['C'],tipo_l:'1',grupos_v:['F'],tipo_v:'2'},
+    {bid:77,desc:'1I vs 3CDFGH',grupos_l:['I'],tipo_l:'1',grupos_v:['C','D','F','G','H'],tipo_v:'3'},
+    {bid:78,desc:'2E vs 2I',    grupos_l:['E'],tipo_l:'2',grupos_v:['I'],tipo_v:'2'},
+    {bid:79,desc:'1A vs 3CEFHI',grupos_l:['A'],tipo_l:'1',grupos_v:['C','E','F','H','I'],tipo_v:'3'},
+    {bid:80,desc:'1L vs 3EHIJK',grupos_l:['L'],tipo_l:'1',grupos_v:['E','H','I','J','K'],tipo_v:'3'},
+    {bid:81,desc:'1D vs 3BEFIJ',grupos_l:['D'],tipo_l:'1',grupos_v:['B','E','F','I','J'],tipo_v:'3'},
+    {bid:82,desc:'1G vs 3AEHIJ',grupos_l:['G'],tipo_l:'1',grupos_v:['A','E','H','I','J'],tipo_v:'3'},
+    {bid:83,desc:'2K vs 2L',    grupos_l:['K'],tipo_l:'2',grupos_v:['L'],tipo_v:'2'},
+    {bid:84,desc:'1H vs 2J',    grupos_l:['H'],tipo_l:'1',grupos_v:['J'],tipo_v:'2'},
+    {bid:85,desc:'1B vs 3EFGIJ',grupos_l:['B'],tipo_l:'1',grupos_v:['E','F','G','I','J'],tipo_v:'3'},
+    {bid:86,desc:'1J vs 2H',    grupos_l:['J'],tipo_l:'1',grupos_v:['H'],tipo_v:'2'},
+    {bid:87,desc:'1K vs 3DEIJL',grupos_l:['K'],tipo_l:'1',grupos_v:['D','E','I','J','L'],tipo_v:'3'},
+    {bid:88,desc:'2D vs 2G',    grupos_l:['D'],tipo_l:'2',grupos_v:['G'],tipo_v:'2'},
   ]},
   { id:'r16', nombre:'Ronda de 16', pts_ex:8, pts_res:4, partidos:[
     {bid:89,desc:'Gan.73 vs Gan.74'},{bid:90,desc:'Gan.75 vs Gan.76'},
@@ -195,22 +195,22 @@ const SLOT_GRUPO_MAP = {
 
 // Mapa limpio: bid -> {l:{grupo,pos}, v:{grupo,pos}}
 const R32_AUTO = {
-  73:{l:{g:'E',p:0},  v:null},
-  74:{l:{g:'I',p:0},  v:null},
-  75:{l:{g:'A',p:1},  v:{g:'B',p:1}},
-  76:{l:{g:'F',p:0},  v:{g:'C',p:1}},
-  77:{l:{g:'K',p:1},  v:{g:'L',p:1}},
-  78:{l:{g:'H',p:0},  v:{g:'J',p:1}},
-  79:{l:{g:'D',p:0},  v:null},
-  80:{l:{g:'G',p:0},  v:null},
-  81:{l:{g:'C',p:0},  v:{g:'F',p:1}},
-  82:{l:{g:'E',p:1},  v:{g:'I',p:1}},
-  83:{l:{g:'A',p:0},  v:null},
-  84:{l:{g:'L',p:0},  v:null},
-  85:{l:{g:'J',p:0},  v:{g:'H',p:1}},
-  86:{l:{g:'D',p:1},  v:{g:'G',p:1}},
-  87:{l:{g:'B',p:0},  v:null},
-  88:{l:{g:'K',p:0},  v:null},
+  73:{l:{g:'A',p:1},  v:{g:'B',p:1}},   // 2A vs 2B
+  74:{l:{g:'E',p:0},  v:null},           // 1E vs 3ABCDF
+  75:{l:{g:'F',p:0},  v:{g:'C',p:1}},   // 1F vs 2C
+  76:{l:{g:'C',p:0},  v:{g:'F',p:1}},   // 1C vs 2F
+  77:{l:{g:'I',p:0},  v:null},           // 1I vs 3CDFGH
+  78:{l:{g:'E',p:1},  v:{g:'I',p:1}},   // 2E vs 2I
+  79:{l:{g:'A',p:0},  v:null},           // 1A vs 3CEFHI
+  80:{l:{g:'L',p:0},  v:null},           // 1L vs 3EHIJK
+  81:{l:{g:'D',p:0},  v:null},           // 1D vs 3BEFIJ
+  82:{l:{g:'G',p:0},  v:null},           // 1G vs 3AEHIJ
+  83:{l:{g:'K',p:1},  v:{g:'L',p:1}},   // 2K vs 2L
+  84:{l:{g:'H',p:0},  v:{g:'J',p:1}},   // 1H vs 2J
+  85:{l:{g:'B',p:0},  v:null},           // 1B vs 3EFGIJ
+  86:{l:{g:'J',p:0},  v:{g:'H',p:1}},   // 1J vs 2H
+  87:{l:{g:'K',p:0},  v:null},           // 1K vs 3DEIJL
+  88:{l:{g:'D',p:1},  v:{g:'G',p:1}},   // 2D vs 2G
 };
 
 // ESTADO
@@ -725,34 +725,65 @@ function abrirModal(bid){
     html+=`<div class="modal-sec-title">Equipo visitante${slotV?` — ${m.tipo_v==='1'?'1ro':m.tipo_v==='2'?'2do':'Mejor 3ro'} del grupo`:''}</div>`;
     renderOpts(slotV?slotV.grupos:null,'v');
   } else {
-    // R16 en adelante: equipos fijos del ganador anterior, solo se edita marcador
-    const pendienteL=!lTeam;
-    const pendienteV=!vTeam;
-    html+=`<div class="modal-equipos-fijos">`;
-    html+=`<div class="equipo-fijo${pendienteL?' pendiente':''}">
-      ${lTeam?flagBadge(lTeam,24):'<span class="bq" style="width:36px;height:24px;font-size:12px">?</span>'}
-      <div>
-        <div class="ef-nombre">${lTeam||'Pendiente'}</div>
-        <div class="ef-label">Ganador de partido anterior</div>
-      </div>
-    </div>`;
-    html+=`<div class="ef-vs">VS</div>`;
-    html+=`<div class="equipo-fijo${pendienteV?' pendiente':''}">
-      ${vTeam?flagBadge(vTeam,24):'<span class="bq" style="width:36px;height:24px;font-size:12px">?</span>'}
-      <div>
-        <div class="ef-nombre">${vTeam||'Pendiente'}</div>
-        <div class="ef-label">Ganador de partido anterior</div>
-      </div>
-    </div>`;
+    // R16 en adelante: mostrar solo los posibles ganadores de los partidos anteriores
+    // Buscar qué partidos alimentan este bid
+    const feeders={l:null,v:null};
+    Object.entries(PROGRESION).forEach(([fbid,prog])=>{
+      if(prog.sig===bid) feeders[prog.slot]=parseInt(fbid);
+    });
+
+    const renderSlotAvanzado=(lado)=>{
+      const feederBid=feeders[lado];
+      const equipoActual=b[lado]||null;
+      if(!feederBid){
+        // No hay feeder mapeado — mostrar equipo actual como fijo
+        html+=`<div class="equipo-fijo${!equipoActual?' pendiente':''}">
+          ${equipoActual?flagBadge(equipoActual,24):'<span class="bq" style="width:36px;height:24px;font-size:12px">?</span>'}
+          <div><div class="ef-nombre">${equipoActual||'Pendiente'}</div><div class="ef-label">Partido anterior</div></div>
+        </div>`;
+        if(equipoActual)html+=`<div class="modal-opt sel" data-lado="${lado}" data-eq="${equipoActual}" style="display:none"></div>`;
+        return;
+      }
+      const fb=bracket[feederBid]||{};
+      const ganadorFeeder=getGanador(feederBid);
+      const posiblesEquipos=[fb.l,fb.v].filter(Boolean);
+
+      if(ganadorFeeder){
+        // Ganador ya determinado — mostrar como fijo
+        html+=`<div class="equipo-fijo">
+          ${flagBadge(ganadorFeeder,24)}
+          <div>
+            <div class="ef-nombre">${ganadorFeeder}</div>
+            <div class="ef-label">Ganador partido ${feederBid}</div>
+          </div>
+        </div>`;
+        html+=`<div class="modal-opt sel" data-lado="${lado}" data-eq="${ganadorFeeder}" style="display:none"></div>`;
+      } else if(posiblesEquipos.length===2){
+        // Partido anterior tiene equipos pero sin marcador — mostrar los 2 como opcion
+        html+=`<div style="font-size:11px;color:var(--muted);margin-bottom:6px">¿Quién ganará el partido ${feederBid}?</div>`;
+        posiblesEquipos.forEach(eq=>{
+          html+=`<div class="modal-opt${b[lado]===eq?' sel':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
+            ${flagBadge(eq,20)} <span>${eq}</span>
+          </div>`;
+        });
+      } else {
+        // Partido anterior no tiene equipos aún
+        html+=`<div class="equipo-fijo pendiente">
+          <span class="bq" style="width:36px;height:24px;font-size:12px">?</span>
+          <div><div class="ef-nombre">Pendiente</div><div class="ef-label">Completa partido ${feederBid} primero</div></div>
+        </div>`;
+      }
+    };
+
+    html+=`<div class="modal-sec-title">Equipo local</div>`;
+    html+=`<div class="modal-equipos-fijos" style="flex-direction:column;gap:6px">`;
+    renderSlotAvanzado('l');
     html+=`</div>`;
-    if(pendienteL||pendienteV){
-      html+=`<div style="background:#fffbf0;border:1px solid var(--oro);border-radius:8px;padding:10px 12px;font-size:12px;color:#7a5500;margin-top:.75rem">
-        Completa los partidos anteriores para desbloquear este partido.
-      </div>`;
-    }
-    // Inputs ocultos para que confirmarModal no falle buscando .sel
-    if(lTeam)html+=`<div class="modal-opt sel" data-lado="l" data-eq="${lTeam}" style="display:none"></div>`;
-    if(vTeam)html+=`<div class="modal-opt sel" data-lado="v" data-eq="${vTeam}" style="display:none"></div>`;
+    html+=`<div style="height:1px;background:var(--borde);margin:.75rem 0"></div>`;
+    html+=`<div class="modal-sec-title">Equipo visitante</div>`;
+    html+=`<div class="modal-equipos-fijos" style="flex-direction:column;gap:6px">`;
+    renderSlotAvanzado('v');
+    html+=`</div>`;
   }
 
   document.getElementById('modal-opts').innerHTML=html;
