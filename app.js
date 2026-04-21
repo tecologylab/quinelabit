@@ -723,6 +723,51 @@ function abrirModal(bid){
   }
   document.getElementById('modal-opts').innerHTML=html;
   document.getElementById('bracket-modal').classList.add('on');
+  // Actualizar penales en tiempo real al cambiar marcador
+  setTimeout(()=>{
+    const glEl=document.getElementById('modal-gl');
+    const gvEl=document.getElementById('modal-gv');
+    if(glEl)glEl.addEventListener('input',actualizarPenalesModal);
+    if(gvEl)gvEl.addEventListener('input',actualizarPenalesModal);
+    actualizarPenalesModal();
+  },50);
+}
+
+function actualizarPenalesModal(){
+  if(!modalActivo)return;
+  const bid=modalActivo.bid;
+  const b=bracket[bid]||{};
+  const gl=parseInt(document.getElementById('modal-gl')?.value,10);
+  const gv=parseInt(document.getElementById('modal-gv')?.value,10);
+  const esEmpate=!isNaN(gl)&&!isNaN(gv)&&gl===gv;
+
+  // Obtener equipos seleccionados actualmente en el modal
+  const selL=document.querySelector('.modal-opt[data-lado="l"].sel');
+  const selV=document.querySelector('.modal-opt[data-lado="v"].sel');
+  const lTeam=selL?selL.dataset.eq:(b.l||null);
+  const vTeam=selV?selV.dataset.eq:(b.v||null);
+
+  let penSection=document.getElementById('penales-section');
+  if(!penSection){
+    penSection=document.createElement('div');
+    penSection.id='penales-section';
+    document.getElementById('modal-opts').appendChild(penSection);
+  }
+
+  if(esEmpate&&lTeam&&vTeam){
+    penSection.innerHTML=`
+      <div style="height:1px;background:var(--borde);margin:.75rem 0"></div>
+      <div class="modal-sec-title" style="color:#c0392b">Empate — ¿Quién gana en penales?</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:.5rem">Obligatorio para continuar</div>
+      ${[lTeam,vTeam].map(eq=>`
+        <div class="modal-opt${b.penales===eq?' sel':''}" data-lado="pen" data-eq="${eq}" onclick="selOpt(this)">
+          ${flagBadge(eq,20)} <span>${eq}</span>
+        </div>`).join('')}`;
+    document.getElementById('modal-pen-msg').style.display='none';
+  } else {
+    penSection.innerHTML='';
+    document.getElementById('modal-pen-msg').style.display='none';
+  }
 }
 
 function selOpt(el){
