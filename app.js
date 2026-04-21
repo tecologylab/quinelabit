@@ -1,15 +1,14 @@
 // =============================================
-// QUINIELA FIFA 2026 - app.js v5.0
+// QUINIELA FIFA 2026 - app.js v6
 // Business IT
 // =============================================
 
 const SB_URL = "https://zriyqyeoiommrnyvwjto.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpyaXlxeWVvaW9tbXJueXZ3anRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NzQ1ODMsImV4cCI6MjA5MjE1MDU4M30.fylrPptB3VpnkXw2qMxh2PgLPBpt5OvIjoPgOzTTjog";
-const FECHA_INICIO = new Date('2026-06-11');
+const FECHA_INICIO = new Date('2026-06-11T00:00:00');
 
 // =============================================
-// BANDERAS — Códigos ISO 2 letras como texto
-// Sin CDN, sin emojis, funciona en todos los navegadores
+// BANDERAS
 // =============================================
 const ISO2 = {
   'Mexico':'mx','Sudafrica':'za','Rep. Checa':'cz','Corea del Sur':'kr',
@@ -26,13 +25,12 @@ const ISO2 = {
   'Inglaterra':'gb-eng','Croacia':'hr','Ghana':'gh','Panama':'pa',
 };
 
-
 function flagBadge(pais, size=20) {
   const code = ISO2[pais];
-  if (!code) return '<span style="width:'+Math.round(size*1.4)+'px;height:'+size+'px;background:#ccc;border-radius:3px;display:inline-block"></span>';
+  if (!code) return `<span style="width:${Math.round(size*1.4)}px;height:${size}px;background:#ccc;border-radius:3px;display:inline-block"></span>`;
   const h = Math.round(size * 0.7);
   const w = Math.round(size * 1.4);
-  return '<img src="https://flagcdn.com/w40/'+code+'.png" alt="'+pais+'" style="width:'+w+'px;height:'+h+'px;object-fit:cover;border-radius:2px;vertical-align:middle;box-shadow:0 0 0 1px rgba(0,0,0,0.1);flex-shrink:0" loading="lazy">';
+  return `<img src="https://flagcdn.com/w40/${code}.png" alt="${pais}" style="width:${w}px;height:${h}px;object-fit:cover;border-radius:2px;vertical-align:middle;box-shadow:0 0 0 1px rgba(0,0,0,0.1);flex-shrink:0" loading="lazy">`;
 }
 
 // =============================================
@@ -130,7 +128,6 @@ const PARTIDOS = [
   {id:72,g:'J',l:'Jordania',v:'Argentina',f:'2026-06-27',h:'22:00',s:'AT&T, Arlington'},
 ];
 
-// Bracket: columnas por ronda
 const BRACKET_RONDAS = [
   {
     id:'r32', nombre:'Ronda de 32', pts_ex:6, pts_res:3,
@@ -191,11 +188,7 @@ const BRACKET_RONDAS = [
   },
 ];
 
-
-// Mapa de progresion del bracket: bid -> {siguiente_bid, slot}
-// Indica a qué partido avanza el ganador y en qué slot (l o v)
 const PROGRESION = {
-  // R32 -> R16
   73:{sig:89,slot:'l'}, 74:{sig:89,slot:'v'},
   75:{sig:90,slot:'l'}, 76:{sig:90,slot:'v'},
   77:{sig:91,slot:'l'}, 78:{sig:91,slot:'v'},
@@ -204,528 +197,977 @@ const PROGRESION = {
   83:{sig:94,slot:'l'}, 84:{sig:94,slot:'v'},
   85:{sig:95,slot:'l'}, 86:{sig:95,slot:'v'},
   87:{sig:96,slot:'l'}, 88:{sig:96,slot:'v'},
-  // R16 -> QF
   89:{sig:97,slot:'l'}, 90:{sig:97,slot:'v'},
   91:{sig:98,slot:'l'}, 92:{sig:98,slot:'v'},
   93:{sig:99,slot:'l'}, 94:{sig:99,slot:'v'},
   95:{sig:100,slot:'l'},96:{sig:100,slot:'v'},
-  // QF -> SF
   97:{sig:101,slot:'l'},98:{sig:101,slot:'v'},
   99:{sig:102,slot:'l'},100:{sig:102,slot:'v'},
-  // SF -> Final
   101:{sig:104,slot:'l'},102:{sig:104,slot:'v'},
-  // SF perdedores -> 3er lugar
 };
 
-// Obtener ganador de un partido del bracket
-function getGanador(bid) {
-  const b = bracket[bid] || {};
-  if (!b.l || !b.v || b.gl === undefined || b.gv === undefined) return null;
-  if (b.gl > b.gv) return b.l;
-  if (b.gv > b.gl) return b.v;
-  // Empate — retornar quien gano penales
-  return b.penales || null;
-}
-
-// Propagar ganador hacia adelante en cascada
-function propagarGanador(bid) {
-  const prog = PROGRESION[bid];
-  if (!prog) return;
-  const ganador = getGanador(bid);
-  const sigBid = prog.sig;
-  const slot = prog.slot;
-  if (!bracket[sigBid]) bracket[sigBid] = {};
-  if (ganador) {
-    bracket[sigBid][slot] = ganador;
-    // Propagar recursivamente
-    propagarGanador(sigBid);
-  }
-}
-
+// =============================================
 // ESTADO
-let sbClient=null, usuarioActual=null, modoDemo=false;
-let predicciones={}, bracket={}, goleador=null;
-let participantes=[], grupoActivo='A', todosCodigos=[];
-let modalActivo=null;
+// =============================================
+let sbClient = null;
+let usuarioActual = null;
+let modoDemo = false;
+let predicciones = {};
+let bracket = {};
+let goleador = null;
+let participantes = [];
+let grupoActivo = 'A';
+let todosCodigos = [];
+let modalActivo = null;
+let rankingSimulado = null;
 
+let configGlobal = {
+  permitir_edicion: true,
+  fecha_cierre: null
+};
+
+// =============================================
 // SDK
+// =============================================
 async function cargarSDK() {
   return new Promise(resolve => {
-    if(window._sbSDK){resolve();return;}
-    const s=document.createElement('script');
-    s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
-    s.onload=()=>{window._sbSDK=window.supabase;resolve();}; s.onerror=()=>resolve();
+    if (window._sbSDK) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+    s.onload = () => { window._sbSDK = window.supabase; resolve(); };
+    s.onerror = () => resolve();
     document.head.appendChild(s);
   });
 }
 
 async function autoConectar() {
   try {
-    const sdk=window._sbSDK;
-    if(!sdk||!sdk.createClient) throw new Error('no sdk');
-    sbClient=sdk.createClient(SB_URL,SB_KEY);
-    const{error}=await sbClient.from('participantes').select('id').limit(1);
-    if(error) throw error;
+    const sdk = window._sbSDK;
+    if (!sdk || !sdk.createClient) throw new Error('No SDK');
+    sbClient = sdk.createClient(SB_URL, SB_KEY);
+    const { error } = await sbClient.from('participantes').select('id').limit(1);
+    if (error) throw error;
     await cargarParticipantes();
-  } catch(e){sbClient=null;cargarParticipantes();}
+  } catch (e) {
+    sbClient = null;
+    cargarParticipantes();
+  }
 }
 
+// =============================================
 // UTILS
+// =============================================
 function calcDias() {
-  const diff=Math.ceil((FECHA_INICIO-new Date())/86400000);
-  const val=diff>0?diff:0;
-  document.querySelectorAll('#dias-restantes,#stat-dias').forEach(el=>{if(el)el.textContent=val;});
+  const diff = Math.ceil((FECHA_INICIO - new Date()) / 86400000);
+  const val = diff > 0 ? diff : 0;
+  document.querySelectorAll('#dias-restantes,#stat-dias').forEach(el => {
+    if (el) el.textContent = val;
+  });
 }
-function fmtFecha(str){return new Date(str+'T12:00:00').toLocaleDateString('es-PA',{weekday:'short',day:'numeric',month:'short'});}
-function alerta(id,tipo,msg){
-  const el=document.getElementById(id);if(!el)return;
-  el.className='alert '+tipo;el.textContent=msg;
-  setTimeout(()=>{el.className='alert';},7000);
+
+function fmtFecha(str) {
+  return new Date(str + 'T12:00:00').toLocaleDateString('es-PA', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short'
+  });
 }
-function goSec(id){
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('sec-'+id).classList.add('active');
-  event.target.classList.add('active');
-  if(id==='ranking')renderRanking();
-  if(id==='admin')renderAdmin();
-  if(id==='segunda')renderBracket();
+
+function alerta(id, tipo, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'alert ' + tipo;
+  el.textContent = msg;
+  setTimeout(() => { el.className = 'alert'; }, 7000);
 }
-function showAuth(tab,btn){
-  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('form-reg').style.display=tab==='reg'?'':'none';
-  document.getElementById('form-login').style.display=tab==='login'?'':'none';
+
+function parseMaybeJSON(value, fallback = {}) {
+  if (!value) return fallback;
+  if (typeof value === 'object') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
 }
-function generarCodigoAlfanum(){
-  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code='BIT-';
-  for(let i=0;i<5;i++)code+=chars[Math.floor(Math.random()*chars.length)];
+
+function generarCodigoAlfanum() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'BIT-';
+  for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
   return code;
 }
 
-// AUTH
-async function registrar() {
-  const nombre=document.getElementById('r-nombre').value.trim();
-  const alias=document.getElementById('r-alias').value.trim();
-  const email=document.getElementById('r-email').value.trim();
-  const tel=document.getElementById('r-tel').value.trim();
-  const codigo=document.getElementById('r-codigo').value.trim().toUpperCase();
-  const favorito=document.getElementById('r-favorito').value;
-  if(!nombre||!alias||!email||!codigo){alerta('reg-alert','error','Completa nombre, alias, correo y código.');return;}
-  const btn=document.getElementById('btn-reg');
-  btn.innerHTML='<span class="loading"></span> Verificando...';btn.disabled=true;
-  if(sbClient){
-    const{data:cod}=await sbClient.from('codigos_participante').select('*').eq('codigo',codigo).eq('usado',false).single();
-    if(!cod){alerta('reg-alert','error','Código inválido o ya utilizado.');btn.innerHTML='Registrarme en la quiniela';btn.disabled=false;return;}
-    const{data:ex}=await sbClient.from('participantes').select('id').eq('email',email).single();
-    if(ex){alerta('reg-alert','error','Correo ya registrado. Usa "Ya tengo cuenta".');btn.innerHTML='Registrarme en la quiniela';btn.disabled=false;return;}
-    const{data,error}=await sbClient.from('participantes').insert([{nombre,alias,email,tel,codigo,favorito,fecha:new Date().toISOString()}]).select();
-    if(error){alerta('reg-alert','error','Error: '+error.message);btn.innerHTML='Registrarme en la quiniela';btn.disabled=false;return;}
-    await sbClient.from('codigos_participante').update({usado:true}).eq('codigo',codigo);
-    usuarioActual=data[0];
-  } else {
-    const local=JSON.parse(localStorage.getItem('participantes')||'[]');
-    if(local.find(p=>p.email===email)){alerta('reg-alert','error','Correo ya registrado.');btn.innerHTML='Registrarme en la quiniela';btn.disabled=false;return;}
-    const nuevo={id:Date.now(),nombre,alias,email,tel,codigo,favorito,fecha:new Date().toISOString()};
-    local.push(nuevo);localStorage.setItem('participantes',JSON.stringify(local));usuarioActual=nuevo;
+function showLockBanner(show) {
+  const el = document.getElementById('lock-banner');
+  if (!el) return;
+  el.classList.toggle('on', !!show);
+}
+
+function estaCerradaQuiniela() {
+  if (modoDemo) return false;
+  if (configGlobal.permitir_edicion === false) return true;
+  if (!configGlobal.fecha_cierre) return false;
+  return new Date() > new Date(configGlobal.fecha_cierre);
+}
+
+function aplicarEstadoCierreUI() {
+  const cerrada = estaCerradaQuiniela();
+  showLockBanner(cerrada);
+
+  document.querySelectorAll('.editable-action').forEach(el => {
+    el.disabled = cerrada;
+  });
+
+  const modalBtn = document.getElementById('modal-confirm-btn');
+  if (modalBtn) modalBtn.disabled = cerrada;
+}
+
+function setMiPosicionDesdeRanking(data) {
+  const stat = document.getElementById('stat-mipos');
+  if (!stat) return;
+  if (!usuarioActual) {
+    stat.textContent = '—';
+    return;
   }
-  participantes.push(usuarioActual);actualizarContadores();
-  mostrarUsuario(usuarioActual.alias||usuarioActual.nombre);
-  alerta('reg-alert','success',`Bienvenido ${alias}! Llena tus predicciones.`);
-  btn.innerHTML='Registrado ✓';btn.disabled=false;
+  const nombreRef = usuarioActual.alias || usuarioActual.nombre;
+  const idx = data.findIndex(x => (x.alias || x.nombre) === nombreRef);
+  stat.textContent = idx >= 0 ? (idx + 1) : '—';
+}
+
+function getFaseByBid(bid) {
+  const n = Number(bid);
+  if (n >= 73 && n <= 88) return 'r32';
+  if (n >= 89 && n <= 96) return 'r16';
+  if (n >= 97 && n <= 100) return 'qf';
+  if (n >= 101 && n <= 102) return 'sf';
+  return 'final';
+}
+
+// =============================================
+// CONFIG
+// =============================================
+async function cargarConfiguracion() {
+  try {
+    if (sbClient) {
+      const { data, error } = await sbClient
+        .from('configuracion')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data) {
+        configGlobal = {
+          permitir_edicion: data.permitir_edicion !== false,
+          fecha_cierre: data.fecha_cierre || null
+        };
+      }
+    } else {
+      const local = parseMaybeJSON(localStorage.getItem('configuracion_local'), null);
+      if (local) configGlobal = local;
+    }
+  } catch (e) {
+    // fallback silencioso
+  }
+
+  const fechaInput = document.getElementById('cfg-fecha-cierre');
+  const editInput = document.getElementById('cfg-permitir-edicion');
+  if (fechaInput && configGlobal.fecha_cierre) {
+    const d = new Date(configGlobal.fecha_cierre);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    fechaInput.value = `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+  }
+  if (editInput) editInput.value = configGlobal.permitir_edicion ? 'true' : 'false';
+
+  aplicarEstadoCierreUI();
+}
+
+async function guardarConfiguracionAdmin() {
+  const fecha = document.getElementById('cfg-fecha-cierre')?.value || null;
+  const permitir = document.getElementById('cfg-permitir-edicion')?.value === 'true';
+
+  const payload = {
+    fecha_cierre: fecha ? new Date(fecha).toISOString() : null,
+    permitir_edicion: permitir
+  };
+
+  try {
+    if (sbClient) {
+      const { data: existing } = await sbClient
+        .from('configuracion')
+        .select('id')
+        .limit(1)
+        .maybeSingle();
+
+      if (existing?.id) {
+        const { error } = await sbClient.from('configuracion').update(payload).eq('id', existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await sbClient.from('configuracion').insert([payload]);
+        if (error) throw error;
+      }
+    } else {
+      localStorage.setItem('configuracion_local', JSON.stringify(payload));
+    }
+
+    configGlobal = payload;
+    aplicarEstadoCierreUI();
+    renderGrupoTabs();
+    renderPartidosGrupo();
+    renderBracket();
+    renderGoleador();
+    alerta('cfg-alert', 'success', 'Configuración guardada.');
+  } catch (error) {
+    alerta('cfg-alert', 'error', 'Error: ' + error.message);
+  }
+}
+
+// =============================================
+// NAVEGACIÓN Y AUTH UI
+// =============================================
+function goSec(id, btnEl = null) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+  const sec = document.getElementById('sec-' + id);
+  if (sec) sec.classList.add('active');
+  if (btnEl) btnEl.classList.add('active');
+
+  if (id === 'ranking') renderRanking();
+  if (id === 'admin') renderAdmin();
+  if (id === 'segunda') renderBracket();
+}
+
+function showAuth(tab, btn) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('form-reg').style.display = tab === 'reg' ? '' : 'none';
+  document.getElementById('form-login').style.display = tab === 'login' ? '' : 'none';
+}
+
+// =============================================
+// AUTH
+// =============================================
+async function registrar() {
+  if (estaCerradaQuiniela()) {
+    alerta('reg-alert', 'error', 'La quiniela ya está cerrada.');
+    return;
+  }
+
+  const nombre = document.getElementById('r-nombre').value.trim();
+  const alias = document.getElementById('r-alias').value.trim();
+  const email = document.getElementById('r-email').value.trim();
+  const tel = document.getElementById('r-tel').value.trim();
+  const codigo = document.getElementById('r-codigo').value.trim().toUpperCase();
+  const favorito = document.getElementById('r-favorito').value;
+
+  if (!nombre || !alias || !email || !codigo) {
+    alerta('reg-alert', 'error', 'Completa nombre, alias, correo y código.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-reg');
+  btn.innerHTML = '<span class="loading"></span> Verificando...';
+  btn.disabled = true;
+
+  try {
+    if (sbClient) {
+      const { data: cod } = await sbClient
+        .from('codigos_participante')
+        .select('*')
+        .eq('codigo', codigo)
+        .eq('usado', false)
+        .maybeSingle();
+
+      if (!cod) throw new Error('Código inválido o ya utilizado.');
+
+      const { data: ex } = await sbClient
+        .from('participantes')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (ex) throw new Error('Correo ya registrado. Usa "Ya tengo cuenta".');
+
+      const { data, error } = await sbClient
+        .from('participantes')
+        .insert([{ nombre, alias, email, tel, codigo, favorito, fecha: new Date().toISOString() }])
+        .select();
+
+      if (error) throw error;
+
+      await sbClient.from('codigos_participante').update({ usado: true }).eq('codigo', codigo);
+      usuarioActual = data[0];
+    } else {
+      const local = JSON.parse(localStorage.getItem('participantes') || '[]');
+      if (local.find(p => p.email === email)) throw new Error('Correo ya registrado.');
+      const nuevo = { id: Date.now(), nombre, alias, email, tel, codigo, favorito, fecha: new Date().toISOString() };
+      local.push(nuevo);
+      localStorage.setItem('participantes', JSON.stringify(local));
+      usuarioActual = nuevo;
+    }
+
+    participantes.push(usuarioActual);
+    actualizarContadores();
+    mostrarUsuario(usuarioActual.alias || usuarioActual.nombre);
+    alerta('reg-alert', 'success', `Bienvenido ${alias}. Llena tus predicciones.`);
+  } catch (error) {
+    alerta('reg-alert', 'error', error.message || 'Error de registro.');
+  } finally {
+    btn.innerHTML = 'Registrarme en la quiniela';
+    btn.disabled = estaCerradaQuiniela();
+  }
 }
 
 async function login() {
-  const email=document.getElementById('l-email').value.trim();
-  const codigo=document.getElementById('l-codigo').value.trim().toUpperCase();
-  if(!email||!codigo){alerta('login-alert','error','Ingresa correo y código.');return;}
-  const btn=document.getElementById('btn-login');
-  btn.innerHTML='<span class="loading"></span> Verificando...';btn.disabled=true;
-  if(sbClient){
-    const{data,error}=await sbClient.from('participantes').select('*').eq('email',email).eq('codigo',codigo).single();
-    if(error||!data){alerta('login-alert','error','Correo o código incorrecto.');btn.innerHTML='Entrar a mi quiniela';btn.disabled=false;return;}
-    usuarioActual=data;
-    const{data:q}=await sbClient.from('quinielas').select('*').eq('participante_id',data.id).single();
-    if(q){predicciones=JSON.parse(q.predicciones||'{}');bracket=JSON.parse(q.bracket||'{}');goleador=q.goleador||null;}
-  } else {
-    const local=JSON.parse(localStorage.getItem('participantes')||'[]');
-    const found=local.find(p=>p.email===email&&p.codigo===codigo);
-    if(!found){alerta('login-alert','error','Correo o código incorrecto.');btn.innerHTML='Entrar a mi quiniela';btn.disabled=false;return;}
-    usuarioActual=found;
-    const q=localStorage.getItem('quiniela_'+found.id);
-    if(q){const qd=JSON.parse(q);predicciones=JSON.parse(qd.predicciones||'{}');bracket=JSON.parse(qd.bracket||'{}');goleador=qd.goleador||null;}
+  const email = document.getElementById('l-email').value.trim();
+  const codigo = document.getElementById('l-codigo').value.trim().toUpperCase();
+
+  if (!email || !codigo) {
+    alerta('login-alert', 'error', 'Ingresa correo y código.');
+    return;
   }
-  mostrarUsuario(usuarioActual.alias||usuarioActual.nombre);
-  alerta('login-alert','success',`Bienvenido de vuelta ${usuarioActual.alias||usuarioActual.nombre}!`);
-  renderGrupoTabs();renderPartidosGrupo();renderBracket();renderGoleador();
-  btn.innerHTML='Entrar a mi quiniela';btn.disabled=false;
+
+  const btn = document.getElementById('btn-login');
+  btn.innerHTML = '<span class="loading"></span> Verificando...';
+  btn.disabled = true;
+
+  try {
+    if (sbClient) {
+      const { data, error } = await sbClient
+        .from('participantes')
+        .select('*')
+        .eq('email', email)
+        .eq('codigo', codigo)
+        .maybeSingle();
+
+      if (error || !data) throw new Error('Correo o código incorrecto.');
+
+      usuarioActual = data;
+
+      const { data: q } = await sbClient
+        .from('quinielas')
+        .select('*')
+        .eq('participante_id', data.id)
+        .maybeSingle();
+
+      if (q) {
+        predicciones = parseMaybeJSON(q.predicciones, {});
+        bracket = parseMaybeJSON(q.bracket, {});
+        goleador = q.goleador || null;
+      } else {
+        predicciones = {};
+        bracket = {};
+        goleador = null;
+      }
+    } else {
+      const local = JSON.parse(localStorage.getItem('participantes') || '[]');
+      const found = local.find(p => p.email === email && p.codigo === codigo);
+      if (!found) throw new Error('Correo o código incorrecto.');
+      usuarioActual = found;
+
+      const q = localStorage.getItem('quiniela_' + found.id);
+      if (q) {
+        const qd = JSON.parse(q);
+        predicciones = parseMaybeJSON(qd.predicciones, {});
+        bracket = parseMaybeJSON(qd.bracket, {});
+        goleador = qd.goleador || null;
+      } else {
+        predicciones = {};
+        bracket = {};
+        goleador = null;
+      }
+    }
+
+    mostrarUsuario(usuarioActual.alias || usuarioActual.nombre);
+    alerta('login-alert', 'success', `Bienvenido de vuelta ${usuarioActual.alias || usuarioActual.nombre}.`);
+    renderGrupoTabs();
+    renderPartidosGrupo();
+    renderBracket();
+    renderGoleador();
+  } catch (error) {
+    alerta('login-alert', 'error', error.message || 'Error de login.');
+  } finally {
+    btn.innerHTML = 'Entrar a mi quiniela';
+    btn.disabled = false;
+  }
 }
 
-function mostrarUsuario(nombre){
-  const ini=nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  document.getElementById('uini').textContent=ini;
-  document.getElementById('unombre').textContent=nombre.split(' ')[0];
+function mostrarUsuario(nombre) {
+  const ini = nombre.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  document.getElementById('uini').textContent = ini;
+  document.getElementById('unombre').textContent = nombre.split(' ')[0];
   document.getElementById('uchip').classList.add('on');
 }
 
-async function cargarParticipantes(){
-  if(sbClient){const{data}=await sbClient.from('participantes').select('*');participantes=data||[];}
-  else{participantes=JSON.parse(localStorage.getItem('participantes')||'[]');}
+async function cargarParticipantes() {
+  if (sbClient) {
+    const { data } = await sbClient.from('participantes').select('*');
+    participantes = data || [];
+  } else {
+    participantes = JSON.parse(localStorage.getItem('participantes') || '[]');
+  }
   actualizarContadores();
 }
 
-function actualizarContadores(){
-  const n=participantes.length;
-  document.querySelectorAll('#hero-part,#stat-total').forEach(el=>{if(el)el.textContent=n;});
+function actualizarContadores() {
+  const n = participantes.length;
+  document.querySelectorAll('#hero-part,#stat-total').forEach(el => {
+    if (el) el.textContent = n;
+  });
 }
 
+// =============================================
+// GUARDADO CENTRAL
+// =============================================
+async function guardarQuinielaCompleta() {
+  const datos = {
+    participante_id: usuarioActual?.id,
+    predicciones: JSON.stringify(predicciones),
+    bracket: JSON.stringify(bracket),
+    goleador,
+    fecha: new Date().toISOString()
+  };
+
+  if (sbClient && !modoDemo) {
+    const { error } = await sbClient.from('quinielas').upsert([datos]);
+    if (error) throw error;
+  } else {
+    localStorage.setItem('quiniela_' + (usuarioActual?.id || 'demo'), JSON.stringify(datos));
+  }
+}
+
+// =============================================
 // 1ERA RONDA
-function renderGrupoTabs(){
-  const tabs=document.getElementById('gtabs');if(!tabs)return;
-  tabs.innerHTML=Object.keys(GRUPOS).map(g=>{
-    const done=PARTIDOS.filter(p=>p.g===g&&predicciones[p.id]&&predicciones[p.id].l!==undefined&&predicciones[p.id].v!==undefined).length;
-    const total=PARTIDOS.filter(p=>p.g===g).length;
-    return `<button class="gtab${grupoActivo===g?' active':''}${done===total?' done':''}" onclick="selGrupo('${g}')">Grupo ${g}${done===total?' ✓':''}</button>`;
+// =============================================
+function renderGrupoTabs() {
+  const tabs = document.getElementById('gtabs');
+  if (!tabs) return;
+
+  tabs.innerHTML = Object.keys(GRUPOS).map(g => {
+    const done = PARTIDOS.filter(p => p.g === g && predicciones[p.id] && predicciones[p.id].l !== undefined && predicciones[p.id].v !== undefined).length;
+    const total = PARTIDOS.filter(p => p.g === g).length;
+    return `<button class="gtab${grupoActivo === g ? ' active' : ''}${done === total ? ' done' : ''}" onclick="selGrupo('${g}')">Grupo ${g}${done === total ? ' ✓' : ''}</button>`;
   }).join('');
 }
-function selGrupo(g){grupoActivo=g;renderGrupoTabs();renderPartidosGrupo();}
 
-function renderPartidosGrupo(){
-  const c=document.getElementById('partidos-container');if(!c)return;
-  const ps=PARTIDOS.filter(p=>p.g===grupoActivo);
-  const eqs=GRUPOS[grupoActivo];
-  let partidosHtml='';
-  let fa='';
-  ps.forEach(p=>{
-    if(p.f!==fa){fa=p.f;partidosHtml+=`<div class="flbl">${fmtFecha(p.f)} · ${p.h} ET</div>`;}
-    const pr=predicciones[p.id]||{};
-    const lv=pr.l!==undefined?pr.l:'';const vv=pr.v!==undefined?pr.v:'';
-    const ok=pr.l!==undefined&&pr.v!==undefined;
-    partidosHtml+=`<div class="pcard${ok?' ok':''}">
-      <div class="psede">${p.s}</div>
-      <div class="prow">
-        <div class="ecol">${flagBadge(p.l,20)}<span class="ename">${p.l}</span></div>
-        <div class="sinputs">
-          <input type="number" min="0" max="20" value="${lv}" placeholder="?" class="sinput${pr.l!==undefined?' v':''}" oninput="setPred(${p.id},'l',this.value)">
-          <span class="ssep">–</span>
-          <input type="number" min="0" max="20" value="${vv}" placeholder="?" class="sinput${pr.v!==undefined?' v':''}" oninput="setPred(${p.id},'v',this.value)">
+function selGrupo(g) {
+  grupoActivo = g;
+  renderGrupoTabs();
+  renderPartidosGrupo();
+}
+
+function renderPartidosGrupo() {
+  const c = document.getElementById('partidos-container');
+  if (!c) return;
+
+  const cerrada = estaCerradaQuiniela();
+  const ps = PARTIDOS.filter(p => p.g === grupoActivo);
+  let partidosHtml = '';
+  let fa = '';
+
+  ps.forEach(p => {
+    if (p.f !== fa) {
+      fa = p.f;
+      partidosHtml += `<div class="flbl">${fmtFecha(p.f)} · ${p.h} ET</div>`;
+    }
+    const pr = predicciones[p.id] || {};
+    const lv = pr.l !== undefined ? pr.l : '';
+    const vv = pr.v !== undefined ? pr.v : '';
+    const ok = pr.l !== undefined && pr.v !== undefined;
+
+    partidosHtml += `
+      <div class="pcard${ok ? ' ok' : ''}">
+        <div class="psede">${p.s}</div>
+        <div class="prow">
+          <div class="ecol">${flagBadge(p.l,20)}<span class="ename">${p.l}</span></div>
+          <div class="sinputs">
+            <input type="number" min="0" max="20" value="${lv}" placeholder="?" class="sinput${pr.l !== undefined ? ' v' : ''}" ${cerrada ? 'disabled' : ''} oninput="setPred(${p.id},'l',this.value)">
+            <span class="ssep">–</span>
+            <input type="number" min="0" max="20" value="${vv}" placeholder="?" class="sinput${pr.v !== undefined ? ' v' : ''}" ${cerrada ? 'disabled' : ''} oninput="setPred(${p.id},'v',this.value)">
+          </div>
+          <div class="ecol r"><span class="ename">${p.v}</span>${flagBadge(p.v,20)}</div>
         </div>
-        <div class="ecol r"><span class="ename">${p.v}</span>${flagBadge(p.v,20)}</div>
-      </div>
-    </div>`;
+      </div>`;
   });
+
   const tablaHtml = renderTablaGrupo(grupoActivo);
-  // Layout: partidos a la izquierda, tabla a la derecha en pantallas grandes
-  c.innerHTML=`<div class="grupo-layout">
-    <div class="grupo-partidos">${partidosHtml}</div>
-    <div class="grupo-tabla" id="tabla-grupo">${tablaHtml}</div>
-  </div>`;
+
+  c.innerHTML = `
+    <div class="grupo-layout">
+      <div class="grupo-partidos">${partidosHtml}</div>
+      <div class="grupo-tabla" id="tabla-grupo">${tablaHtml}</div>
+    </div>`;
+
   actualizarProgreso();
 }
 
-
-// TABLA DE POSICIONES POR GRUPO
 function calcTablaGrupo(grupo) {
   const eqs = GRUPOS[grupo];
   const ps = PARTIDOS.filter(p => p.g === grupo);
-  // Inicializar tabla
   const tabla = {};
+
   eqs.forEach(eq => {
-    tabla[eq] = {pj:0, g:0, e:0, p:0, gf:0, gc:0, dif:0, pts:0};
+    tabla[eq] = { pj:0, g:0, e:0, p:0, gf:0, gc:0, dif:0, pts:0 };
   });
-  // Calcular con predicciones actuales
+
   ps.forEach(p => {
     const pr = predicciones[p.id];
     if (!pr || pr.l === undefined || pr.v === undefined) return;
-    const gl = pr.l, gv = pr.v;
-    tabla[p.l].pj++; tabla[p.v].pj++;
-    tabla[p.l].gf += gl; tabla[p.l].gc += gv;
-    tabla[p.v].gf += gv; tabla[p.v].gc += gl;
+
+    const gl = pr.l;
+    const gv = pr.v;
+
+    tabla[p.l].pj++;
+    tabla[p.v].pj++;
+
+    tabla[p.l].gf += gl;
+    tabla[p.l].gc += gv;
+    tabla[p.v].gf += gv;
+    tabla[p.v].gc += gl;
+
     tabla[p.l].dif = tabla[p.l].gf - tabla[p.l].gc;
     tabla[p.v].dif = tabla[p.v].gf - tabla[p.v].gc;
+
     if (gl > gv) {
-      tabla[p.l].g++; tabla[p.l].pts += 3;
+      tabla[p.l].g++;
+      tabla[p.l].pts += 3;
       tabla[p.v].p++;
     } else if (gv > gl) {
-      tabla[p.v].g++; tabla[p.v].pts += 3;
+      tabla[p.v].g++;
+      tabla[p.v].pts += 3;
       tabla[p.l].p++;
     } else {
-      tabla[p.l].e++; tabla[p.l].pts++;
-      tabla[p.v].e++; tabla[p.v].pts++;
+      tabla[p.l].e++;
+      tabla[p.l].pts++;
+      tabla[p.v].e++;
+      tabla[p.v].pts++;
     }
   });
-  // Ordenar: pts desc, dif desc, gf desc
-  return eqs.map(eq => ({eq, ...tabla[eq]}))
-    .sort((a,b) => b.pts-a.pts || b.dif-a.dif || b.gf-a.gf);
+
+  return eqs
+    .map(eq => ({ eq, ...tabla[eq] }))
+    .sort((a,b) => b.pts - a.pts || b.dif - a.dif || b.gf - a.gf);
 }
 
 function renderTablaGrupo(grupo) {
   const rows = calcTablaGrupo(grupo);
-  const hayDatos = PARTIDOS.filter(p=>p.g===grupo).some(p=>{
-    const pr=predicciones[p.id]; return pr&&pr.l!==undefined&&pr.v!==undefined;
+  const hayDatos = PARTIDOS.filter(p => p.g === grupo).some(p => {
+    const pr = predicciones[p.id];
+    return pr && pr.l !== undefined && pr.v !== undefined;
   });
   if (!hayDatos) return '';
-  return `<div class="gtabla-wrap">
-    <div class="gtabla-title">Tabla — Grupo ${grupo}</div>
-    <table class="gtabla">
-      <thead>
-        <tr>
-          <th>Pos</th><th style="text-align:left">País</th>
-          <th>PJ</th><th>G</th><th>E</th><th>P</th>
-          <th>GF</th><th>GC</th><th>DIF</th><th>Pts</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows.map((r,i) => `<tr class="${i<2?'clasif':''}${i===2?' tercero':''}">
-          <td class="pos-num">${i+1}</td>
-          <td class="pais-cell">${flagBadge(r.eq,16)} <span>${r.eq}</span></td>
-          <td>${r.pj}</td><td>${r.g}</td><td>${r.e}</td><td>${r.p}</td>
-          <td>${r.gf}</td><td>${r.gc}</td>
-          <td class="${r.dif>0?'dif-pos':r.dif<0?'dif-neg':''}">${r.dif>0?'+'+r.dif:r.dif}</td>
-          <td class="pts-num">${r.pts}</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>
-    <div class="gtabla-legend">
-      <span class="legend-clasif">■ Clasifican directamente</span>
-      <span class="legend-tercero">■ Posible mejor 3ro</span>
-    </div>
-  </div>`;
+
+  return `
+    <div class="gtabla-wrap">
+      <div class="gtabla-title">Tabla — Grupo ${grupo}</div>
+      <table class="gtabla">
+        <thead>
+          <tr>
+            <th>Pos</th><th style="text-align:left">País</th>
+            <th>PJ</th><th>G</th><th>E</th><th>P</th>
+            <th>GF</th><th>GC</th><th>DIF</th><th>Pts</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((r,i) => `
+            <tr class="${i < 2 ? 'clasif' : ''}${i === 2 ? ' tercero' : ''}">
+              <td class="pos-num">${i+1}</td>
+              <td class="pais-cell">${flagBadge(r.eq,16)} <span>${r.eq}</span></td>
+              <td>${r.pj}</td><td>${r.g}</td><td>${r.e}</td><td>${r.p}</td>
+              <td>${r.gf}</td><td>${r.gc}</td>
+              <td class="${r.dif>0?'dif-pos':r.dif<0?'dif-neg':''}">${r.dif>0?'+'+r.dif:r.dif}</td>
+              <td class="pts-num">${r.pts}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+      <div class="gtabla-legend">
+        <span class="legend-clasif">■ Clasifican directamente</span>
+        <span class="legend-tercero">■ Posible mejor 3ro</span>
+      </div>
+    </div>`;
 }
 
-function setPred(id,lado,val){
-  const num=parseInt(val);
-  if(!predicciones[id])predicciones[id]={};
-  if(!isNaN(num)&&num>=0)predicciones[id][lado]=num;
+function setPred(id, lado, val) {
+  if (estaCerradaQuiniela()) return;
+
+  const num = parseInt(val, 10);
+  if (!predicciones[id]) predicciones[id] = {};
+
+  if (!isNaN(num) && num >= 0 && num <= 20) predicciones[id][lado] = num;
   else delete predicciones[id][lado];
-  actualizarProgreso();renderGrupoTabs();
-  // Actualizar tabla en tiempo real
-  const tablaEl=document.getElementById('tabla-grupo');
-  if(tablaEl)tablaEl.innerHTML=renderTablaGrupo(grupoActivo);
+
+  actualizarProgreso();
+  renderGrupoTabs();
+
+  const tablaEl = document.getElementById('tabla-grupo');
+  if (tablaEl) tablaEl.innerHTML = renderTablaGrupo(grupoActivo);
 }
 
-function actualizarProgreso(){
-  const total=PARTIDOS.length;
-  const done=PARTIDOS.filter(p=>{const pr=predicciones[p.id];return pr&&pr.l!==undefined&&pr.v!==undefined;}).length;
-  const pct=Math.round(done/total*100);
-  const f=document.getElementById('prog-fill');if(f)f.style.width=pct+'%';
-  const t=document.getElementById('prog-txt');if(t)t.textContent=`${done} de ${total} predichos`;
-  const s=document.getElementById('q-status');if(s)s.textContent=done===total?'Lista para guardar!':'Faltan '+(total-done)+' partidos';
+function actualizarProgreso() {
+  const total = PARTIDOS.length;
+  const done = PARTIDOS.filter(p => {
+    const pr = predicciones[p.id];
+    return pr && pr.l !== undefined && pr.v !== undefined;
+  }).length;
+
+  const pct = Math.round(done / total * 100);
+  const f = document.getElementById('prog-fill');
+  if (f) f.style.width = pct + '%';
+
+  const t = document.getElementById('prog-txt');
+  if (t) t.textContent = `${done} de ${total} predichos`;
+
+  const s = document.getElementById('q-status');
+  if (s) s.textContent = done === total ? 'Lista para guardar' : 'Faltan ' + (total - done) + ' partidos';
 }
 
-async function guardarQuiniela(){
-  if(!usuarioActual&&!modoDemo){alerta('q-alert','error','Primero regístrate.');return;}
-  const done=PARTIDOS.filter(p=>{const pr=predicciones[p.id];return pr&&pr.l!==undefined&&pr.v!==undefined;}).length;
-  if(done<PARTIDOS.length){alerta('q-alert','error','Faltan '+(PARTIDOS.length-done)+' partidos.');return;}
-  const datos={participante_id:usuarioActual?.id,predicciones:JSON.stringify(predicciones),bracket:JSON.stringify(bracket),goleador,fecha:new Date().toISOString()};
-  if(sbClient&&!modoDemo){const{error}=await sbClient.from('quinielas').upsert([datos]);if(error){alerta('q-alert','error','Error: '+error.message);return;}}
-  else{localStorage.setItem('quiniela_'+(usuarioActual?.id||'demo'),JSON.stringify(datos));}
-  alerta('q-alert','success','Predicciones de grupos guardadas!');
+async function guardarQuiniela() {
+  if (estaCerradaQuiniela()) {
+    alerta('q-alert', 'error', 'La quiniela ya está cerrada.');
+    return;
+  }
+  if (!usuarioActual && !modoDemo) {
+    alerta('q-alert', 'error', 'Primero regístrate.');
+    return;
+  }
+
+  const done = PARTIDOS.filter(p => {
+    const pr = predicciones[p.id];
+    return pr && pr.l !== undefined && pr.v !== undefined;
+  }).length;
+
+  if (done < PARTIDOS.length) {
+    alerta('q-alert', 'error', 'Faltan ' + (PARTIDOS.length - done) + ' partidos.');
+    return;
+  }
+
+  try {
+    await guardarQuinielaCompleta();
+    alerta('q-alert', 'success', 'Predicciones de grupos guardadas.');
+  } catch (error) {
+    alerta('q-alert', 'error', 'Error: ' + error.message);
+  }
 }
 
-// 2DA RONDA — BRACKET COLUMNAS
-function getPaisesSlot(m, lado){
-  const grupos=lado==='l'?m.grupos_l:m.grupos_v;
-  const tipo=lado==='l'?m.tipo_l:m.tipo_v;
-  if(!grupos||tipo==='ganador')return null; // rondas avanzadas: null = todos
-  let paises=[];
-  grupos.forEach(g=>{if(GRUPOS[g])paises=[...paises,...GRUPOS[g]];});
-  return{grupos, paises:[...new Set(paises)]};
+// =============================================
+// BRACKET
+// =============================================
+function getGanador(bid) {
+  const b = bracket[bid] || {};
+  if (!b.l || !b.v || b.gl === undefined || b.gv === undefined) return null;
+  if (b.gl > b.gv) return b.l;
+  if (b.gv > b.gl) return b.v;
+  return b.penales || null;
 }
 
-function matchCard(m, ronda){
-  const b=bracket[m.bid]||{};
-  const lN=b.l||null;const vN=b.v||null;
-  const gl=b.gl!==undefined?b.gl:null;const gv=b.gv!==undefined?b.gv:null;
-  const ok=lN&&vN&&gl!==null&&gv!==null;
-  const ganador=getGanador(m.bid);
-  const esEmpate=ok&&gl===gv;
-  const penales=b.penales||null;
-  // Checkmark verde al ganador
-  const lCheck=(ganador===lN)?'<span class="bcheck">✓</span>':'';
-  const vCheck=(ganador===vN)?'<span class="bcheck">✓</span>':'';
-  // Badge de penales si hay empate
-  const penalesBadge=esEmpate&&penales?`<span class="bpen-badge">Penales: ${flagBadge(penales,14)} ${penales}</span>`:'';
-  return `<div class="bmatch${ok?' ok':''}" onclick="abrirModal(${m.bid})" title="Clic para editar">
-    <div class="bmlbl">${m.desc} <span class="pts-pill">${ronda.pts_ex}pts</span></div>
-    <div class="bteam${!lN?' empty':''}${ganador===lN?' winner':''}">
-      ${lN?flagBadge(lN,18):'<span class="bq">?</span>'}
-      <span class="btn">${lN||'Seleccionar'}</span>
-      <span class="bsc">${gl!==null?gl:''}</span>
-      ${lCheck}
-    </div>
-    <div class="bdiv"></div>
-    <div class="bteam${!vN?' empty':''}${ganador===vN?' winner':''}">
-      ${vN?flagBadge(vN,18):'<span class="bq">?</span>'}
-      <span class="btn">${vN||'Seleccionar'}</span>
-      <span class="bsc">${gv!==null?gv:''}</span>
-      ${vCheck}
-    </div>
-    ${penalesBadge}
-  </div>`;
+function limpiarPartidoDependiente(bid) {
+  if (!bracket[bid]) return;
+  delete bracket[bid].gl;
+  delete bracket[bid].gv;
+  delete bracket[bid].penales;
 }
 
-function renderBracket(){
-  const c=document.getElementById('bracket-container');if(!c)return;
-  let html='<div class="bracket-cols">';
-  BRACKET_RONDAS.forEach(ronda=>{
-    html+=`<div class="bcol">
-      <div class="bcol-title">${ronda.nombre}</div>
-      <div class="bcol-matches">`;
-    ronda.partidos.forEach(m=>{html+=matchCard(m,ronda);});
-    html+=`</div></div>`;
+function propagarGanador(bid) {
+  const prog = PROGRESION[bid];
+  if (!prog) return;
+
+  const ganador = getGanador(bid);
+  const sigBid = prog.sig;
+  const slot = prog.slot;
+
+  if (!bracket[sigBid]) bracket[sigBid] = {};
+
+  const previo = bracket[sigBid][slot];
+  const nuevoValor = ganador || null;
+
+  if (previo !== nuevoValor) {
+    bracket[sigBid][slot] = nuevoValor;
+    limpiarPartidoDependiente(sigBid);
+  }
+
+  propagarGanador(sigBid);
+}
+
+function getPaisesSlot(m, lado) {
+  const grupos = lado === 'l' ? m.grupos_l : m.grupos_v;
+  const tipo = lado === 'l' ? m.tipo_l : m.tipo_v;
+  if (!grupos || tipo === 'ganador') return null;
+  let paises = [];
+  grupos.forEach(g => {
+    if (GRUPOS[g]) paises = [...paises, ...GRUPOS[g]];
   });
-  html+='</div>';
-  c.innerHTML=html;
+  return { grupos, paises:[...new Set(paises)] };
 }
 
-// MODAL
-function abrirModal(bid){
-  // Encontrar el match en cualquier ronda
-  let m=null;
-  for(const r of BRACKET_RONDAS){const found=r.partidos.find(x=>x.bid===bid);if(found){m={...found,pts_ex:r.pts_ex};break;}}
-  if(!m)return;
-  modalActivo={bid,match:m};
-  const b=bracket[bid]||{};
-  document.getElementById('modal-title').textContent='Partido '+bid+' — '+m.desc;
-  document.getElementById('modal-gl').value=b.gl!==undefined?b.gl:'';
-  document.getElementById('modal-gv').value=b.gv!==undefined?b.gv:'';
+function matchCard(m, ronda) {
+  const b = bracket[m.bid] || {};
+  const lN = b.l || null;
+  const vN = b.v || null;
+  const gl = b.gl !== undefined ? b.gl : null;
+  const gv = b.gv !== undefined ? b.gv : null;
+  const ok = lN && vN && gl !== null && gv !== null;
+  const ganador = getGanador(m.bid);
+  const esEmpate = ok && gl === gv;
+  const penales = b.penales || null;
+  const cerrada = estaCerradaQuiniela();
 
-  const slotL=getPaisesSlot(m,'l');
-  const slotV=getPaisesSlot(m,'v');
-  let html='';
+  const lCheck = (ganador === lN) ? '<span class="bcheck">✓</span>' : '';
+  const vCheck = (ganador === vN) ? '<span class="bcheck">✓</span>' : '';
+  const penalesBadge = esEmpate && penales ? `<span class="bpen-badge">Penales: ${flagBadge(penales,14)} ${penales}</span>` : '';
 
-  // EQUIPO LOCAL
-  html+=`<div class="modal-sec-title">Equipo local${slotL?` — ${m.tipo_l==='1'?'1ro':'2do'} del grupo`:''}</div>`;
-  if(slotL){
-    slotL.grupos.forEach(g=>{
-      html+=`<div class="modal-grupo-lbl">Grupo ${g}</div>`;
-      GRUPOS[g].forEach(eq=>{
-        html+=`<div class="modal-opt${b.l===eq?' sel':''}" data-lado="l" data-eq="${eq}" onclick="selOpt(this)">
+  return `
+    <div class="bmatch${ok ? ' ok' : ''}${cerrada ? ' locked' : ''}" onclick="abrirModal(${m.bid})" title="${cerrada ? 'Quiniela cerrada' : 'Clic para editar'}">
+      <div class="bmlbl">${m.desc} <span class="pts-pill">${ronda.pts_ex}pts</span></div>
+      <div class="bteam${!lN ? ' empty' : ''}${ganador === lN ? ' winner' : ''}">
+        ${lN ? flagBadge(lN,18) : '<span class="bq">?</span>'}
+        <span class="btn">${lN || 'Seleccionar'}</span>
+        <span class="bsc">${gl !== null ? gl : ''}</span>
+        ${lCheck}
+      </div>
+      <div class="bdiv"></div>
+      <div class="bteam${!vN ? ' empty' : ''}${ganador === vN ? ' winner' : ''}">
+        ${vN ? flagBadge(vN,18) : '<span class="bq">?</span>'}
+        <span class="btn">${vN || 'Seleccionar'}</span>
+        <span class="bsc">${gv !== null ? gv : ''}</span>
+        ${vCheck}
+      </div>
+      ${penalesBadge}
+    </div>`;
+}
+
+function renderBracket() {
+  const c = document.getElementById('bracket-container');
+  if (!c) return;
+
+  let html = '<div class="bracket-cols">';
+  BRACKET_RONDAS.forEach(ronda => {
+    html += `<div class="bcol"><div class="bcol-title">${ronda.nombre}</div><div class="bcol-matches">`;
+    ronda.partidos.forEach(m => { html += matchCard(m, ronda); });
+    html += `</div></div>`;
+  });
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+function abrirModal(bid) {
+  if (estaCerradaQuiniela()) return;
+
+  let m = null;
+  for (const r of BRACKET_RONDAS) {
+    const found = r.partidos.find(x => x.bid === bid);
+    if (found) {
+      m = { ...found, pts_ex: r.pts_ex };
+      break;
+    }
+  }
+  if (!m) return;
+
+  modalActivo = { bid, match: m };
+  const b = bracket[bid] || {};
+
+  document.getElementById('modal-title').textContent = 'Partido ' + bid + ' — ' + m.desc;
+  document.getElementById('modal-gl').value = b.gl !== undefined ? b.gl : '';
+  document.getElementById('modal-gv').value = b.gv !== undefined ? b.gv : '';
+  document.getElementById('modal-pen-msg').style.display = 'none';
+
+  const slotL = getPaisesSlot(m, 'l');
+  const slotV = getPaisesSlot(m, 'v');
+
+  let html = '';
+
+  html += `<div class="modal-sec-title">Equipo local${slotL ? ` — ${m.tipo_l === '1' ? '1ro' : m.tipo_l === '2' ? '2do' : 'Mejor 3ro'} del grupo` : ''}</div>`;
+  if (slotL) {
+    slotL.grupos.forEach(g => {
+      html += `<div class="modal-grupo-lbl">Grupo ${g}</div>`;
+      GRUPOS[g].forEach(eq => {
+        html += `<div class="modal-opt${b.l === eq ? ' sel' : ''}" data-lado="l" data-eq="${eq}" onclick="selOpt(this)">
           ${flagBadge(eq,20)} <span>${g} — ${eq}</span>
         </div>`;
       });
     });
   } else {
-    Object.keys(GRUPOS).forEach(g=>{
-      html+=`<div class="modal-grupo-lbl">Grupo ${g}</div>`;
-      GRUPOS[g].forEach(eq=>{
-        html+=`<div class="modal-opt${b.l===eq?' sel':''}" data-lado="l" data-eq="${eq}" onclick="selOpt(this)">
+    Object.keys(GRUPOS).forEach(g => {
+      html += `<div class="modal-grupo-lbl">Grupo ${g}</div>`;
+      GRUPOS[g].forEach(eq => {
+        html += `<div class="modal-opt${b.l === eq ? ' sel' : ''}" data-lado="l" data-eq="${eq}" onclick="selOpt(this)">
           ${flagBadge(eq,20)} <span>${g} — ${eq}</span>
         </div>`;
       });
     });
   }
 
-  html+=`<div style="height:1px;background:var(--borde);margin:.75rem 0"></div>`;
+  html += `<div style="height:1px;background:var(--borde);margin:.75rem 0"></div>`;
 
-  // EQUIPO VISITANTE
-  html+=`<div class="modal-sec-title">Equipo visitante${slotV?` — ${m.tipo_v==='1'?'1ro':m.tipo_v==='2'?'2do':'Mejor 3ro'} del grupo`:''}</div>`;
-  if(slotV){
-    slotV.grupos.forEach(g=>{
-      html+=`<div class="modal-grupo-lbl">Grupo ${g}</div>`;
-      GRUPOS[g].forEach(eq=>{
-        html+=`<div class="modal-opt${b.v===eq?' sel':''}" data-lado="v" data-eq="${eq}" onclick="selOpt(this)">
+  html += `<div class="modal-sec-title">Equipo visitante${slotV ? ` — ${m.tipo_v === '1' ? '1ro' : m.tipo_v === '2' ? '2do' : 'Mejor 3ro'} del grupo` : ''}</div>`;
+  if (slotV) {
+    slotV.grupos.forEach(g => {
+      html += `<div class="modal-grupo-lbl">Grupo ${g}</div>`;
+      GRUPOS[g].forEach(eq => {
+        html += `<div class="modal-opt${b.v === eq ? ' sel' : ''}" data-lado="v" data-eq="${eq}" onclick="selOpt(this)">
           ${flagBadge(eq,20)} <span>${g} — ${eq}</span>
         </div>`;
       });
     });
   } else {
-    Object.keys(GRUPOS).forEach(g=>{
-      html+=`<div class="modal-grupo-lbl">Grupo ${g}</div>`;
-      GRUPOS[g].forEach(eq=>{
-        html+=`<div class="modal-opt${b.v===eq?' sel':''}" data-lado="v" data-eq="${eq}" onclick="selOpt(this)">
+    Object.keys(GRUPOS).forEach(g => {
+      html += `<div class="modal-grupo-lbl">Grupo ${g}</div>`;
+      GRUPOS[g].forEach(eq => {
+        html += `<div class="modal-opt${b.v === eq ? ' sel' : ''}" data-lado="v" data-eq="${eq}" onclick="selOpt(this)">
           ${flagBadge(eq,20)} <span>${g} — ${eq}</span>
         </div>`;
       });
     });
   }
 
-  // Penales — mostrar siempre en rondas eliminatorias para poder seleccionar
-  const b2=bracket[bid]||{};
-  const gl2=b2.gl!==undefined?b2.gl:null;
-  const gv2=b2.gv!==undefined?b2.gv:null;
-  const esEmpate=gl2!==null&&gv2!==null&&gl2===gv2;
-  const lTeam=b2.l||null;const vTeam=b2.v||null;
-  if(lTeam&&vTeam){
-    html+=`<div style="height:1px;background:var(--borde);margin:.75rem 0"></div>`;
-    html+=`<div class="modal-sec-title" style="color:#c0392b">En caso de empate — ¿Quién gana en penales?</div>`;
-    html+=`<div style="font-size:11px;color:var(--muted);margin-bottom:.5rem">Solo aplica si el marcador queda igual</div>`;
-    [lTeam,vTeam].forEach(eq=>{
-      html+=`<div class="modal-opt${b2.penales===eq?' sel':''}" data-lado="pen" data-eq="${eq}" onclick="selOpt(this)">
+  const lTeam = b.l || null;
+  const vTeam = b.v || null;
+
+  if (lTeam && vTeam) {
+    html += `<div style="height:1px;background:var(--borde);margin:.75rem 0"></div>`;
+    html += `<div class="modal-sec-title" style="color:#c0392b">En caso de empate — ganador en penales</div>`;
+    [lTeam, vTeam].forEach(eq => {
+      html += `<div class="modal-opt${b.penales === eq ? ' sel' : ''}" data-lado="pen" data-eq="${eq}" onclick="selOpt(this)">
         ${flagBadge(eq,20)} <span>${eq}</span>
       </div>`;
     });
   }
-  document.getElementById('modal-opts').innerHTML=html;
+
+  document.getElementById('modal-opts').innerHTML = html;
   document.getElementById('bracket-modal').classList.add('on');
 }
 
-function selOpt(el){
-  const lado=el.dataset.lado;
-  document.querySelectorAll(`.modal-opt[data-lado="${lado}"]`).forEach(o=>o.classList.remove('sel'));
+function selOpt(el) {
+  const lado = el.dataset.lado;
+  document.querySelectorAll(`.modal-opt[data-lado="${lado}"]`).forEach(o => o.classList.remove('sel'));
   el.classList.add('sel');
 }
 
-function confirmarModal(){
-  if(!modalActivo)return;
-  const bid=modalActivo.bid;
-  if(!bracket[bid])bracket[bid]={};
-  const selL=document.querySelector('.modal-opt[data-lado="l"].sel');
-  const selV=document.querySelector('.modal-opt[data-lado="v"].sel');
-  if(selL)bracket[bid].l=selL.dataset.eq;
-  if(selV)bracket[bid].v=selV.dataset.eq;
-  const gl=parseInt(document.getElementById('modal-gl').value);
-  const gv=parseInt(document.getElementById('modal-gv').value);
-  if(!isNaN(gl)&&gl>=0)bracket[bid].gl=gl;
-  if(!isNaN(gv)&&gv>=0)bracket[bid].gv=gv;
-  // Penales
-  const selPen=document.querySelector('.modal-opt[data-lado="pen"].sel');
-  if(selPen)bracket[bid].penales=selPen.dataset.eq;
-  else if(gl!==gv)delete bracket[bid].penales; // no hay penales si no hay empate
-  // Propagar ganador al siguiente partido
+function confirmarModal() {
+  if (estaCerradaQuiniela()) return;
+  if (!modalActivo) return;
+
+  const bid = modalActivo.bid;
+  if (!bracket[bid]) bracket[bid] = {};
+
+  const selL = document.querySelector('.modal-opt[data-lado="l"].sel');
+  const selV = document.querySelector('.modal-opt[data-lado="v"].sel');
+
+  if (!selL || !selV) {
+    alert('Selecciona ambos equipos.');
+    return;
+  }
+
+  bracket[bid].l = selL.dataset.eq;
+  bracket[bid].v = selV.dataset.eq;
+
+  const gl = parseInt(document.getElementById('modal-gl').value, 10);
+  const gv = parseInt(document.getElementById('modal-gv').value, 10);
+
+  if (isNaN(gl) || isNaN(gv) || gl < 0 || gv < 0 || gl > 20 || gv > 20) {
+    alert('Ingresa un marcador válido.');
+    return;
+  }
+
+  bracket[bid].gl = gl;
+  bracket[bid].gv = gv;
+
+  const selPen = document.querySelector('.modal-opt[data-lado="pen"].sel');
+
+  if (gl === gv && !selPen) {
+    document.getElementById('modal-pen-msg').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('modal-pen-msg').style.display = 'none';
+
+  if (gl === gv) bracket[bid].penales = selPen.dataset.eq;
+  else delete bracket[bid].penales;
+
   propagarGanador(bid);
-  cerrarModal();renderBracket();
+  cerrarModal();
+  renderBracket();
 }
 
-function cerrarModal(){
+function cerrarModal() {
   document.getElementById('bracket-modal').classList.remove('on');
-  modalActivo=null;
+  modalActivo = null;
 }
 
-async function guardarBracket(){
-  if(!usuarioActual&&!modoDemo){alerta('b-alert','error','Primero regístrate.');return;}
-  const datos={participante_id:usuarioActual?.id,predicciones:JSON.stringify(predicciones),bracket:JSON.stringify(bracket),goleador,fecha:new Date().toISOString()};
-  if(sbClient&&!modoDemo){const{error}=await sbClient.from('quinielas').upsert([datos]);if(error){alerta('b-alert','error','Error: '+error.message);return;}}
-  else{localStorage.setItem('quiniela_'+(usuarioActual?.id||'demo'),JSON.stringify(datos));}
-  alerta('b-alert','success','Bracket guardado!');
+async function guardarBracket() {
+  if (estaCerradaQuiniela()) {
+    alerta('b-alert', 'error', 'La quiniela ya está cerrada.');
+    return;
+  }
+  if (!usuarioActual && !modoDemo) {
+    alerta('b-alert', 'error', 'Primero regístrate.');
+    return;
+  }
+
+  try {
+    await guardarQuinielaCompleta();
+    alerta('b-alert', 'success', 'Bracket guardado.');
+  } catch (error) {
+    alerta('b-alert', 'error', 'Error: ' + error.message);
+  }
 }
 
+// =============================================
 // GOLEADOR
-function renderGoleador(){
-  const g=document.getElementById('goleador-grid');if(!g)return;
-  g.innerHTML=TODOS_PAISES.map(eq=>`
-    <button class="camp-btn${goleador===eq?' sel':''}" onclick="selGoleador('${eq}')">
+// =============================================
+function renderGoleador() {
+  const g = document.getElementById('goleador-grid');
+  if (!g) return;
+
+  const cerrada = estaCerradaQuiniela();
+
+  g.innerHTML = TODOS_PAISES.map(eq => `
+    <button class="camp-btn${goleador === eq ? ' sel' : ''}" ${cerrada ? 'disabled' : ''} onclick="selGoleador('${eq}')">
       ${flagBadge(eq,28)}
       <span style="font-size:10px;margin-top:3px">${eq}</span>
-    </button>`).join('');
-  const st=document.getElementById('g-status');
-  if(st)st.textContent=goleador?`Seleccionado: ${goleador}`:'Selecciona el país goleador';
-}
-function selGoleador(eq){goleador=eq;renderGoleador();}
+    </button>
+  `).join('');
 
-async function guardarGoleador(){
-  if(!usuarioActual&&!modoDemo){alerta('g-alert','error','Primero regístrate.');return;}
-  if(!goleador){alerta('g-alert','error','Selecciona un país.');return;}
-  const datos={participante_id:usuarioActual?.id,predicciones:JSON.stringify(predicciones),bracket:JSON.stringify(bracket),goleador,fecha:new Date().toISOString()};
-  if(sbClient&&!modoDemo){const{error}=await sbClient.from('quinielas').upsert([datos]);if(error){alerta('g-alert','error','Error: '+error.message);return;}}
-  else{localStorage.setItem('quiniela_'+(usuarioActual?.id||'demo'),JSON.stringify(datos));}
-  alerta('g-alert','success',`País goleador guardado: ${goleador}!`);
+  const st = document.getElementById('g-status');
+  if (st) st.textContent = goleador ? `Seleccionado: ${goleador}` : 'Selecciona el país goleador';
 }
 
+function selGoleador(eq) {
+  if (estaCerradaQuiniela()) return;
+  goleador = eq;
+  renderGoleador();
+}
+
+async function guardarGoleador() {
+  if (estaCerradaQuiniela()) {
+    alerta('g-alert', 'error', 'La quiniela ya está cerrada.');
+    return;
+  }
+  if (!usuarioActual && !modoDemo) {
+    alerta('g-alert', 'error', 'Primero regístrate.');
+    return;
+  }
+  if (!goleador) {
+    alerta('g-alert', 'error', 'Selecciona un país.');
+    return;
+  }
+
+  try {
+    await guardarQuinielaCompleta();
+    alerta('g-alert', 'success', `País goleador guardado: ${goleador}.`);
+  } catch (error) {
+    alerta('g-alert', 'error', 'Error: ' + error.message);
+  }
+}
+
+// =============================================
 // RANKING
-const DEMO_RANK=[
+// =============================================
+const DEMO_RANK = [
   {alias:'Efro Tecology',nombre:'Efrain Gomez',pts:142,goleador:'Brasil'},
   {alias:'LaVaquita FC',nombre:'Carlos Rodriguez',pts:128,goleador:'Argentina'},
   {alias:'MisterMundial',nombre:'Maria Gonzalez',pts:115,goleador:'Francia'},
@@ -735,135 +1177,249 @@ const DEMO_RANK=[
   {alias:'PajaritoPan',nombre:'Luisa Ramos',pts:61,goleador:'Panama'},
 ];
 
-async function renderRanking(){
-  let data=modoDemo?DEMO_RANK:[];
-  if(sbClient&&!modoDemo){const{data:rows}=await sbClient.from('ranking_view').select('*').order('pts',{ascending:false}).limit(100);if(rows&&rows.length)data=rows;}
-  if(!data.length)data=DEMO_RANK;
-  const c=document.getElementById('ranking-container');if(!c)return;
-  c.innerHTML=data.map((p,i)=>{
-    const ini=(p.alias||p.nombre).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    const pos=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+async function renderRanking() {
+  let data = [];
+
+  if (rankingSimulado?.length) {
+    data = rankingSimulado;
+  } else if (modoDemo) {
+    data = DEMO_RANK;
+  } else if (sbClient) {
+    const { data: rows } = await sbClient
+      .from('ranking_view')
+      .select('*')
+      .order('pts', { ascending:false })
+      .limit(100);
+
+    if (rows && rows.length) data = rows;
+  }
+
+  if (!data.length) data = DEMO_RANK;
+
+  const c = document.getElementById('ranking-container');
+  if (!c) return;
+
+  c.innerHTML = data.map((p,i) => {
+    const ini = (p.alias || p.nombre).split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    const pos = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1);
+
     return `<div class="rankrow">
       <div class="rankpos${i<3?' med':''}">${pos}</div>
       <div class="rankavatar">${ini}</div>
-      <div><div class="rankname">${p.alias||p.nombre}</div></div>
-      <div class="rankcamp">${p.goleador?flagBadge(p.goleador,16)+' ':''} ${p.goleador||'—'}</div>
+      <div><div class="rankname">${p.alias || p.nombre}</div></div>
+      <div class="rankcamp">${p.goleador ? flagBadge(p.goleador,16) + ' ' : ''}${p.goleador || '—'}</div>
       <div class="rankpts">${p.pts}<span class="ptslbl">pts</span></div>
     </div>`;
   }).join('');
-  document.getElementById('stat-total').textContent=modoDemo?DEMO_RANK.length:(participantes.length||data.length);
+
+  document.getElementById('stat-total').textContent = participantes.length || data.length;
+  setMiPosicionDesdeRanking(data);
 }
 
-// MODO DEMO
-function activarDemo(){
-  modoDemo=true;
+function simularRankingDemo() {
+  const base = participantes.length ? participantes : DEMO_RANK.map((p,i)=>({ ...p, id:'demo_'+i }));
+  rankingSimulado = base.map((p, i) => ({
+    alias: p.alias || `Jugador${i+1}`,
+    nombre: p.nombre || `Participante ${i+1}`,
+    pts: Math.floor(Math.random() * 160),
+    goleador: TODOS_PAISES[Math.floor(Math.random() * TODOS_PAISES.length)]
+  })).sort((a,b) => b.pts - a.pts);
+
+  renderRanking();
+  alerta('sim-alert', 'success', 'Ranking simulado generado.');
+}
+
+function limpiarSimulacion() {
+  rankingSimulado = null;
+  renderRanking();
+  alerta('sim-alert', 'success', 'Simulación limpiada.');
+}
+
+// =============================================
+// DEMO
+// =============================================
+function getPaisesParaSlot(m, lado) {
+  const s = getPaisesSlot(m, lado);
+  return s ? s : null;
+}
+
+function activarDemo() {
+  modoDemo = true;
   document.getElementById('demo-banner').classList.add('on');
-  document.getElementById('demo-fab').style.display='none';
-  usuarioActual={id:'demo',nombre:'Demo Usuario',alias:'DemoFan2026',email:'demo@bit.com',codigo:'BIT-DEMO0'};
+  document.getElementById('demo-fab').style.display = 'none';
+
+  usuarioActual = {
+    id:'demo',
+    nombre:'Demo Usuario',
+    alias:'DemoFan2026',
+    email:'demo@bit.com',
+    codigo:'BIT-DEMO0'
+  };
+
   mostrarUsuario('DemoFan2026');
-  PARTIDOS.forEach(p=>{predicciones[p.id]={l:Math.floor(Math.random()*4),v:Math.floor(Math.random()*3)};});
-  BRACKET_RONDAS.forEach(ronda=>{
-    ronda.partidos.forEach(m=>{
-      const sl=getPaisesSlot(m,'l');const sv=getPaisesParaSlot(m,'v');
-      const pl=sl?sl.paises:TODOS_PAISES;const pv=sv?sv.paises:TODOS_PAISES;
-      bracket[m.bid]={l:pl[Math.floor(Math.random()*pl.length)],v:pv[Math.floor(Math.random()*pv.length)],gl:Math.floor(Math.random()*3),gv:Math.floor(Math.random()*2)};
+
+  predicciones = {};
+  bracket = {};
+  goleador = 'Brasil';
+
+  PARTIDOS.forEach(p => {
+    predicciones[p.id] = {
+      l: Math.floor(Math.random() * 4),
+      v: Math.floor(Math.random() * 4)
+    };
+  });
+
+  BRACKET_RONDAS.forEach(ronda => {
+    ronda.partidos.forEach(m => {
+      const sl = getPaisesParaSlot(m, 'l');
+      const sv = getPaisesParaSlot(m, 'v');
+      const pl = sl ? sl.paises : TODOS_PAISES;
+      const pv = sv ? sv.paises : TODOS_PAISES;
+      let l = pl[Math.floor(Math.random() * pl.length)];
+      let v = pv[Math.floor(Math.random() * pv.length)];
+      if (l === v && pv.length > 1) {
+        const opciones = pv.filter(x => x !== l);
+        v = opciones[Math.floor(Math.random() * opciones.length)];
+      }
+      const gl = Math.floor(Math.random() * 4);
+      const gv = Math.floor(Math.random() * 4);
+      bracket[m.bid] = { l, v, gl, gv };
+      if (gl === gv) {
+        bracket[m.bid].penales = Math.random() > 0.5 ? l : v;
+      }
     });
   });
-  goleador='Brasil';
-  participantes=DEMO_RANK.map((p,i)=>({...p,id:'demo_'+i}));
+
+  participantes = DEMO_RANK.map((p,i) => ({ ...p, id:'demo_'+i }));
+
   actualizarContadores();
-  renderGrupoTabs();renderPartidosGrupo();renderBracket();renderGoleador();renderRanking();
-  alert('Modo demo activado! Navega por todas las secciones.');
+  renderGrupoTabs();
+  renderPartidosGrupo();
+  renderBracket();
+  renderGoleador();
+  renderRanking();
+  aplicarEstadoCierreUI();
+
+  alert('Modo demo activado. Navega por todas las secciones.');
 }
 
-function getPaisesParaSlot(m,lado){const s=getPaisesSlot(m,lado);return s?s:null;}
+function salirDemo() {
+  modoDemo = false;
+  predicciones = {};
+  bracket = {};
+  goleador = null;
+  usuarioActual = null;
+  rankingSimulado = null;
 
-function salirDemo(){
-  modoDemo=false;predicciones={};bracket={};goleador=null;usuarioActual=null;
   document.getElementById('demo-banner').classList.remove('on');
-  document.getElementById('demo-fab').style.display='';
+  document.getElementById('demo-fab').style.display = '';
   document.getElementById('uchip').classList.remove('on');
-  renderGrupoTabs();renderPartidosGrupo();renderBracket();renderGoleador();actualizarContadores();
+
+  renderGrupoTabs();
+  renderPartidosGrupo();
+  renderBracket();
+  renderGoleador();
+  renderRanking();
+  actualizarContadores();
+  aplicarEstadoCierreUI();
 }
 
+// =============================================
 // ADMIN
-function renderAdmin(){
-  const loc=JSON.parse(localStorage.getItem('participantes')||'[]');
-  const data=participantes.length?participantes:loc;
-  const c=document.getElementById('admin-table');if(!c)return;
-  if(!data.length){c.innerHTML='<p style="color:var(--muted);font-size:13px">Sin participantes registrados.</p>';return;}
-  c.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
-    <thead><tr style="border-bottom:2px solid var(--borde)">
-      <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">#</th>
-      <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">Nombre</th>
-      <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">Alias</th>
-      <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">Correo</th>
-      <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">Código</th>
-      <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">Ver</th>
-    </tr></thead>
-    <tbody>${data.map((p,i)=>`<tr style="border-bottom:1px solid rgba(0,0,0,0.05);cursor:pointer" onclick="verPerfil('${p.id}')">
-      <td style="padding:7px;color:var(--muted)">${i+1}</td>
-      <td style="padding:7px;font-weight:500">${p.nombre}</td>
-      <td style="padding:7px;color:var(--verde);font-weight:700">${p.alias||'—'}</td>
-      <td style="padding:7px;color:var(--muted)">${p.email}</td>
-      <td style="padding:7px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.05em">${p.codigo||'—'}</td>
-      <td style="padding:7px"><span style="color:var(--verde);font-size:12px;font-weight:600">Ver →</span></td>
-    </tr>`).join('')}</tbody>
+// =============================================
+function renderAdmin() {
+  const loc = JSON.parse(localStorage.getItem('participantes') || '[]');
+  const data = participantes.length ? participantes : loc;
+  const c = document.getElementById('admin-table');
+  if (!c) return;
+
+  if (!data.length) {
+    c.innerHTML = '<p style="color:var(--muted);font-size:13px">Sin participantes registrados.</p>';
+    cargarCodigos();
+    return;
+  }
+
+  c.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead>
+      <tr style="border-bottom:2px solid var(--borde)">
+        <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">#</th>
+        <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">Nombre</th>
+        <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">Alias</th>
+        <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">Correo</th>
+        <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">Código</th>
+        <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">Ver</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${data.map((p,i) => `
+        <tr style="border-bottom:1px solid rgba(0,0,0,0.05);cursor:pointer" onclick="verPerfil('${p.id}')">
+          <td style="padding:7px;color:var(--muted)">${i+1}</td>
+          <td style="padding:7px;font-weight:500">${p.nombre || '—'}</td>
+          <td style="padding:7px;color:var(--verde);font-weight:700">${p.alias || '—'}</td>
+          <td style="padding:7px;color:var(--muted)">${p.email || '—'}</td>
+          <td style="padding:7px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.05em">${p.codigo || '—'}</td>
+          <td style="padding:7px"><span style="color:var(--verde);font-size:12px;font-weight:600">Ver →</span></td>
+        </tr>`).join('')}
+    </tbody>
   </table>`;
+
   cargarCodigos();
 }
 
-async function verPerfil(pid){
-  // Buscar participante
-  const p=participantes.find(x=>String(x.id)===String(pid));
-  if(!p){alert('Participante no encontrado.');return;}
-
-  let q=null;
-  if(sbClient){
-    const{data}=await sbClient.from('quinielas').select('*').eq('participante_id',pid).single();
-    q=data;
-  } else {
-    const qs=localStorage.getItem('quiniela_'+pid);
-    if(qs)q=JSON.parse(qs);
+async function verPerfil(pid) {
+  const p = participantes.find(x => String(x.id) === String(pid));
+  if (!p) {
+    alert('Participante no encontrado.');
+    return;
   }
 
-  const preds=q?JSON.parse(q.predicciones||'{}'):{};
-  const brac=q?JSON.parse(q.bracket||'{}'):{};
-  const gol=q?q.goleador:null;
-  const done=PARTIDOS.filter(x=>{const pr=preds[x.id];return pr&&pr.l!==undefined&&pr.v!==undefined;}).length;
+  let q = null;
+  if (sbClient) {
+    const { data } = await sbClient.from('quinielas').select('*').eq('participante_id', pid).maybeSingle();
+    q = data;
+  } else {
+    const qs = localStorage.getItem('quiniela_' + pid);
+    if (qs) q = JSON.parse(qs);
+  }
 
-  const modal=document.getElementById('perfil-modal');
-  const body=document.getElementById('perfil-body');
+  const preds = q ? parseMaybeJSON(q.predicciones, {}) : {};
+  const gol = q ? q.goleador : null;
+  const done = PARTIDOS.filter(x => {
+    const pr = preds[x.id];
+    return pr && pr.l !== undefined && pr.v !== undefined;
+  }).length;
 
-  // Muestra de predicciones de grupos (primeros 12)
-  let predsHtml='';
-  const muestra=PARTIDOS.slice(0,12);
-  muestra.forEach(pa=>{
-    const pr=preds[pa.id];
-    predsHtml+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--borde);font-size:12px">
+  const modal = document.getElementById('perfil-modal');
+  const body = document.getElementById('perfil-body');
+
+  let predsHtml = '';
+  const muestra = PARTIDOS.slice(0, 12);
+  muestra.forEach(pa => {
+    const pr = preds[pa.id];
+    predsHtml += `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--borde);font-size:12px">
       <span>${flagBadge(pa.l,16)} ${pa.l}</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--verde);margin:0 6px">${pr?pr.l:'-'} – ${pr?pr.v:'-'}</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--verde);margin:0 6px">${pr ? pr.l : '-'} – ${pr ? pr.v : '-'}</span>
       <span>${pa.v} ${flagBadge(pa.v,16)}</span>
     </div>`;
   });
 
-  body.innerHTML=`
+  body.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
       <div style="background:var(--bg);border-radius:8px;padding:12px">
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Nombre completo</div>
-        <div style="font-weight:600">${p.nombre}</div>
+        <div style="font-weight:600">${p.nombre || '—'}</div>
       </div>
       <div style="background:var(--bg);border-radius:8px;padding:12px">
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Alias público</div>
-        <div style="font-weight:700;color:var(--verde)">${p.alias||'—'}</div>
+        <div style="font-weight:700;color:var(--verde)">${p.alias || '—'}</div>
       </div>
       <div style="background:var(--bg);border-radius:8px;padding:12px">
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Correo</div>
-        <div style="font-size:13px">${p.email}</div>
+        <div style="font-size:13px">${p.email || '—'}</div>
       </div>
       <div style="background:var(--bg);border-radius:8px;padding:12px">
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Código</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.05em">${p.codigo||'—'}</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.05em">${p.codigo || '—'}</div>
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:1rem">
@@ -872,8 +1428,8 @@ async function verPerfil(pid){
         <div style="font-size:11px">Partidos predichos</div>
       </div>
       <div style="background:#fffbf0;color:#7a5500;border-radius:8px;padding:10px;flex:1;text-align:center">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.5rem">${gol?flagBadge(gol,20)+' ':''}</div>
-        <div style="font-size:11px">País goleador: ${gol||'Sin selección'}</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.5rem">${gol ? flagBadge(gol,20) + ' ' : ''}</div>
+        <div style="font-size:11px">País goleador: ${gol || 'Sin selección'}</div>
       </div>
     </div>
     <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Muestra predicciones — Primeros 12 partidos</div>
@@ -884,79 +1440,155 @@ async function verPerfil(pid){
   modal.classList.add('on');
 }
 
-function cerrarPerfil(){document.getElementById('perfil-modal').classList.remove('on');}
-
-async function cargarCodigos(){
-  const c=document.getElementById('codigos-list');if(!c)return;
-  if(!sbClient){c.innerHTML='<p style="color:var(--muted);font-size:13px">Conecta Supabase para gestionar códigos.</p>';return;}
-  const{data}=await sbClient.from('codigos_participante').select('*').order('codigo');
-  todosCodigos=data||[];
-  if(!todosCodigos.length){c.innerHTML='<p style="color:var(--muted);font-size:13px">Sin códigos generados.</p>';return;}
-  const libres=todosCodigos.filter(d=>!d.usado).length;
-  c.innerHTML=`<p style="font-size:12px;color:var(--muted);margin-bottom:.75rem"><strong>${libres}</strong> disponibles · <strong>${todosCodigos.length-libres}</strong> usados · <strong>${todosCodigos.length}</strong> total</p>`+
-    `<div style="display:flex;flex-wrap:wrap;gap:4px">`+
-    todosCodigos.map(d=>{
-      const pid=participantes.find(p=>p.codigo===d.codigo)?.id;
-      return `<span class="codigo-chip ${d.usado?'usado':'libre'}"
-        style="cursor:${d.usado?'pointer':'default'}"
-        ${d.usado&&pid?`onclick="verPerfil('${pid}')" title="Ver participante"`:''}
-      >${d.codigo}${d.usado?' ✓':''}</span>`;
-    }).join('')+`</div>`;
+function cerrarPerfil() {
+  document.getElementById('perfil-modal').classList.remove('on');
 }
 
-async function generarCodigos(){
-  const cant=parseInt(document.getElementById('cant-codigos').value)||10;
-  if(!sbClient){alert('Conecta Supabase primero.');return;}
-  const existentes=new Set(todosCodigos.map(c=>c.codigo));
-  const nuevos=[];let intentos=0;
-  while(nuevos.length<cant&&intentos<cant*10){
-    const cod=generarCodigoAlfanum();
-    if(!existentes.has(cod)){nuevos.push({codigo:cod,usado:false});existentes.add(cod);}
+async function cargarCodigos() {
+  const c = document.getElementById('codigos-list');
+  if (!c) return;
+
+  if (!sbClient) {
+    c.innerHTML = '<p style="color:var(--muted);font-size:13px">Conecta Supabase para gestionar códigos.</p>';
+    return;
+  }
+
+  const { data } = await sbClient.from('codigos_participante').select('*').order('codigo');
+  todosCodigos = data || [];
+
+  if (!todosCodigos.length) {
+    c.innerHTML = '<p style="color:var(--muted);font-size:13px">Sin códigos generados.</p>';
+    return;
+  }
+
+  const libres = todosCodigos.filter(d => !d.usado).length;
+
+  c.innerHTML =
+    `<p style="font-size:12px;color:var(--muted);margin-bottom:.75rem"><strong>${libres}</strong> disponibles · <strong>${todosCodigos.length-libres}</strong> usados · <strong>${todosCodigos.length}</strong> total</p>` +
+    `<div style="display:flex;flex-wrap:wrap;gap:4px">` +
+    todosCodigos.map(d => {
+      const pid = participantes.find(p => p.codigo === d.codigo)?.id;
+      return `<span class="codigo-chip ${d.usado ? 'usado' : 'libre'}"
+        style="cursor:${d.usado ? 'pointer' : 'default'}"
+        ${d.usado && pid ? `onclick="verPerfil('${pid}')" title="Ver participante"` : ''}>
+        ${d.codigo}${d.usado ? ' ✓' : ''}
+      </span>`;
+    }).join('') +
+    `</div>`;
+}
+
+async function generarCodigos() {
+  const cant = parseInt(document.getElementById('cant-codigos').value, 10) || 10;
+  if (!sbClient) {
+    alert('Conecta Supabase primero.');
+    return;
+  }
+
+  const existentes = new Set(todosCodigos.map(c => c.codigo));
+  const nuevos = [];
+  let intentos = 0;
+
+  while (nuevos.length < cant && intentos < cant * 20) {
+    const cod = generarCodigoAlfanum();
+    if (!existentes.has(cod)) {
+      nuevos.push({ codigo: cod, usado: false });
+      existentes.add(cod);
+    }
     intentos++;
   }
-  if(!nuevos.length){alert('No se pudieron generar códigos únicos.');return;}
-  const{error}=await sbClient.from('codigos_participante').insert(nuevos);
-  if(error){alert('Error al generar: '+error.message+'\n\nAsegúrate de ejecutar el SQL de permisos en Supabase.');return;}
-  alert(`${nuevos.length} códigos generados!`);
+
+  if (!nuevos.length) {
+    alert('No se pudieron generar códigos únicos.');
+    return;
+  }
+
+  const { error } = await sbClient.from('codigos_participante').insert(nuevos);
+  if (error) {
+    alert('Error al generar: ' + error.message);
+    return;
+  }
+
+  alert(`${nuevos.length} códigos generados.`);
   cargarCodigos();
 }
 
-function exportarCodigos(){
-  if(!todosCodigos.length){alert('No hay códigos.');return;}
-  const csv=['Codigo,Estado,Participante',...todosCodigos.map(d=>{
-    const p=participantes.find(x=>x.codigo===d.codigo);
-    return `${d.codigo},${d.usado?'Usado':'Disponible'},${p?p.nombre:''}`;
-  })].join('\n');
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-  a.download='codigos_quiniela2026.csv';a.click();
+function exportarCodigos() {
+  if (!todosCodigos.length) {
+    alert('No hay códigos.');
+    return;
+  }
+
+  const csv = [
+    'Codigo,Estado,Participante',
+    ...todosCodigos.map(d => {
+      const p = participantes.find(x => x.codigo === d.codigo);
+      return `${d.codigo},${d.usado ? 'Usado' : 'Disponible'},${p ? p.nombre : ''}`;
+    })
+  ].join('\n');
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8;' }));
+  a.download = 'codigos_quiniela2026.csv';
+  a.click();
 }
 
-function exportarCSV(){
-  const loc=JSON.parse(localStorage.getItem('participantes')||'[]');
-  const data=participantes.length?participantes:loc;
-  if(!data.length){alert('Sin datos.');return;}
-  const cols=['nombre','alias','email','tel','codigo','favorito','fecha'];
-  const csv=[cols.join(','),...data.map(r=>cols.map(c=>`"${(r[c]||'').toString().replace(/"/g,'""')}"`).join(','))].join('\n');
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-  a.download='participantes_quiniela2026.csv';a.click();
+function exportarCSV() {
+  const loc = JSON.parse(localStorage.getItem('participantes') || '[]');
+  const data = participantes.length ? participantes : loc;
+
+  if (!data.length) {
+    alert('Sin datos.');
+    return;
+  }
+
+  const cols = ['nombre','alias','email','tel','codigo','favorito','fecha'];
+  const csv = [
+    cols.join(','),
+    ...data.map(r => cols.map(c => `"${(r[c] || '').toString().replace(/"/g, '""')}"`).join(','))
+  ].join('\n');
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8;' }));
+  a.download = 'participantes_quiniela2026.csv';
+  a.click();
 }
 
-function aplicarConfig(){
-  const emp=document.getElementById('cfg-empresa').value.trim();
-  const col=document.getElementById('cfg-color').value.trim();
-  if(emp){document.getElementById('empresa-label').textContent=emp;localStorage.setItem('cfg_empresa',emp);}
-  if(col&&/^#[0-9a-fA-F]{6}$/.test(col)){document.documentElement.style.setProperty('--verde',col);localStorage.setItem('cfg_color',col);}
-  alert('Configuracion aplicada!');
+function aplicarConfig() {
+  const emp = document.getElementById('cfg-empresa').value.trim();
+  const col = document.getElementById('cfg-color').value.trim();
+
+  if (emp) {
+    document.getElementById('empresa-label').textContent = emp;
+    localStorage.setItem('cfg_empresa', emp);
+  }
+  if (col && /^#[0-9a-fA-F]{6}$/.test(col)) {
+    document.documentElement.style.setProperty('--verde', col);
+    localStorage.setItem('cfg_color', col);
+  }
+
+  alert('Configuración aplicada.');
 }
 
+// =============================================
 // INIT
-async function init(){
-  calcDias();renderGrupoTabs();renderPartidosGrupo();renderGoleador();renderRanking();
-  const emp=localStorage.getItem('cfg_empresa');const col=localStorage.getItem('cfg_color');
-  if(emp)document.getElementById('empresa-label').textContent=emp;
-  if(col)document.documentElement.style.setProperty('--verde',col);
-  await cargarSDK();await autoConectar();
+// =============================================
+async function init() {
+  calcDias();
+  renderGrupoTabs();
+  renderPartidosGrupo();
+  renderGoleador();
+  renderRanking();
+
+  const emp = localStorage.getItem('cfg_empresa');
+  const col = localStorage.getItem('cfg_color');
+
+  if (emp) document.getElementById('empresa-label').textContent = emp;
+  if (col) document.documentElement.style.setProperty('--verde', col);
+
+  await cargarSDK();
+  await autoConectar();
+  await cargarConfiguracion();
+
+  aplicarEstadoCierreUI();
 }
-document.addEventListener('DOMContentLoaded',init);
+document.addEventListener('DOMContentLoaded', init);
