@@ -687,49 +687,77 @@ function abrirModal(bid){
   document.getElementById('modal-gl').value=b.gl!==undefined?b.gl:'';
   document.getElementById('modal-gv').value=b.gv!==undefined?b.gv:'';
   document.getElementById('modal-pen-msg').style.display='none';
-  const slotL=getPaisesSlot(m,'l');const slotV=getPaisesSlot(m,'v');
-  let html='';
-  // EQUIPOS LOCALES
-  html+=`<div class="modal-sec-title">Equipo local${slotL?` — ${m.tipo_l==='1'?'1ro':m.tipo_l==='2'?'2do':'Mejor 3ro'} del grupo`:''}</div>`;
-  // Equipos ya usados en otros partidos de R32
-  const r32bids=[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88];
-  const usadosR32={};
-  r32bids.forEach(otherBid=>{
-    if(otherBid===bid)return;
-    const ob=bracket[otherBid]||{};
-    if(ob.l)usadosR32[ob.l]=otherBid;
-    if(ob.v)usadosR32[ob.v]=otherBid;
-  });
 
-  const renderOpts=(grupos,lado)=>{
-    const listaGrupos=grupos||Object.keys(GRUPOS);
-    listaGrupos.forEach(g=>{
-      html+=`<div class="modal-grupo-lbl">Grupo ${g}</div>`;
-      GRUPOS[g].forEach(eq=>{
-        const yaUsado=usadosR32[eq];
-        const esSel=b[lado]===eq;
-        const usadoLabel=yaUsado?`<span class="opt-usado-tag">Ya en partido ${yaUsado}</span>`:'';
-        html+=`<div class="modal-opt${esSel?' sel':''}${yaUsado?' opt-usado':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
-          ${flagBadge(eq,20)} <span>${g} — ${eq}</span>${usadoLabel}
-        </div>`;
+  const esR32=ronda.id==='r32';
+  const slotL=getPaisesSlot(m,'l');
+  const slotV=getPaisesSlot(m,'v');
+  const lTeam=b.l||null;
+  const vTeam=b.v||null;
+  let html='';
+
+  if(esR32){
+    // R32: mostrar dropdowns de seleccion con advertencia de equipos ya usados
+    const r32bids=[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88];
+    const usadosR32={};
+    r32bids.forEach(otherBid=>{
+      if(otherBid===bid)return;
+      const ob=bracket[otherBid]||{};
+      if(ob.l)usadosR32[ob.l]=otherBid;
+      if(ob.v)usadosR32[ob.v]=otherBid;
+    });
+    const renderOpts=(grupos,lado)=>{
+      const listaGrupos=grupos||Object.keys(GRUPOS);
+      listaGrupos.forEach(g=>{
+        html+=`<div class="modal-grupo-lbl">Grupo ${g}</div>`;
+        GRUPOS[g].forEach(eq=>{
+          const yaUsado=usadosR32[eq];
+          const esSel=b[lado]===eq;
+          const usadoLabel=yaUsado?`<span class="opt-usado-tag">Ya en partido ${yaUsado}</span>`:'';
+          html+=`<div class="modal-opt${esSel?' sel':''}${yaUsado?' opt-usado':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
+            ${flagBadge(eq,20)} <span>${g} — ${eq}</span>${usadoLabel}
+          </div>`;
+        });
       });
-    });
-  };
-  renderOpts(slotL?slotL.grupos:null,'l');
-  html+=`<div style="height:1px;background:var(--borde);margin:.75rem 0"></div>`;
-  html+=`<div class="modal-sec-title">Equipo visitante${slotV?` — ${m.tipo_v==='1'?'1ro':m.tipo_v==='2'?'2do':'Mejor 3ro'} del grupo`:''}</div>`;
-  renderOpts(slotV?slotV.grupos:null,'v');
-  // PENALES
-  const lTeam=b.l||null;const vTeam=b.v||null;
-  if(lTeam&&vTeam){
+    };
+    html+=`<div class="modal-sec-title">Equipo local${slotL?` — ${m.tipo_l==='1'?'1ro':m.tipo_l==='2'?'2do':'Mejor 3ro'} del grupo`:''}</div>`;
+    renderOpts(slotL?slotL.grupos:null,'l');
     html+=`<div style="height:1px;background:var(--borde);margin:.75rem 0"></div>`;
-    html+=`<div class="modal-sec-title" style="color:#c0392b">En caso de empate — ganador en penales</div>`;
-    [lTeam,vTeam].forEach(eq=>{
-      html+=`<div class="modal-opt${b.penales===eq?' sel':''}" data-lado="pen" data-eq="${eq}" onclick="selOpt(this)">${flagBadge(eq,20)} <span>${eq}</span></div>`;
-    });
+    html+=`<div class="modal-sec-title">Equipo visitante${slotV?` — ${m.tipo_v==='1'?'1ro':m.tipo_v==='2'?'2do':'Mejor 3ro'} del grupo`:''}</div>`;
+    renderOpts(slotV?slotV.grupos:null,'v');
+  } else {
+    // R16 en adelante: equipos fijos del ganador anterior, solo se edita marcador
+    const pendienteL=!lTeam;
+    const pendienteV=!vTeam;
+    html+=`<div class="modal-equipos-fijos">`;
+    html+=`<div class="equipo-fijo${pendienteL?' pendiente':''}">
+      ${lTeam?flagBadge(lTeam,24):'<span class="bq" style="width:36px;height:24px;font-size:12px">?</span>'}
+      <div>
+        <div class="ef-nombre">${lTeam||'Pendiente'}</div>
+        <div class="ef-label">Ganador de partido anterior</div>
+      </div>
+    </div>`;
+    html+=`<div class="ef-vs">VS</div>`;
+    html+=`<div class="equipo-fijo${pendienteV?' pendiente':''}">
+      ${vTeam?flagBadge(vTeam,24):'<span class="bq" style="width:36px;height:24px;font-size:12px">?</span>'}
+      <div>
+        <div class="ef-nombre">${vTeam||'Pendiente'}</div>
+        <div class="ef-label">Ganador de partido anterior</div>
+      </div>
+    </div>`;
+    html+=`</div>`;
+    if(pendienteL||pendienteV){
+      html+=`<div style="background:#fffbf0;border:1px solid var(--oro);border-radius:8px;padding:10px 12px;font-size:12px;color:#7a5500;margin-top:.75rem">
+        Completa los partidos anteriores para desbloquear este partido.
+      </div>`;
+    }
+    // Inputs ocultos para que confirmarModal no falle buscando .sel
+    if(lTeam)html+=`<div class="modal-opt sel" data-lado="l" data-eq="${lTeam}" style="display:none"></div>`;
+    if(vTeam)html+=`<div class="modal-opt sel" data-lado="v" data-eq="${vTeam}" style="display:none"></div>`;
   }
+
   document.getElementById('modal-opts').innerHTML=html;
   document.getElementById('bracket-modal').classList.add('on');
+
   // Actualizar penales en tiempo real al cambiar marcador
   setTimeout(()=>{
     const glEl=document.getElementById('modal-gl');
