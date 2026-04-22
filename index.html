@@ -388,7 +388,11 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
   </div>
   <div class="savebar">
     <span class="savestatus" id="b-status">Llena el bracket para guardar</span>
-    <button class="btn-save" onclick="guardarBracket()">Guardar bracket</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-sec" onclick="autoCalcularBracket()" title="Rellena el bracket con los clasificados de tu 1era Ronda">&#9654; Calcular desde 1era Ronda</button>
+      <button class="btn-sec" onclick="resetBracket()" style="color:#c0392b;border-color:#c0392b" title="Borrar toda la seleccion">&#128465; Borrar todo</button>
+      <button class="btn-save" onclick="guardarBracket()">Guardar bracket</button>
+    </div>
   </div>
   <div class="alert" id="b-alert"></div>
 </section>
