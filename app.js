@@ -126,101 +126,87 @@ const PARTIDOS = [
 
 const BRACKET_RONDAS = [
   { id:'r32', nombre:'Ronda de 32', pts_ex:6, pts_res:3, partidos:[
-    {bid:73,desc:'2A vs 2B',    grupos_l:['A'],tipo_l:'2',grupos_v:['B'],tipo_v:'2'},
-    {bid:74,desc:'1E vs 3ABCDF',grupos_l:['E'],tipo_l:'1',grupos_v:['A','B','C','D','F'],tipo_v:'3'},
-    {bid:75,desc:'1F vs 2C',    grupos_l:['F'],tipo_l:'1',grupos_v:['C'],tipo_v:'2'},
-    {bid:76,desc:'1C vs 2F',    grupos_l:['C'],tipo_l:'1',grupos_v:['F'],tipo_v:'2'},
-    {bid:77,desc:'1I vs 3CDFGH',grupos_l:['I'],tipo_l:'1',grupos_v:['C','D','F','G','H'],tipo_v:'3'},
-    {bid:78,desc:'2E vs 2I',    grupos_l:['E'],tipo_l:'2',grupos_v:['I'],tipo_v:'2'},
-    {bid:79,desc:'1A vs 3CEFHI',grupos_l:['A'],tipo_l:'1',grupos_v:['C','E','F','H','I'],tipo_v:'3'},
-    {bid:80,desc:'1L vs 3EHIJK',grupos_l:['L'],tipo_l:'1',grupos_v:['E','H','I','J','K'],tipo_v:'3'},
-    {bid:81,desc:'1D vs 3BEFIJ',grupos_l:['D'],tipo_l:'1',grupos_v:['B','E','F','I','J'],tipo_v:'3'},
-    {bid:82,desc:'1G vs 3AEHIJ',grupos_l:['G'],tipo_l:'1',grupos_v:['A','E','H','I','J'],tipo_v:'3'},
-    {bid:83,desc:'2K vs 2L',    grupos_l:['K'],tipo_l:'2',grupos_v:['L'],tipo_v:'2'},
-{bid:84,desc:'1L vs 3EHIJK',grupos_l:['L'],tipo_l:'1',grupos_v:['E','H','I','J','K'],tipo_v:'3'},
-{bid:85,desc:'1J vs 2H',    grupos_l:['J'],tipo_l:'1',grupos_v:['H'],tipo_v:'2'},
-{bid:86,desc:'2D vs 2G',    grupos_l:['D'],tipo_l:'2',grupos_v:['G'],tipo_v:'2'},
-{bid:87,desc:'1B vs 3EFGIJ',grupos_l:['B'],tipo_l:'1',grupos_v:['E','F','G','I','J'],tipo_v:'3'},
-{bid:88,desc:'1K vs 3DEIJL',grupos_l:['K'],tipo_l:'1',grupos_v:['D','E','I','J','L'],tipo_v:'3'},
+    // LADO IZQUIERDO (-> Semi 101)
+    {bid:74,desc:'1E vs 3ABCDF', grupos_l:['E'],tipo_l:'1',grupos_v:['A','B','C','D','F'],tipo_v:'3'},
+    {bid:77,desc:'1I vs 3CDFGH', grupos_l:['I'],tipo_l:'1',grupos_v:['C','D','F','G','H'],tipo_v:'3'},
+    {bid:73,desc:'2A vs 2B',     grupos_l:['A'],tipo_l:'2',grupos_v:['B'],tipo_v:'2'},
+    {bid:75,desc:'1F vs 2C',     grupos_l:['F'],tipo_l:'1',grupos_v:['C'],tipo_v:'2'},
+    {bid:83,desc:'2K vs 2L',     grupos_l:['K'],tipo_l:'2',grupos_v:['L'],tipo_v:'2'},
+    {bid:84,desc:'1H vs 2J',     grupos_l:['H'],tipo_l:'1',grupos_v:['J'],tipo_v:'2'},
+    {bid:81,desc:'1D vs 3BEFIJ', grupos_l:['D'],tipo_l:'1',grupos_v:['B','E','F','I','J'],tipo_v:'3'},
+    {bid:82,desc:'1G vs 3AEHIJ', grupos_l:['G'],tipo_l:'1',grupos_v:['A','E','H','I','J'],tipo_v:'3'},
+    // LADO DERECHO (-> Semi 102)
+    {bid:76,desc:'1C vs 2F',     grupos_l:['C'],tipo_l:'1',grupos_v:['F'],tipo_v:'2'},
+    {bid:78,desc:'2E vs 2I',     grupos_l:['E'],tipo_l:'2',grupos_v:['I'],tipo_v:'2'},
+    {bid:79,desc:'1A vs 3CEFHI', grupos_l:['A'],tipo_l:'1',grupos_v:['C','E','F','H','I'],tipo_v:'3'},
+    {bid:80,desc:'1L vs 3EHIJK', grupos_l:['L'],tipo_l:'1',grupos_v:['E','H','I','J','K'],tipo_v:'3'},
+    {bid:86,desc:'1J vs 2H',     grupos_l:['J'],tipo_l:'1',grupos_v:['H'],tipo_v:'2'},
+    {bid:88,desc:'2D vs 2G',     grupos_l:['D'],tipo_l:'2',grupos_v:['G'],tipo_v:'2'},
+    {bid:85,desc:'1B vs 3EFGIJ', grupos_l:['B'],tipo_l:'1',grupos_v:['E','F','G','I','J'],tipo_v:'3'},
+    {bid:87,desc:'1K vs 3DEIJL', grupos_l:['K'],tipo_l:'1',grupos_v:['D','E','I','J','L'],tipo_v:'3'},
   ]},
- { id:'r16', nombre:'Ronda de 16', pts_ex:8, pts_res:4, partidos:[
-  {bid:89,desc:'Gan.74 vs Gan.77'},{bid:90,desc:'Gan.73 vs Gan.75'},
-  {bid:91,desc:'Gan.83 vs Gan.84'},{bid:92,desc:'Gan.81 vs Gan.82'},
-  {bid:93,desc:'Gan.76 vs Gan.78'},{bid:94,desc:'Gan.79 vs Gan.80'},
-  {bid:95,desc:'Gan.86 vs Gan.88'},{bid:96,desc:'Gan.85 vs Gan.87'},
-]},
+  { id:'r16', nombre:'Ronda de 16', pts_ex:8, pts_res:4, partidos:[
+    {bid:89,desc:'Gan.74 vs Gan.77'},{bid:90,desc:'Gan.73 vs Gan.75'},
+    {bid:91,desc:'Gan.83 vs Gan.84'},{bid:92,desc:'Gan.81 vs Gan.82'},
+    {bid:93,desc:'Gan.76 vs Gan.78'},{bid:94,desc:'Gan.79 vs Gan.80'},
+    {bid:95,desc:'Gan.86 vs Gan.88'},{bid:96,desc:'Gan.85 vs Gan.87'},
+  ]},
   { id:'qf', nombre:'Cuartos de Final', pts_ex:10, pts_res:5, partidos:[
     {bid:97,desc:'Gan.89 vs Gan.90'},{bid:98,desc:'Gan.91 vs Gan.92'},
     {bid:99,desc:'Gan.93 vs Gan.94'},{bid:100,desc:'Gan.95 vs Gan.96'},
   ]},
   { id:'sf', nombre:'Semifinales', pts_ex:12, pts_res:6, partidos:[
-    {bid:101,desc:'Gan.97 vs Gan.98',sede:'AT&T, Dallas'},
-    {bid:102,desc:'Gan.99 vs Gan.100',sede:'Mercedes-Benz, Atlanta'},
+    {bid:101,desc:'Gan.97 vs Gan.98',  sede:'AT&T, Dallas'},
+    {bid:102,desc:'Gan.99 vs Gan.100', sede:'Mercedes-Benz, Atlanta'},
   ]},
   { id:'final', nombre:'Final', pts_ex:15, pts_res:8, partidos:[
     {bid:103,desc:'3er Lugar',sede:'Hard Rock, Miami'},
-    {bid:104,desc:'FINAL',sede:'MetLife, Nueva Jersey'},
+    {bid:104,desc:'FINAL',    sede:'MetLife, Nueva Jersey'},
   ]},
 ];
 
-// Mapa de progresion del bracket
+// Progresion correcta segun bracket visual oficial FIFA 2026
 const PROGRESION = {
-  // R32 -> R16
-  74:(89,'l'),77:(89,'v'),
-  73:(90,'l'),75:(90,'v'),
-  83:(91,'l'),84:(91,'v'),
-  81:(92,'l'),82:(92,'v'),
-  76:(93,'l'),78:(93,'v'),
-  79:(94,'l'),80:(94,'v'),
-  86:(95,'l'),88:(95,'v'),
-  85:(96,'l'),87:(96,'v'),
+  // R32 -> R16 (lado izquierdo -> Semi 101)
+  74:{sig:89,slot:'l'},77:{sig:89,slot:'v'},
+  73:{sig:90,slot:'l'},75:{sig:90,slot:'v'},
+  83:{sig:91,slot:'l'},84:{sig:91,slot:'v'},
+  81:{sig:92,slot:'l'},82:{sig:92,slot:'v'},
+  // R32 -> R16 (lado derecho -> Semi 102)
+  76:{sig:93,slot:'l'},78:{sig:93,slot:'v'},
+  79:{sig:94,slot:'l'},80:{sig:94,slot:'v'},
+  86:{sig:95,slot:'l'},88:{sig:95,slot:'v'},
+  85:{sig:96,slot:'l'},87:{sig:96,slot:'v'},
   // R16 -> QF
-  89:(97,'l'),90:(97,'v'),
-  91:(98,'l'),92:(98,'v'),
-  93:(99,'l'),94:(99,'v'),
-  95:(100,'l'),96:(100,'v'),
+  89:{sig:97,slot:'l'},90:{sig:97,slot:'v'},
+  91:{sig:98,slot:'l'},92:{sig:98,slot:'v'},
+  93:{sig:99,slot:'l'},94:{sig:99,slot:'v'},
+  95:{sig:100,slot:'l'},96:{sig:100,slot:'v'},
   // QF -> SF
-  97:(101,'l'),98:(101,'v'),
-  99:(102,'l'),100:(102,'v'),
+  97:{sig:101,slot:'l'},98:{sig:101,slot:'v'},
+  99:{sig:102,slot:'l'},100:{sig:102,slot:'v'},
   // SF -> Final
-  101:(104,'l'),102:(104,'v'),
-};
-// Mapa inverso para auto-rellenar desde grupos
-// Cada slot de R32 recibe el clasificado de un grupo especifico
-const SLOT_GRUPO_MAP = {
-  73:{lado:'l',grupo:'E',pos:0}, 73:{lado:'v',grupo:null,pos:null}, // 3ro especial
-  75:{lado:'l',grupo:'A',pos:1}, 75:{lado:'v',grupo:'B',pos:1},
-  76:{lado:'l',grupo:'F',pos:0}, 76:{lado:'v',grupo:'C',pos:1},
-  77:{lado:'l',grupo:'K',pos:1}, 77:{lado:'v',grupo:'L',pos:1},
-  78:{lado:'l',grupo:'H',pos:0}, 78:{lado:'v',grupo:'J',pos:1},
-  81:{lado:'l',grupo:'C',pos:0}, 81:{lado:'v',grupo:'F',pos:1},
-  82:{lado:'l',grupo:'E',pos:1}, 82:{lado:'v',grupo:'I',pos:1},
-  83:{lado:'l',grupo:'A',pos:0}, 83:{lado:'v',grupo:null,pos:null},
-  84:{lado:'l',grupo:'L',pos:0}, 84:{lado:'v',grupo:null,pos:null},
-  85:{lado:'l',grupo:'J',pos:0}, 85:{lado:'v',grupo:'H',pos:1},
-  86:{lado:'l',grupo:'D',pos:1}, 86:{lado:'v',grupo:'G',pos:1},
-  87:{lado:'l',grupo:'B',pos:0}, 87:{lado:'v',grupo:null,pos:null},
-  88:{lado:'l',grupo:'K',pos:0}, 88:{lado:'v',grupo:null,pos:null},
+  101:{sig:104,slot:'l'},102:{sig:104,slot:'v'},
 };
 
-// Mapa limpio: bid -> {l:{grupo,pos}, v:{grupo,pos}}
+// Auto-rellenar R32 desde clasificados de grupos
 const R32_AUTO = {
-  73:{l:{g:'A',p:1},  v:{g:'B',p:1}},   // 2A vs 2B
-  74:{l:{g:'E',p:0},  v:null},           // 1E vs 3ABCDF
-  75:{l:{g:'F',p:0},  v:{g:'C',p:1}},   // 1F vs 2C
-  76:{l:{g:'C',p:0},  v:{g:'F',p:1}},   // 1C vs 2F
-  77:{l:{g:'I',p:0},  v:null},           // 1I vs 3CDFGH
-  78:{l:{g:'E',p:1},  v:{g:'I',p:1}},   // 2E vs 2I
-  79:{l:{g:'A',p:0},  v:null},           // 1A vs 3CEFHI
-  80:{l:{g:'L',p:0},  v:null},           // 1L vs 3EHIJK
-  81:{l:{g:'D',p:0},  v:null},           // 1D vs 3BEFIJ
-  82:{l:{g:'G',p:0},  v:null},           // 1G vs 3AEHIJ
-  83:{l:{g:'K',p:1},  v:{g:'L',p:1}},   // 2K vs 2L
-84:{l:{g:'L',p:0},  v:null},
-85:{l:{g:'J',p:0},  v:{g:'H',p:1}},
-86:{l:{g:'D',p:1},  v:{g:'G',p:1}},
-87:{l:{g:'B',p:0},  v:null},
-88:{l:{g:'K',p:0},  v:null},
+  74:{l:{g:'E',p:0}, v:null},          // 1E vs 3ABCDF
+  77:{l:{g:'I',p:0}, v:null},          // 1I vs 3CDFGH
+  73:{l:{g:'A',p:1}, v:{g:'B',p:1}},  // 2A vs 2B
+  75:{l:{g:'F',p:0}, v:{g:'C',p:1}},  // 1F vs 2C
+  83:{l:{g:'K',p:1}, v:{g:'L',p:1}},  // 2K vs 2L
+  84:{l:{g:'H',p:0}, v:{g:'J',p:1}},  // 1H vs 2J
+  81:{l:{g:'D',p:0}, v:null},          // 1D vs 3BEFIJ
+  82:{l:{g:'G',p:0}, v:null},          // 1G vs 3AEHIJ
+  76:{l:{g:'C',p:0}, v:{g:'F',p:1}},  // 1C vs 2F
+  78:{l:{g:'E',p:1}, v:{g:'I',p:1}},  // 2E vs 2I
+  79:{l:{g:'A',p:0}, v:null},          // 1A vs 3CEFHI
+  80:{l:{g:'L',p:0}, v:null},          // 1L vs 3EHIJK
+  86:{l:{g:'J',p:0}, v:{g:'H',p:1}},  // 1J vs 2H
+  88:{l:{g:'D',p:1}, v:{g:'G',p:1}},  // 2D vs 2G
+  85:{l:{g:'B',p:0}, v:null},          // 1B vs 3EFGIJ
+  87:{l:{g:'K',p:0}, v:null},          // 1K vs 3DEIJL
 };
 
 // ESTADO
