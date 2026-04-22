@@ -601,6 +601,25 @@ function propagarGanador(bid,visitados=new Set()){
   propagarGanador(sigBid,visitados);
 }
 
+// Perdedores de Semis -> 3er lugar
+const PROGRESION_PERDEDOR = {
+  101:{sig:103,slot:'l'},
+  102:{sig:103,slot:'v'},
+};
+
+function propagarPerdedor(bid){
+  const prog=PROGRESION_PERDEDOR[bid];
+  if(!prog)return;
+  const b=bracket[bid]||{};
+  if(!b.l||!b.v||b.gl===undefined||b.gv===undefined)return;
+  let perdedor=null;
+  if(b.gl>b.gv)perdedor=b.v;
+  else if(b.gv>b.gl)perdedor=b.l;
+  else perdedor=b.penales===b.l?b.v:b.l;
+  if(!bracket[prog.sig])bracket[prog.sig]={};
+  bracket[prog.sig][prog.slot]=perdedor;
+}
+
 function getPaisesSlot(m,lado){
   const grupos=lado==='l'?m.grupos_l:m.grupos_v;
   const tipo=lado==='l'?m.tipo_l:m.tipo_v;
@@ -913,6 +932,7 @@ function confirmarModal(){
   if(gl===gv)bracket[bid].penales=selPen.dataset.eq;
   else delete bracket[bid].penales;
   propagarGanador(bid);
+  propagarPerdedor(bid);
   cerrarModal();renderBracket();
 }
 
