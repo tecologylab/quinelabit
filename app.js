@@ -456,8 +456,16 @@ function renderPartidosGrupo(){
       else if(Math.sign(pr.l-pr.v)===Math.sign(r.l-r.v)){lClass='sim-correcto';vClass='sim-correcto';}
       else{lClass='sim-fallo';vClass='sim-fallo';}
     }
+    // Badge de puntos si hay resultado
+    let ptsBadge='';
+    const resOficial=resultadosAdmin[p.id]||(rankingSimulado&&rankingSimulado._resultados&&rankingSimulado._resultados[p.id]);
+    if(resOficial&&ok){
+      if(pr.l===resOficial.l&&pr.v===resOficial.v)ptsBadge='<span class="pts-badge pts-exacto">+5pts</span>';
+      else if(Math.sign(pr.l-pr.v)===Math.sign(resOficial.l-resOficial.v))ptsBadge='<span class="pts-badge pts-correcto">+2pts</span>';
+      else ptsBadge='<span class="pts-badge pts-fallo">0pts</span>';
+    }
     pHtml+=`<div class="pcard${ok?' ok':''}${lClass?' '+lClass:''}">
-      <div class="psede">${p.s}</div>
+      <div class="psede">${p.s}${ptsBadge}</div>
       <div class="prow">
         <div class="ecol">${flagBadge(p.l,20)}<span class="ename">${p.l}</span></div>
         <div class="sinputs">
@@ -1017,24 +1025,38 @@ const DEMO_RANK=[
 
 async function renderRanking(){
   let data=[];
-  if(rankingSimulado?.length)data=rankingSimulado;
-  else if(modoDemo)data=DEMO_RANK;
-  else if(sbClient){const{data:rows}=await sbClient.from('ranking_view').select('*').order('pts',{ascending:false}).limit(100);if(rows&&rows.length)data=rows;}
+  if(rankingSimulado?.length){
+    data=rankingSimulado.filter(x=>!x._resultados); // filtrar metadata
+  } else if(modoDemo){
+    data=DEMO_RANK;
+  } else if(sbClient){
+    const{data:rows}=await sbClient.from('ranking_view').select('*').order('pts',{ascending:false}).limit(100);
+    if(rows&&rows.length)data=rows;
+  }
+  // Asegurar que todos los participantes esten en el ranking aunque tengan 0 pts
+  if(participantes.length){
+    const idsEnRanking=new Set(data.map(x=>String(x.id)));
+    participantes.forEach(p=>{
+      if(!idsEnRanking.has(String(p.id))){
+        data.push({id:p.id,alias:p.alias||p.nombre,nombre:p.nombre,pts:0,goleador:p.favorito||null});
+      }
+    });
+    data.sort((a,b)=>b.pts-a.pts);
+  }
   if(!data.length)data=DEMO_RANK;
   const c=document.getElementById('ranking-container');if(!c)return;
   c.innerHTML=data.map((p,i)=>{
     const ini=(p.alias||p.nombre).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const pos=i===0?'&#127951;':i===1?'&#127952;':i===2?'&#127953;':(i+1);
-    return `<div class="rankrow">
+    return `<div class="rankrow" onclick="verPerfilPublico('${p.id}')" style="cursor:pointer" title="Ver predicciones">
       <div class="rankpos${i<3?' med':''}">${pos}</div>
       <div class="rankavatar">${ini}</div>
       <div><div class="rankname">${p.alias||p.nombre}</div></div>
       <div class="rankcamp">${p.goleador?flagBadge(p.goleador,16)+' ':''} ${p.goleador||'—'}</div>
-      <div class="rankpts">${p.pts}<span class="ptslbl">pts</span></div>
+      <div class="rankpts">${p.pts||0}<span class="ptslbl">pts</span></div>
     </div>`;
   }).join('');
   document.getElementById('stat-total').textContent=participantes.length||data.length;
-  // Mi posicion
   const stat=document.getElementById('stat-mipos');
   if(stat&&usuarioActual){
     const idx=data.findIndex(x=>String(x.id)===String(usuarioActual.id)||(x.alias||x.nombre)===(usuarioActual.alias||usuarioActual.nombre));
@@ -1042,22 +1064,162 @@ async function renderRanking(){
   }
 }
 
-// ============================================================
-// SIMULACION VISUAL
-// ============================================================
-function calcPuntosParticipante(preds,brac,gol,resultados){
-  let pts=0;
-  // Grupos
-  PARTIDOS.forEach(p=>{
-    const pr=preds[p.id];const r=resultados[p.id];
-    if(!pr||!r||pr.l===undefined||pr.v===undefined)return;
-    if(pr.l===r.l&&pr.v===r.v)pts+=5; // exacto
-    else if(Math.sign(pr.l-pr.v)===Math.sign(r.l-r.v))pts+=2; // resultado
+async function verPerfilPublico(pid){
+  // Buscar en participantes o en ranking
+  let p=participantes.find(x=>String(x.id)===String(pid));
+  if(!p){alert('Participante no encontrado.');return;}
+  let q=null;
+  if(sbClient){const{data}=await sbClient.from('quinielas').select('*').eq('participante_id',pid).maybeSingle();q=data;}
+  else{const qs=localStorage.getItem('quiniela_'+pid);if(qs)q=JSON.parse(qs);}
+  const preds=q?parseMaybeJSON(q.predicciones,{}):{}; const gol=q?q.goleador:null;
+  const done=PARTIDOS.filter(x=>{const pr=preds[x.id];return pr&&pr.l!==undefined&&pr.v!==undefined;}).length;
+  let predsHtml='';
+  // Mostrar todos los partidos con colores si hay resultados del simulador
+  const resultados=rankingSimulado?._resultados||resultadosAdmin||{};
+  PARTIDOS.forEach(pa=>{
+    const pr=preds[pa.id]; const r=resultados[pa.id];
+    let color='',badge='';
+    if(pr&&r&&pr.l!==undefined&&r.l!==undefined){
+      if(pr.l===r.l&&pr.v===r.v){color='background:#eaf5ee';badge='<span style="color:#0a5c2e;font-weight:700;font-size:11px">+5pts</span>';}
+      else if(Math.sign(pr.l-pr.v)===Math.sign(r.l-r.v)){color='background:#fffbf0';badge='<span style="color:#7a5500;font-weight:700;font-size:11px">+2pts</span>';}
+      else{color='background:#fef0f0';badge='<span style="color:#c0392b;font-weight:700;font-size:11px">0pts</span>';}
+    }
+    predsHtml+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid var(--borde);font-size:12px;${color};border-radius:4px;margin-bottom:2px">
+      <span>${flagBadge(pa.l,16)} ${pa.l}</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--verde);margin:0 6px">${pr?pr.l:'-'} – ${pr?pr.v:'-'}</span>
+      <span>${pa.v} ${flagBadge(pa.v,16)}</span>
+      <span style="margin-left:auto">${badge}</span>
+    </div>`;
   });
-  // Pais goleador
-  if(gol&&resultados._goleador&&gol===resultados._goleador)pts+=30;
-  return pts;
+  document.getElementById('perfil-body').innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--borde)">
+      <div style="width:44px;height:44px;border-radius:50%;background:#eaf5ee;border:2px solid #9fd4b0;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:var(--verde)">${(p.alias||p.nombre).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
+      <div>
+        <div style="font-weight:700;font-size:16px;color:var(--verde)">${p.alias||p.nombre}</div>
+        <div style="font-size:12px;color:var(--muted)">${done}/72 partidos predichos · Goleador: ${gol||'Sin selección'}</div>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Predicciones — ${PARTIDOS.length} partidos</div>
+    <div style="max-height:400px;overflow-y:auto">${predsHtml}</div>`;
+  document.getElementById('perfil-modal').classList.add('on');
 }
+
+// ============================================================
+// SIMULADOR DE RESULTADOS (ADMIN)
+// ============================================================
+let resultadosAdmin = {}; // {partidoId: {l, v}}
+let simGrupoActivo = 'A';
+
+function renderSimGrupoTabs(){
+  const c = document.getElementById('sim-grupo-tabs'); if(!c)return;
+  c.innerHTML = Object.keys(GRUPOS).map(g=>{
+    const done = PARTIDOS.filter(p=>p.g===g&&resultadosAdmin[p.id]!==undefined).length;
+    const total = PARTIDOS.filter(p=>p.g===g).length;
+    return `<button class="gtab${simGrupoActivo===g?' active':''}${done===total?' done':''}" onclick="selSimGrupo('${g}')">${g}${done===total?' ✓':''}</button>`;
+  }).join('');
+}
+
+function selSimGrupo(g){ simGrupoActivo=g; renderSimGrupoTabs(); renderSimPartidos(); }
+
+function renderSimPartidos(){
+  const c = document.getElementById('sim-partidos-container'); if(!c)return;
+  const ps = PARTIDOS.filter(p=>p.g===simGrupoActivo);
+  let html=''; let fa='';
+  ps.forEach(p=>{
+    if(p.f!==fa){fa=p.f; html+=`<div class="flbl">${fmtFecha(p.f)} · ${p.h} ET</div>`;}
+    const r = resultadosAdmin[p.id]||{};
+    const lv = r.l!==undefined?r.l:''; const vv = r.v!==undefined?r.v:'';
+    const ok = r.l!==undefined&&r.v!==undefined;
+    html+=`<div class="pcard${ok?' ok':''}">
+      <div class="psede">${p.s}</div>
+      <div class="prow">
+        <div class="ecol">${flagBadge(p.l,20)}<span class="ename">${p.l}</span></div>
+        <div class="sinputs">
+          <input type="number" min="0" max="20" value="${lv}" placeholder="?" class="sinput${r.l!==undefined?' v':''}" oninput="setResultadoAdmin(${p.id},'l',this.value)">
+          <span class="ssep">–</span>
+          <input type="number" min="0" max="20" value="${vv}" placeholder="?" class="sinput${r.v!==undefined?' v':''}" oninput="setResultadoAdmin(${p.id},'v',this.value)">
+        </div>
+        <div class="ecol r"><span class="ename">${p.v}</span>${flagBadge(p.v,20)}</div>
+      </div>
+    </div>`;
+  });
+  c.innerHTML=html;
+  const done = PARTIDOS.filter(p=>resultadosAdmin[p.id]&&resultadosAdmin[p.id].l!==undefined&&resultadosAdmin[p.id].v!==undefined).length;
+  const s=document.getElementById('sim-status'); if(s)s.textContent=`${done} de ${PARTIDOS.length} resultados ingresados`;
+}
+
+function setResultadoAdmin(id,lado,val){
+  const num=parseInt(val,10);
+  if(!resultadosAdmin[id])resultadosAdmin[id]={};
+  if(!isNaN(num)&&num>=0&&num<=20)resultadosAdmin[id][lado]=num;
+  else delete resultadosAdmin[id][lado];
+  renderSimGrupoTabs();
+  const done=PARTIDOS.filter(p=>resultadosAdmin[p.id]&&resultadosAdmin[p.id].l!==undefined&&resultadosAdmin[p.id].v!==undefined).length;
+  const s=document.getElementById('sim-status'); if(s)s.textContent=`${done} de ${PARTIDOS.length} resultados ingresados`;
+}
+
+function generarResultadosAleatorios(){
+  PARTIDOS.forEach(p=>{
+    resultadosAdmin[p.id]={l:Math.floor(Math.random()*4),v:Math.floor(Math.random()*4)};
+  });
+  renderSimGrupoTabs(); renderSimPartidos();
+  alerta('sim-alert','success','Resultados aleatorios generados. Haz clic en "Calcular puntos".');
+}
+
+function limpiarResultadosAdmin(){
+  resultadosAdmin={};
+  renderSimGrupoTabs(); renderSimPartidos();
+  // Limpiar colores del ranking
+  rankingSimulado=null; renderRanking();
+  alerta('sim-alert','success','Resultados limpiados.');
+}
+
+function calcularPuntosSimulados(){
+  const done=PARTIDOS.filter(p=>resultadosAdmin[p.id]&&resultadosAdmin[p.id].l!==undefined&&resultadosAdmin[p.id].v!==undefined).length;
+  if(done===0){alerta('sim-alert','error','Ingresa al menos un resultado primero.');return;}
+
+  const base = participantes.length ? participantes : DEMO_RANK.map((p,i)=>({...p,id:'demo_'+i}));
+  if(!base.length){alerta('sim-alert','error','No hay participantes registrados.');return;}
+
+  rankingSimulado = base.map(p=>{
+    // Cargar quiniela del participante
+    let preds={}, gol=null;
+    if(sbClient){
+      // Para modo async usamos cache local si existe
+      const qLocal=localStorage.getItem('quiniela_'+p.id);
+      if(qLocal){const qd=JSON.parse(qLocal);preds=parseMaybeJSON(qd.predicciones,{});gol=qd.goleador||null;}
+    } else {
+      const qLocal=localStorage.getItem('quiniela_'+p.id);
+      if(qLocal){const qd=JSON.parse(qLocal);preds=parseMaybeJSON(qd.predicciones,{});gol=qd.goleador||null;}
+    }
+    const pts=calcPuntosConDesglose(preds,gol,resultadosAdmin);
+    return{id:p.id,alias:p.alias||p.nombre,nombre:p.nombre,pts:pts.total,goleador:gol,desglose:pts};
+  }).sort((a,b)=>b.pts-a.pts);
+
+  renderRanking();
+  alerta('sim-alert','success',`Puntos calculados para ${base.length} participantes. Revisa el Ranking.`);
+}
+
+function calcPuntosConDesglose(preds,gol,resultados){
+  let total=0, exactos=0, correctos=0, fallos=0;
+  PARTIDOS.forEach(p=>{
+    const pr=preds[p.id]; const r=resultados[p.id];
+    if(!pr||!r||pr.l===undefined||pr.v===undefined||r.l===undefined||r.v===undefined)return;
+    if(pr.l===r.l&&pr.v===r.v){total+=5;exactos++;}
+    else if(Math.sign(pr.l-pr.v)===Math.sign(r.l-r.v)&&!(pr.l===pr.v&&r.l===r.v&&pr.l!==r.l)){total+=2;correctos++;}
+    else if(Math.sign(pr.l-pr.v)===Math.sign(r.l-r.v)){total+=2;correctos++;}
+    else fallos++;
+  });
+  if(gol&&resultados._goleador&&gol===resultados._goleador)total+=30;
+  return{total,exactos,correctos,fallos};
+}
+
+function initSimulador(){
+  renderSimGrupoTabs();
+  renderSimPartidos();
+}
+
+
 
 function simularRankingDemo(){
   // Generar resultados simulados para todos los partidos
@@ -1191,16 +1353,20 @@ function _renderAdminContent(){
       <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">Codigo</th>
       <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">Ver</th>
     </tr></thead>
-    <tbody>${data.map((p,i)=>`<tr style="border-bottom:1px solid rgba(0,0,0,0.05);cursor:pointer" onclick="verPerfil('${p.id}')">
+    <tbody>${data.map((p,i)=>`<tr style="border-bottom:1px solid rgba(0,0,0,0.05)">
       <td style="padding:7px;color:var(--muted)">${i+1}</td>
       <td style="padding:7px;font-weight:500">${p.nombre||'—'}</td>
       <td style="padding:7px;color:var(--verde);font-weight:700">${p.alias||'—'}</td>
       <td style="padding:7px;color:var(--muted)">${p.email||'—'}</td>
       <td style="padding:7px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.05em">${p.codigo||'—'}</td>
-      <td style="padding:7px"><span style="color:var(--verde);font-size:12px;font-weight:600">Ver &rarr;</span></td>
+      <td style="padding:7px;display:flex;gap:6px">
+        <span style="color:var(--verde);font-size:12px;font-weight:600;cursor:pointer" onclick="verPerfil('${p.id}')">Ver →</span>
+        <span style="color:#c0392b;font-size:12px;font-weight:600;cursor:pointer" onclick="borrarParticipante('${p.id}')">✕</span>
+      </td>
     </tr>`).join('')}</tbody>
   </table>`;
   cargarCodigos();
+  initSimulador();
 } // end _renderAdminContent
 
 async function verPerfil(pid){
@@ -1282,6 +1448,43 @@ function exportarCodigos(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='codigos_quiniela2026.csv';a.click();
 }
 
+async function borrarCodigosLibres(){
+  if(!sbClient){alert('Conecta Supabase primero.');return;}
+  const libres=todosCodigos.filter(d=>!d.usado);
+  if(!libres.length){alert('No hay codigos libres para borrar.');return;}
+  if(!confirm(`¿Borrar ${libres.length} codigos libres? Esta accion no se puede deshacer.`))return;
+  const{error}=await sbClient.from('codigos_participante').delete().eq('usado',false);
+  if(error){alert('Error: '+error.message);return;}
+  alert(`${libres.length} codigos borrados.`);cargarCodigos();
+}
+
+async function borrarTodosCodigosLibres(){
+  if(!sbClient){alert('Conecta Supabase primero.');return;}
+  if(!confirm('¿Borrar TODOS los codigos (libres y usados)? Esta accion no se puede deshacer.'))return;
+  const{error}=await sbClient.from('codigos_participante').delete().neq('id',0);
+  if(error){alert('Error: '+error.message);return;}
+  todosCodigos=[];alert('Todos los codigos borrados.');cargarCodigos();
+}
+
+async function borrarParticipante(pid){
+  if(!confirm('¿Borrar este participante y sus predicciones? No se puede deshacer.'))return;
+  if(sbClient){
+    await sbClient.from('quinielas').delete().eq('participante_id',pid);
+    const{error}=await sbClient.from('participantes').delete().eq('id',pid);
+    if(error){alert('Error: '+error.message);return;}
+  } else {
+    let local=JSON.parse(localStorage.getItem('participantes')||'[]');
+    local=local.filter(p=>String(p.id)!==String(pid));
+    localStorage.setItem('participantes',JSON.stringify(local));
+    localStorage.removeItem('quiniela_'+pid);
+  }
+  participantes=participantes.filter(p=>String(p.id)!==String(pid));
+  actualizarContadores();
+  document.getElementById('perfil-modal').classList.remove('on');
+  _renderAdminContent();
+  alert('Participante borrado.');
+}
+
 function exportarCSV(){
   const loc=JSON.parse(localStorage.getItem('participantes')||'[]');
   const data=participantes.length?participantes:loc;
@@ -1296,7 +1499,27 @@ function aplicarConfig(){
   const col=document.getElementById('cfg-color').value.trim();
   if(emp){document.getElementById('empresa-label').textContent=emp;localStorage.setItem('cfg_empresa',emp);}
   if(col&&/^#[0-9a-fA-F]{6}$/.test(col)){document.documentElement.style.setProperty('--verde',col);localStorage.setItem('cfg_color',col);}
+  // Zonas publicitarias
+  ['1','2','6'].forEach(z=>{
+    const inp=document.getElementById('ad-zona'+z+'-input');
+    const zona=document.getElementById('ad-zona'+z);
+    const contenido=document.getElementById('ad-zona'+z+'-content');
+    if(inp&&zona&&contenido&&inp.value.trim()){
+      contenido.innerHTML=inp.value.trim();
+      zona.style.display='';
+      localStorage.setItem('ad_zona'+z,inp.value.trim());
+    }
+  });
   alert('Configuracion aplicada.');
+}
+
+function cargarAdsGuardados(){
+  ['1','2','6'].forEach(z=>{
+    const saved=localStorage.getItem('ad_zona'+z);
+    const zona=document.getElementById('ad-zona'+z);
+    const contenido=document.getElementById('ad-zona'+z+'-content');
+    if(saved&&zona&&contenido){contenido.innerHTML=saved;zona.style.display='';}
+  });
 }
 
 // ============================================================
@@ -1307,6 +1530,6 @@ async function init(){
   const emp=localStorage.getItem('cfg_empresa');const col=localStorage.getItem('cfg_color');
   if(emp)document.getElementById('empresa-label').textContent=emp;
   if(col)document.documentElement.style.setProperty('--verde',col);
-  await cargarSDK();await autoConectar();await cargarConfiguracion();aplicarCierreUI();
+  await cargarSDK();await autoConectar();await cargarConfiguracion();aplicarCierreUI();cargarAdsGuardados();
 }
 document.addEventListener('DOMContentLoaded',init);
