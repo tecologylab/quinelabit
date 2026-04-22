@@ -791,6 +791,42 @@ function abrirModal(bid){
     const renderSlotAvanzado=(lado)=>{
       const feederBid=feeders[lado];
       const equipoActual=b[lado]||null;
+
+      // Partido 103 (3er lugar) — usar perdedores de semis
+      const esTercerLugar=bid===103;
+      const feederBid103={l:101,v:102};
+
+      if(esTercerLugar){
+        const semifinal=feederBid103[lado];
+        const sf=bracket[semifinal]||{};
+        const posibles=[sf.l,sf.v].filter(Boolean);
+        const ganadorSF=getGanador(semifinal);
+        const perdedorSF=ganadorSF?(ganadorSF===sf.l?sf.v:sf.l):null;
+        if(perdedorSF){
+          html+=`<div class="equipo-fijo">
+            ${flagBadge(perdedorSF,24)}
+            <div>
+              <div class="ef-nombre">${perdedorSF}</div>
+              <div class="ef-label">Perdedor Semifinal ${semifinal}</div>
+            </div>
+          </div>`;
+          html+=`<div class="modal-opt sel" data-lado="${lado}" data-eq="${perdedorSF}" style="display:none"></div>`;
+        } else if(posibles.length===2){
+          html+=`<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Perdedor de Semifinal ${semifinal}</div>`;
+          posibles.forEach(eq=>{
+            html+=`<div class="modal-opt${b[lado]===eq?' sel':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
+              ${flagBadge(eq,20)} <span>${eq}</span>
+            </div>`;
+          });
+        } else {
+          html+=`<div class="equipo-fijo pendiente">
+            <span class="bq" style="width:36px;height:24px;font-size:12px">?</span>
+            <div><div class="ef-nombre">Pendiente</div><div class="ef-label">Completa Semifinal ${semifinal} primero</div></div>
+          </div>`;
+        }
+        return;
+      }
+
       if(!feederBid){
         // No hay feeder mapeado — mostrar equipo actual como fijo
         html+=`<div class="equipo-fijo${!equipoActual?' pendiente':''}">
