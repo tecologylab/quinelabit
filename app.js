@@ -137,11 +137,11 @@ const BRACKET_RONDAS = [
     {bid:81,desc:'1D vs 3BEFIJ',grupos_l:['D'],tipo_l:'1',grupos_v:['B','E','F','I','J'],tipo_v:'3'},
     {bid:82,desc:'1G vs 3AEHIJ',grupos_l:['G'],tipo_l:'1',grupos_v:['A','E','H','I','J'],tipo_v:'3'},
     {bid:83,desc:'2K vs 2L',    grupos_l:['K'],tipo_l:'2',grupos_v:['L'],tipo_v:'2'},
-    {bid:84,desc:'1H vs 2J',    grupos_l:['H'],tipo_l:'1',grupos_v:['J'],tipo_v:'2'},
-    {bid:85,desc:'1B vs 3EFGIJ',grupos_l:['B'],tipo_l:'1',grupos_v:['E','F','G','I','J'],tipo_v:'3'},
-    {bid:86,desc:'1J vs 2H',    grupos_l:['J'],tipo_l:'1',grupos_v:['H'],tipo_v:'2'},
-    {bid:87,desc:'1K vs 3DEIJL',grupos_l:['K'],tipo_l:'1',grupos_v:['D','E','I','J','L'],tipo_v:'3'},
-    {bid:88,desc:'2D vs 2G',    grupos_l:['D'],tipo_l:'2',grupos_v:['G'],tipo_v:'2'},
+{bid:84,desc:'1L vs 3EHIJK',grupos_l:['L'],tipo_l:'1',grupos_v:['E','H','I','J','K'],tipo_v:'3'},
+{bid:85,desc:'1J vs 2H',    grupos_l:['J'],tipo_l:'1',grupos_v:['H'],tipo_v:'2'},
+{bid:86,desc:'2D vs 2G',    grupos_l:['D'],tipo_l:'2',grupos_v:['G'],tipo_v:'2'},
+{bid:87,desc:'1B vs 3EFGIJ',grupos_l:['B'],tipo_l:'1',grupos_v:['E','F','G','I','J'],tipo_v:'3'},
+{bid:88,desc:'1K vs 3DEIJL',grupos_l:['K'],tipo_l:'1',grupos_v:['D','E','I','J','L'],tipo_v:'3'},
   ]},
   { id:'r16', nombre:'Ronda de 16', pts_ex:8, pts_res:4, partidos:[
     {bid:89,desc:'Gan.73 vs Gan.74'},{bid:90,desc:'Gan.75 vs Gan.76'},
@@ -206,11 +206,11 @@ const R32_AUTO = {
   81:{l:{g:'D',p:0},  v:null},           // 1D vs 3BEFIJ
   82:{l:{g:'G',p:0},  v:null},           // 1G vs 3AEHIJ
   83:{l:{g:'K',p:1},  v:{g:'L',p:1}},   // 2K vs 2L
-  84:{l:{g:'H',p:0},  v:{g:'J',p:1}},   // 1H vs 2J
-  85:{l:{g:'B',p:0},  v:null},           // 1B vs 3EFGIJ
-  86:{l:{g:'J',p:0},  v:{g:'H',p:1}},   // 1J vs 2H
-  87:{l:{g:'K',p:0},  v:null},           // 1K vs 3DEIJL
-  88:{l:{g:'D',p:1},  v:{g:'G',p:1}},   // 2D vs 2G
+84:{l:{g:'L',p:0},  v:null},
+85:{l:{g:'J',p:0},  v:{g:'H',p:1}},
+86:{l:{g:'D',p:1},  v:{g:'G',p:1}},
+87:{l:{g:'B',p:0},  v:null},
+88:{l:{g:'K',p:0},  v:null},
 };
 
 // ESTADO
