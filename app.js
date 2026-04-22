@@ -665,6 +665,47 @@ function matchCard(m,ronda){
   </div>`;
 }
 
+
+// Borrar toda la seleccion de bracket
+function resetBracket(){
+  if(!confirm('¿Borrar todas las selecciones de la 2da Ronda? Esta accion no se puede deshacer.'))return;
+  bracket={};
+  renderBracket();
+  alerta('b-alert','success','Bracket reiniciado.');
+}
+
+// Auto-calcular bracket completo desde predicciones de 1era ronda
+function autoCalcularBracket(){
+  // Llenar R32 con clasificados de grupos
+  autoRellenarBracketDesdeGrupos();
+  // Para mejor 3ro: tomar los 8 mejores 3eros de todos los grupos
+  const todosTerceros=Object.keys(GRUPOS).map(g=>{
+    const tabla=calcTablaGrupo(g);
+    if(tabla.length<3)return null;
+    return{eq:tabla[2].eq,pts:tabla[2].pts,dif:tabla[2].dif,gf:tabla[2].gf,grupo:g};
+  }).filter(Boolean).sort((a,b)=>b.pts-a.pts||b.dif-a.dif||b.gf-a.gf);
+
+  // Partidos que necesitan mejor 3ro (slot v=null en R32_AUTO)
+  const slotsTercero=[74,77,79,80,81,82,85,87]; // bids con mejor 3ro
+  const tercerosUsados=new Set();
+
+  slotsTercero.forEach((bid,idx)=>{
+    if(!bracket[bid])bracket[bid]={};
+    // Encontrar el mejor 3ro disponible segun grupos permitidos
+    const mp=BRACKET_RONDAS[0].partidos.find(p=>p.bid===bid);
+    if(!mp)return;
+    const gruposPermitidos=new Set(mp.grupos_v||[]);
+    const candidato=todosTerceros.find(t=>gruposPermitidos.has(t.grupo)&&!tercerosUsados.has(t.eq));
+    if(candidato){
+      bracket[bid].v=candidato.eq;
+      tercerosUsados.add(candidato.eq);
+    }
+  });
+
+  renderBracket();
+  alerta('b-alert','success','Bracket calculado desde tu seleccion de 1era Ronda. Ahora agrega los marcadores.');
+}
+
 function renderBracket(){
   const c=document.getElementById('bracket-container');if(!c)return;
   let html='<div class="bracket-cols">';
