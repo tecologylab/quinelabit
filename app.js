@@ -143,12 +143,12 @@ const BRACKET_RONDAS = [
 {bid:87,desc:'1B vs 3EFGIJ',grupos_l:['B'],tipo_l:'1',grupos_v:['E','F','G','I','J'],tipo_v:'3'},
 {bid:88,desc:'1K vs 3DEIJL',grupos_l:['K'],tipo_l:'1',grupos_v:['D','E','I','J','L'],tipo_v:'3'},
   ]},
-  { id:'r16', nombre:'Ronda de 16', pts_ex:8, pts_res:4, partidos:[
-    {bid:89,desc:'Gan.73 vs Gan.74'},{bid:90,desc:'Gan.75 vs Gan.76'},
-    {bid:91,desc:'Gan.77 vs Gan.78'},{bid:92,desc:'Gan.79 vs Gan.80'},
-    {bid:93,desc:'Gan.81 vs Gan.82'},{bid:94,desc:'Gan.83 vs Gan.84'},
-    {bid:95,desc:'Gan.85 vs Gan.86'},{bid:96,desc:'Gan.87 vs Gan.88'},
-  ]},
+ { id:'r16', nombre:'Ronda de 16', pts_ex:8, pts_res:4, partidos:[
+  {bid:89,desc:'Gan.74 vs Gan.77'},{bid:90,desc:'Gan.73 vs Gan.75'},
+  {bid:91,desc:'Gan.83 vs Gan.84'},{bid:92,desc:'Gan.81 vs Gan.82'},
+  {bid:93,desc:'Gan.76 vs Gan.78'},{bid:94,desc:'Gan.79 vs Gan.80'},
+  {bid:95,desc:'Gan.86 vs Gan.88'},{bid:96,desc:'Gan.85 vs Gan.87'},
+]},
   { id:'qf', nombre:'Cuartos de Final', pts_ex:10, pts_res:5, partidos:[
     {bid:97,desc:'Gan.89 vs Gan.90'},{bid:98,desc:'Gan.91 vs Gan.92'},
     {bid:99,desc:'Gan.93 vs Gan.94'},{bid:100,desc:'Gan.95 vs Gan.96'},
@@ -165,16 +165,26 @@ const BRACKET_RONDAS = [
 
 // Mapa de progresion del bracket
 const PROGRESION = {
-  73:{sig:89,slot:'l'},74:{sig:89,slot:'v'},75:{sig:90,slot:'l'},76:{sig:90,slot:'v'},
-  77:{sig:91,slot:'l'},78:{sig:91,slot:'v'},79:{sig:92,slot:'l'},80:{sig:92,slot:'v'},
-  81:{sig:93,slot:'l'},82:{sig:93,slot:'v'},83:{sig:94,slot:'l'},84:{sig:94,slot:'v'},
-  85:{sig:95,slot:'l'},86:{sig:95,slot:'v'},87:{sig:96,slot:'l'},88:{sig:96,slot:'v'},
-  89:{sig:97,slot:'l'},90:{sig:97,slot:'v'},91:{sig:98,slot:'l'},92:{sig:98,slot:'v'},
-  93:{sig:99,slot:'l'},94:{sig:99,slot:'v'},95:{sig:100,slot:'l'},96:{sig:100,slot:'v'},
-  97:{sig:101,slot:'l'},98:{sig:101,slot:'v'},99:{sig:102,slot:'l'},100:{sig:102,slot:'v'},
-  101:{sig:104,slot:'l'},102:{sig:104,slot:'v'},
+  // R32 -> R16
+  74:(89,'l'),77:(89,'v'),
+  73:(90,'l'),75:(90,'v'),
+  83:(91,'l'),84:(91,'v'),
+  81:(92,'l'),82:(92,'v'),
+  76:(93,'l'),78:(93,'v'),
+  79:(94,'l'),80:(94,'v'),
+  86:(95,'l'),88:(95,'v'),
+  85:(96,'l'),87:(96,'v'),
+  // R16 -> QF
+  89:(97,'l'),90:(97,'v'),
+  91:(98,'l'),92:(98,'v'),
+  93:(99,'l'),94:(99,'v'),
+  95:(100,'l'),96:(100,'v'),
+  // QF -> SF
+  97:(101,'l'),98:(101,'v'),
+  99:(102,'l'),100:(102,'v'),
+  // SF -> Final
+  101:(104,'l'),102:(104,'v'),
 };
-
 // Mapa inverso para auto-rellenar desde grupos
 // Cada slot de R32 recibe el clasificado de un grupo especifico
 const SLOT_GRUPO_MAP = {
