@@ -196,19 +196,19 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 .bpen-badge{display:flex;align-items:center;gap:4px;margin-top:4px;padding:3px 6px;background:#fff3e0;border-radius:5px;font-size:10px;color:#c0392b;font-weight:600;border:1px solid #f0cb6a}
 
 /* TABLA DE POSICIONES POR GRUPO */
-.grupo-layout{display:grid;grid-template-columns:1fr 280px;gap:1rem;align-items:start}
+.grupo-layout{display:grid;grid-template-columns:1fr 250px;gap:1rem;align-items:start;min-width:0}
 @media(max-width:700px){.grupo-layout{grid-template-columns:1fr}}
-.grupo-partidos{min-width:0}
-.grupo-tabla{min-width:0}
+.grupo-partidos{min-width:0;overflow:hidden}
+.grupo-tabla{min-width:0;overflow:hidden}
 .gtabla-wrap{background:#fafafa;border:1.5px solid var(--borde);border-radius:var(--rs);padding:10px;position:sticky;top:120px}
 .gtabla-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--oro);margin-bottom:8px}
-.gtabla{width:100%;border-collapse:collapse;font-size:11px}
+.gtabla{width:100%;border-collapse:collapse;font-size:10px;table-layout:fixed}
 .gtabla thead th{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:3px 4px;border-bottom:1.5px solid var(--borde);text-align:center}
 .gtabla thead th:nth-child(2){text-align:left}
 .gtabla tbody td{padding:5px 4px;text-align:center;border-bottom:1px solid rgba(0,0,0,0.04)}
 .gtabla tbody tr:last-child td{border-bottom:none}
-.pais-cell{display:flex;align-items:center;gap:4px;text-align:left;white-space:nowrap}
-.pais-cell span{font-size:11px;font-weight:500}
+.pais-cell{display:flex;align-items:center;gap:4px;text-align:left;white-space:nowrap;overflow:hidden}
+.pais-cell span{font-size:10px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:75px;display:inline-block}
 .pos-num{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--muted)}
 .pts-num{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;color:var(--verde)}
 .dif-pos{color:#0a5c2e;font-weight:700}
@@ -268,6 +268,9 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 .pts-exacto{background:#0a5c2e;color:#fff}
 .pts-correcto{background:#c9a84c;color:#fff}
 .pts-fallo{background:#c0392b;color:#fff}
+
+
+.bsc-real{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--oro);font-weight:600;margin-left:2px}
 
 </style>
 </head>
@@ -490,6 +493,63 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
       <button class="btn-oro" onclick="generarResultadosAleatorios()">Generar resultados aleatorios</button>
       <button class="btn-sec" onclick="limpiarResultadosAdmin()">Limpiar</button>
     </div>
+    <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+      <div style="flex:1;min-width:180px">
+        <label>País goleador del torneo (resultado real)</label>
+        <select id="sim-goleador" onchange="setGoleadorAdmin(this.value)" style="width:100%">
+          <option value="">Sin seleccionar</option>
+          <option value="Mexico">Mexico</option>
+          <option value="Sudafrica">Sudafrica</option>
+          <option value="Rep. Checa">Rep. Checa</option>
+          <option value="Corea del Sur">Corea del Sur</option>
+          <option value="Canada">Canada</option>
+          <option value="Bosnia-Herzegovina">Bosnia-Herzegovina</option>
+          <option value="Qatar">Qatar</option>
+          <option value="Suiza">Suiza</option>
+          <option value="Brasil">Brasil</option>
+          <option value="Marruecos">Marruecos</option>
+          <option value="Haiti">Haiti</option>
+          <option value="Escocia">Escocia</option>
+          <option value="EEUU">EEUU</option>
+          <option value="Paraguay">Paraguay</option>
+          <option value="Australia">Australia</option>
+          <option value="Turkiye">Turkiye</option>
+          <option value="Alemania">Alemania</option>
+          <option value="Curazao">Curazao</option>
+          <option value="Costa de Marfil">Costa de Marfil</option>
+          <option value="Ecuador">Ecuador</option>
+          <option value="Paises Bajos">Paises Bajos</option>
+          <option value="Japon">Japon</option>
+          <option value="Suecia">Suecia</option>
+          <option value="Tunez">Tunez</option>
+          <option value="Belgica">Belgica</option>
+          <option value="Egipto">Egipto</option>
+          <option value="Iran">Iran</option>
+          <option value="Nueva Zelanda">Nueva Zelanda</option>
+          <option value="Espana">Espana</option>
+          <option value="Cabo Verde">Cabo Verde</option>
+          <option value="Arabia Saudita">Arabia Saudita</option>
+          <option value="Uruguay">Uruguay</option>
+          <option value="Francia">Francia</option>
+          <option value="Senegal">Senegal</option>
+          <option value="Iraq">Iraq</option>
+          <option value="Noruega">Noruega</option>
+          <option value="Argentina">Argentina</option>
+          <option value="Argelia">Argelia</option>
+          <option value="Austria">Austria</option>
+          <option value="Jordania">Jordania</option>
+          <option value="Portugal">Portugal</option>
+          <option value="DR Congo">DR Congo</option>
+          <option value="Uzbekistan">Uzbekistan</option>
+          <option value="Colombia">Colombia</option>
+          <option value="Inglaterra">Inglaterra</option>
+          <option value="Croacia">Croacia</option>
+          <option value="Ghana">Ghana</option>
+          <option value="Panama">Panama</option>
+        </select>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Resultados — Fase de grupos</div>
     <div id="sim-grupo-tabs" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:.75rem"></div>
     <div id="sim-partidos-container"></div>
     <div class="savebar" style="margin-top:.75rem">
