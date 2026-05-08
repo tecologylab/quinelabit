@@ -659,6 +659,7 @@ function matchCard(m,ronda){
   const cerrada=estaCerrada();
   const lCheck=ganador===lN?'<span class="bcheck">&#10003;</span>':'';
   const vCheck=ganador===vN?'<span class="bcheck">&#10003;</span>':'';
+  const resB=resultadosAdmin._bracketRes?resultadosAdmin._bracketRes[m.bid]:(rankingSimulado&&rankingSimulado._resultados&&rankingSimulado._resultados._bracketRes?rankingSimulado._resultados._bracketRes[m.bid]:null);
   const penBadge=esEmpate&&penales?`<span class="bpen-badge">Pen: ${flagBadge(penales,14)} ${penales}</span>`:'';
   // Color simulacion
   let simClass='';
@@ -675,6 +676,7 @@ function matchCard(m,ronda){
       ${lN?flagBadge(lN,18):'<span class="bq">?</span>'}
       <span class="btn">${lN||'Seleccionar'}</span>
       <span class="bsc">${gl!==null?gl:''}</span>
+      ${resB?`<span class="bsc-real">(${resB.gl})</span>`:''}
       ${lCheck}
     </div>
     <div class="bdiv"></div>
@@ -682,6 +684,7 @@ function matchCard(m,ronda){
       ${vN?flagBadge(vN,18):'<span class="bq">?</span>'}
       <span class="btn">${vN||'Seleccionar'}</span>
       <span class="bsc">${gv!==null?gv:''}</span>
+      ${resB?`<span class="bsc-real">(${resB.gv})</span>`:''}
       ${vCheck}
     </div>
     ${penBadge}
@@ -1025,8 +1028,8 @@ const DEMO_RANK=[
 
 async function renderRanking(){
   let data=[];
-  if(rankingSimulado?.length){
-    data=rankingSimulado.filter(x=>!x._resultados); // filtrar metadata
+  if(rankingSimulado&&Array.isArray(rankingSimulado)&&rankingSimulado.length){
+    data=rankingSimulado.filter(x=>x&&!x._resultados&&x.alias);
   } else if(modoDemo){
     data=DEMO_RANK;
   } else if(sbClient){
@@ -1158,59 +1161,99 @@ function setResultadoAdmin(id,lado,val){
   const s=document.getElementById('sim-status'); if(s)s.textContent=`${done} de ${PARTIDOS.length} resultados ingresados`;
 }
 
+function setGoleadorAdmin(val){
+  if(val)resultadosAdmin._goleador=val;
+  else delete resultadosAdmin._goleador;
+}
+
 function generarResultadosAleatorios(){
   PARTIDOS.forEach(p=>{
     resultadosAdmin[p.id]={l:Math.floor(Math.random()*4),v:Math.floor(Math.random()*4)};
   });
+  // Generar bracket simulado
+  resultadosAdmin._goleador=FAVORITOS_SIM[Math.floor(Math.random()*FAVORITOS_SIM.length)];
+  resultadosAdmin._bracketRes={};
+  BRACKET_RONDAS.forEach(ronda=>{
+    ronda.partidos.forEach(m=>{
+      const gl=Math.floor(Math.random()*3),gv=Math.floor(Math.random()*2);
+      const equipos=Object.values(GRUPOS).flat();
+      const ganador=gl>gv?equipos[Math.floor(Math.random()*equipos.length)]:gv>gl?equipos[Math.floor(Math.random()*equipos.length)]:equipos[Math.floor(Math.random()*equipos.length)];
+      resultadosAdmin._bracketRes[m.bid]={gl,gv,ganador};
+    });
+  });
+  // Actualizar campo pais goleador en UI
+  const gEl=document.getElementById('sim-goleador');
+  if(gEl)gEl.value=resultadosAdmin._goleador;
   renderSimGrupoTabs(); renderSimPartidos();
   alerta('sim-alert','success','Resultados aleatorios generados. Haz clic en "Calcular puntos".');
 }
 
 function limpiarResultadosAdmin(){
   resultadosAdmin={};
-  renderSimGrupoTabs(); renderSimPartidos();
-  // Limpiar colores del ranking
-  rankingSimulado=null; renderRanking();
+  rankingSimulado=null;
+  renderSimGrupoTabs(); renderSimPartidos(); renderRanking(); renderBracket();
   alerta('sim-alert','success','Resultados limpiados.');
 }
 
-function calcularPuntosSimulados(){
+async function calcularPuntosSimulados(){
   const done=PARTIDOS.filter(p=>resultadosAdmin[p.id]&&resultadosAdmin[p.id].l!==undefined&&resultadosAdmin[p.id].v!==undefined).length;
   if(done===0){alerta('sim-alert','error','Ingresa al menos un resultado primero.');return;}
 
   const base = participantes.length ? participantes : DEMO_RANK.map((p,i)=>({...p,id:'demo_'+i}));
   if(!base.length){alerta('sim-alert','error','No hay participantes registrados.');return;}
 
+  // Si hay Supabase, cargar quinielas de todos
+  let quinielasMap={};
+  if(sbClient){
+    const{data:qs}=await sbClient.from('quinielas').select('*');
+    if(qs)qs.forEach(q=>{quinielasMap[String(q.participante_id)]=q;});
+  }
+
   rankingSimulado = base.map(p=>{
-    // Cargar quiniela del participante
-    let preds={}, gol=null;
-    if(sbClient){
-      // Para modo async usamos cache local si existe
-      const qLocal=localStorage.getItem('quiniela_'+p.id);
-      if(qLocal){const qd=JSON.parse(qLocal);preds=parseMaybeJSON(qd.predicciones,{});gol=qd.goleador||null;}
+    let preds={}, brac={}, gol=null;
+    const qSupa=quinielasMap[String(p.id)];
+    if(qSupa){
+      preds=parseMaybeJSON(qSupa.predicciones,{});
+      brac=parseMaybeJSON(qSupa.bracket,{});
+      gol=qSupa.goleador||null;
     } else {
       const qLocal=localStorage.getItem('quiniela_'+p.id);
-      if(qLocal){const qd=JSON.parse(qLocal);preds=parseMaybeJSON(qd.predicciones,{});gol=qd.goleador||null;}
+      if(qLocal){const qd=JSON.parse(qLocal);preds=parseMaybeJSON(qd.predicciones,{});brac=parseMaybeJSON(qd.bracket,{});gol=qd.goleador||null;}
     }
-    const pts=calcPuntosConDesglose(preds,gol,resultadosAdmin);
+    const pts=calcPuntosConDesglose(preds,brac,gol,resultadosAdmin);
     return{id:p.id,alias:p.alias||p.nombre,nombre:p.nombre,pts:pts.total,goleador:gol,desglose:pts};
   }).sort((a,b)=>b.pts-a.pts);
 
   renderRanking();
-  alerta('sim-alert','success',`Puntos calculados para ${base.length} participantes. Revisa el Ranking.`);
+  renderPartidosGrupo();
+  alerta('sim-alert','success',`Puntos calculados para ${base.length} participantes. Los colores aparecen en 1era Ronda.`);
 }
 
-function calcPuntosConDesglose(preds,gol,resultados){
+function calcPuntosConDesglose(preds,brac,gol,resultados){
   let total=0, exactos=0, correctos=0, fallos=0;
+  // Grupos
   PARTIDOS.forEach(p=>{
     const pr=preds[p.id]; const r=resultados[p.id];
     if(!pr||!r||pr.l===undefined||pr.v===undefined||r.l===undefined||r.v===undefined)return;
     if(pr.l===r.l&&pr.v===r.v){total+=5;exactos++;}
-    else if(Math.sign(pr.l-pr.v)===Math.sign(r.l-r.v)&&!(pr.l===pr.v&&r.l===r.v&&pr.l!==r.l)){total+=2;correctos++;}
     else if(Math.sign(pr.l-pr.v)===Math.sign(r.l-r.v)){total+=2;correctos++;}
     else fallos++;
   });
+  // Pais goleador
   if(gol&&resultados._goleador&&gol===resultados._goleador)total+=30;
+  // Bracket — usar resultadosAdmin._bracketRes si existe
+  if(resultados._bracketRes&&brac){
+    BRACKET_RONDAS.forEach(ronda=>{
+      ronda.partidos.forEach(m=>{
+        const pb=brac[m.bid]; const rb=resultados._bracketRes[m.bid];
+        if(!pb||!rb)return;
+        const ganadorPred=pb.gl>pb.gv?pb.l:pb.gv>pb.gl?pb.v:(pb.penales||null);
+        if(pb.gl===rb.gl&&pb.gv===rb.gv){total+=ronda.pts_ex;exactos++;}
+        else if(ganadorPred===rb.ganador){total+=ronda.pts_res;correctos++;}
+        else fallos++;
+      });
+    });
+  }
   return{total,exactos,correctos,fallos};
 }
 
@@ -1359,9 +1402,9 @@ function _renderAdminContent(){
       <td style="padding:7px;color:var(--verde);font-weight:700">${p.alias||'—'}</td>
       <td style="padding:7px;color:var(--muted)">${p.email||'—'}</td>
       <td style="padding:7px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.05em">${p.codigo||'—'}</td>
-      <td style="padding:7px;display:flex;gap:6px">
-        <span style="color:var(--verde);font-size:12px;font-weight:600;cursor:pointer" onclick="verPerfil('${p.id}')">Ver →</span>
-        <span style="color:#c0392b;font-size:12px;font-weight:600;cursor:pointer" onclick="borrarParticipante('${p.id}')">✕</span>
+      <td style="padding:7px">
+        <span style="color:var(--verde);font-size:12px;font-weight:600;cursor:pointer;margin-right:8px" onclick="verPerfil('${p.id}')">Ver →</span>
+        <span style="color:#c0392b;font-size:12px;font-weight:600;cursor:pointer" onclick="event.stopPropagation();borrarParticipante('${p.id}')">✕ Borrar</span>
       </td>
     </tr>`).join('')}</tbody>
   </table>`;
@@ -1467,22 +1510,24 @@ async function borrarTodosCodigosLibres(){
 }
 
 async function borrarParticipante(pid){
-  if(!confirm('¿Borrar este participante y sus predicciones? No se puede deshacer.'))return;
-  if(sbClient){
-    await sbClient.from('quinielas').delete().eq('participante_id',pid);
-    const{error}=await sbClient.from('participantes').delete().eq('id',pid);
-    if(error){alert('Error: '+error.message);return;}
-  } else {
-    let local=JSON.parse(localStorage.getItem('participantes')||'[]');
-    local=local.filter(p=>String(p.id)!==String(pid));
-    localStorage.setItem('participantes',JSON.stringify(local));
-    localStorage.removeItem('quiniela_'+pid);
-  }
-  participantes=participantes.filter(p=>String(p.id)!==String(pid));
-  actualizarContadores();
-  document.getElementById('perfil-modal').classList.remove('on');
-  _renderAdminContent();
-  alert('Participante borrado.');
+  if(!confirm('¿Borrar este participante y sus predicciones? Esta accion no se puede deshacer.'))return;
+  try{
+    if(sbClient){
+      await sbClient.from('quinielas').delete().eq('participante_id',pid);
+      const{error}=await sbClient.from('participantes').delete().eq('id',pid);
+      if(error)throw error;
+    } else {
+      let local=JSON.parse(localStorage.getItem('participantes')||'[]');
+      local=local.filter(p=>String(p.id)!==String(pid));
+      localStorage.setItem('participantes',JSON.stringify(local));
+      localStorage.removeItem('quiniela_'+pid);
+    }
+    participantes=participantes.filter(p=>String(p.id)!==String(pid));
+    actualizarContadores();
+    document.getElementById('perfil-modal').classList.remove('on');
+    alert('Participante borrado exitosamente.');
+    _renderAdminContent();
+  } catch(e){alert('Error al borrar: '+e.message);}
 }
 
 function exportarCSV(){
