@@ -217,6 +217,47 @@ let modalActivo=null, rankingSimulado=null;
 let configGlobal={permitir_edicion:true,fecha_cierre:null};
 let adminAutenticado=false;
 
+
+// ============================================================
+// PREMIOS
+// ============================================================
+function renderPremios(){
+  const c=document.getElementById('premios-container');
+  const empty=document.getElementById('premios-empty');
+  if(!c)return;
+  const premios=[];
+  for(let i=1;i<=3;i++){
+    const img=localStorage.getItem('premio'+i+'_img');
+    const desc=localStorage.getItem('premio'+i+'_desc');
+    if(img||desc)premios.push({n:i,img,desc});
+  }
+  if(!premios.length){
+    c.innerHTML='';
+    if(empty)empty.style.display='';
+    return;
+  }
+  if(empty)empty.style.display='none';
+  const medals=['🥇','🥈','🥉'];
+  const titulos=['1er Premio','2do Premio','3er Premio'];
+  c.innerHTML=`<div class="card">
+    <div class="card-hdr">
+      <div class="card-icon">🏆</div>
+      <div class="card-title">Premios de la Quiniela</div>
+    </div>
+    <div class="premios-grid">
+      ${premios.map(p=>`
+        <div class="premio-card">
+          ${p.img?`<img src="${p.img}" alt="Premio ${p.n}" onerror="this.style.display='none'">`:''}
+          <div class="premio-card-body">
+            <div class="premio-medal">${medals[p.n-1]}</div>
+            <div class="premio-titulo">${titulos[p.n-1]}</div>
+            ${p.desc?`<div class="premio-desc">${p.desc}</div>`:''}
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
 // ============================================================
 // SDK
 // ============================================================
@@ -284,6 +325,7 @@ function goSec(id,btn=null){
   if(id==='ranking')renderRanking();
   if(id==='admin')renderAdmin();
   if(id==='segunda')renderBracket();
+  if(id==='premios')renderPremios();
 }
 function showAuth(tab,btn){
   document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
@@ -478,7 +520,9 @@ function renderPartidosGrupo(){
     </div>`;
   });
   const tablaHtml=renderTablaGrupo(grupoActivo);
-  c.innerHTML=`<div class="grupo-layout"><div class="grupo-partidos">${pHtml}</div><div class="grupo-tabla" id="tabla-grupo">${tablaHtml}</div></div>`;
+  const zona2=localStorage.getItem('ad_zona2')||'';
+  const zona2Html=zona2?`<div id="ad-zona2" style="margin-top:.75rem">${zona2}</div>`:'';
+  c.innerHTML=`<div class="grupo-layout"><div class="grupo-partidos">${pHtml}</div><div class="grupo-tabla" id="tabla-grupo">${tablaHtml}${zona2Html}</div></div>`;
   actualizarProgreso();
 }
 
@@ -1260,6 +1304,63 @@ function calcPuntosConDesglose(preds,brac,gol,resultados){
 function initSimulador(){
   renderSimGrupoTabs();
   renderSimPartidos();
+  renderSimBracket();
+}
+
+function renderSimBracket(){
+  const c=document.getElementById('sim-bracket-container');if(!c)return;
+  let html='';
+  BRACKET_RONDAS.forEach(ronda=>{
+    html+=`<div style="margin-bottom:1rem">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--oro);margin-bottom:.5rem;padding-bottom:.4rem;border-bottom:1px solid var(--borde)">${ronda.nombre}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px">`;
+    ronda.partidos.forEach(m=>{
+      const r=resultadosAdmin._bracketRes?resultadosAdmin._bracketRes[m.bid]:{};
+      const gl=r&&r.gl!==undefined?r.gl:''; const gv=r&&r.gv!==undefined?r.gv:'';
+      const ganador=r&&r.ganador?r.ganador:'';
+      // Equipos posibles — ganadores del partido anterior
+      const b=bracket[m.bid]||{};
+      const lTeam=b.l||'Local'; const vTeam=b.v||'Visitante';
+      html+=`<div style="background:#fafafa;border:1.5px solid var(--borde);border-radius:8px;padding:8px 10px">
+        <div style="font-size:9px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px">${m.desc}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="font-size:11px;font-weight:600;flex:1">${lTeam}</span>
+          <input type="number" min="0" max="20" value="${gl}" placeholder="0" style="width:40px;height:30px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;border:1.5px solid var(--borde);border-radius:5px;padding:0" oninput="setSimBracket(${m.bid},'gl',this.value,'${lTeam}','${vTeam}')">
+          <span style="color:var(--muted);font-weight:700">–</span>
+          <input type="number" min="0" max="20" value="${gv}" placeholder="0" style="width:40px;height:30px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;border:1.5px solid var(--borde);border-radius:5px;padding:0" oninput="setSimBracket(${m.bid},'gv',this.value,'${lTeam}','${vTeam}')">
+          <span style="font-size:11px;font-weight:600;flex:1;text-align:right">${vTeam}</span>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px">
+          Ganador: <select style="font-size:11px;border:1px solid var(--borde);border-radius:4px;padding:2px 4px" onchange="setSimBracketGanador(${m.bid},this.value)">
+            <option value="">Seleccionar</option>
+            <option value="${lTeam}"${ganador===lTeam?' selected':''}>${lTeam}</option>
+            <option value="${vTeam}"${ganador===vTeam?' selected':''}>${vTeam}</option>
+          </select>
+        </div>
+      </div>`;
+    });
+    html+=`</div></div>`;
+  });
+  c.innerHTML=html;
+}
+
+function setSimBracket(bid,lado,val,lTeam,vTeam){
+  const num=parseInt(val,10);
+  if(!resultadosAdmin._bracketRes)resultadosAdmin._bracketRes={};
+  if(!resultadosAdmin._bracketRes[bid])resultadosAdmin._bracketRes[bid]={ganador:''};
+  if(!isNaN(num)&&num>=0)resultadosAdmin._bracketRes[bid][lado]=num;
+  // Auto-detectar ganador si no hay empate
+  const r=resultadosAdmin._bracketRes[bid];
+  if(r.gl!==undefined&&r.gv!==undefined&&r.gl!==r.gv){
+    r.ganador=r.gl>r.gv?lTeam:vTeam;
+    renderSimBracket();
+  }
+}
+
+function setSimBracketGanador(bid,ganador){
+  if(!resultadosAdmin._bracketRes)resultadosAdmin._bracketRes={};
+  if(!resultadosAdmin._bracketRes[bid])resultadosAdmin._bracketRes[bid]={};
+  resultadosAdmin._bracketRes[bid].ganador=ganador;
 }
 
 
@@ -1544,17 +1645,35 @@ function aplicarConfig(){
   const col=document.getElementById('cfg-color').value.trim();
   if(emp){document.getElementById('empresa-label').textContent=emp;localStorage.setItem('cfg_empresa',emp);}
   if(col&&/^#[0-9a-fA-F]{6}$/.test(col)){document.documentElement.style.setProperty('--verde',col);localStorage.setItem('cfg_color',col);}
+
   // Zonas publicitarias
   ['1','2','6'].forEach(z=>{
     const inp=document.getElementById('ad-zona'+z+'-input');
     const zona=document.getElementById('ad-zona'+z);
     const contenido=document.getElementById('ad-zona'+z+'-content');
-    if(inp&&zona&&contenido&&inp.value.trim()){
-      contenido.innerHTML=inp.value.trim();
+    if(!inp||!zona||!contenido)return;
+    const val=inp.value.trim();
+    if(val){
+      // Si es URL de imagen, envolver en img tag
+      const html=val.startsWith('http')||val.endsWith('.jpg')||val.endsWith('.png')||val.endsWith('.gif')
+        ?`<img src="${val}" style="max-width:100%;height:auto;display:block;margin:0 auto">`
+        :val;
+      contenido.innerHTML=html;
       zona.style.display='';
-      localStorage.setItem('ad_zona'+z,inp.value.trim());
+      localStorage.setItem('ad_zona'+z,html);
     }
   });
+
+  // Premios
+  for(let i=1;i<=3;i++){
+    const img=document.getElementById('premio'+i+'-img')?.value.trim()||'';
+    const desc=document.getElementById('premio'+i+'-desc')?.value.trim()||'';
+    if(img)localStorage.setItem('premio'+i+'_img',img);
+    else localStorage.removeItem('premio'+i+'_img');
+    if(desc)localStorage.setItem('premio'+i+'_desc',desc);
+    else localStorage.removeItem('premio'+i+'_desc');
+  }
+  renderPremios();
   alert('Configuracion aplicada.');
 }
 
@@ -1565,6 +1684,15 @@ function cargarAdsGuardados(){
     const contenido=document.getElementById('ad-zona'+z+'-content');
     if(saved&&zona&&contenido){contenido.innerHTML=saved;zona.style.display='';}
   });
+  // Cargar premios
+  renderPremios();
+  // Cargar valores en inputs del admin si existen
+  for(let i=1;i<=3;i++){
+    const imgEl=document.getElementById('premio'+i+'-img');
+    const descEl=document.getElementById('premio'+i+'-desc');
+    if(imgEl)imgEl.value=localStorage.getItem('premio'+i+'_img')||'';
+    if(descEl)descEl.value=localStorage.getItem('premio'+i+'_desc')||'';
+  }
 }
 
 // ============================================================
