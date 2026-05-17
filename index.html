@@ -310,9 +310,9 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 </div>
 
 <div class="hero">
-  <div class="hero-badge">Campaña de clientes 2026</div>
-  <h1>La gran<br><span>quiniela</span> mundialista</h1>
-  <p>Predice, compite y gana con tus colegas</p>
+  <div class="hero-badge" id="hero-badge-txt">Campaña de clientes 2026</div>
+  <h1 id="hero-titulo-txt">La gran<br><span>quiniela</span> mundialista</h1>
+  <p id="hero-subtitulo-txt">Predice, compite y gana con tus colegas</p>
   <div class="hstats">
     <div><div class="hstat-num" id="hero-part">0</div><div class="hstat-lbl">Participantes</div></div>
     <div><div class="hstat-num">104</div><div class="hstat-lbl">Partidos</div></div>
@@ -590,6 +590,9 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
     <div class="fgrid">
       <div class="fg"><label>Nombre de empresa</label><input type="text" id="cfg-empresa" placeholder="Business IT"></div>
       <div class="fg"><label>Color principal (hex)</label><input type="text" id="cfg-color" placeholder="#0a5c2e"></div>
+      <div class="fg"><label>Badge del hero (ej: Campaña de clientes 2026)</label><input type="text" id="cfg-hero-badge" placeholder="Campaña de clientes 2026"></div>
+      <div class="fg"><label>Título principal</label><input type="text" id="cfg-hero-titulo" placeholder="La gran &lt;span&gt;quiniela&lt;/span&gt; mundialista"></div>
+      <div class="fg full"><label>Subtítulo</label><input type="text" id="cfg-hero-subtitulo" placeholder="Predice, compite y gana con tus colegas"></div>
     </div>
     <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--borde)">
       <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Zonas publicitarias — pega URL de imagen o código HTML</div>
