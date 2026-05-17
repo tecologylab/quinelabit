@@ -1437,11 +1437,102 @@ function activarDemo(){
       if(gl===gv)bracket[m.bid].penales=Math.random()>0.5?bracket[m.bid].l:bracket[m.bid].v;
     });
   });
-  // Propagar ganadores en orden
-  [73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88].forEach(bid=>propagarGanador(bid));
+  // Propagar ganadores en orden completo R32->R16->QF->SF->Final
+  const ordenPropagacion=[74,77,73,75,83,84,81,82,76,78,79,80,86,88,85,87];
+  ordenPropagacion.forEach(bid=>propagarGanador(bid));
+  // Propagar R16
+  [89,90,91,92,93,94,95,96].forEach(bid=>{
+    const b=bracket[bid]||{};
+    if(!bracket[bid])bracket[bid]={};
+    if(!b.l||!b.v){
+      // Asignar equipos desde los feeders si no fueron propagados
+      const prog=Object.entries(PROGRESION).filter(([k,v])=>v.sig===bid);
+      prog.forEach(([fbid,p])=>{
+        const fb=bracket[parseInt(fbid)]||{};
+        const ganador=getGanador(parseInt(fbid));
+        if(ganador)bracket[bid][p.slot]=ganador;
+        else if(fb.l&&!bracket[bid][p.slot])bracket[bid][p.slot]=fb.l;
+      });
+    }
+    const gl=Math.floor(Math.random()*4),gv=Math.floor(Math.random()*3);
+    bracket[bid].gl=gl;bracket[bid].gv=gv;
+    if(gl===gv)bracket[bid].penales=Math.random()>0.5?bracket[bid].l:bracket[bid].v;
+    propagarGanador(bid);
+    propagarPerdedor(bid);
+  });
+  // Propagar QF
+  [97,98,99,100].forEach(bid=>{
+    const b=bracket[bid]||{};
+    if(!bracket[bid])bracket[bid]={};
+    if(!b.l||!b.v){
+      const prog=Object.entries(PROGRESION).filter(([k,v])=>v.sig===bid);
+      prog.forEach(([fbid,p])=>{
+        const ganador=getGanador(parseInt(fbid));
+        if(ganador)bracket[bid][p.slot]=ganador;
+      });
+    }
+    if(bracket[bid].l&&bracket[bid].v){
+      const gl=Math.floor(Math.random()*3),gv=Math.floor(Math.random()*3);
+      bracket[bid].gl=gl;bracket[bid].gv=gv;
+      if(gl===gv)bracket[bid].penales=Math.random()>0.5?bracket[bid].l:bracket[bid].v;
+      propagarGanador(bid);
+      propagarPerdedor(bid);
+    }
+  });
+  // Propagar SF
+  [101,102].forEach(bid=>{
+    const b=bracket[bid]||{};
+    if(!bracket[bid])bracket[bid]={};
+    if(!b.l||!b.v){
+      const prog=Object.entries(PROGRESION).filter(([k,v])=>v.sig===bid);
+      prog.forEach(([fbid,p])=>{
+        const ganador=getGanador(parseInt(fbid));
+        if(ganador)bracket[bid][p.slot]=ganador;
+      });
+    }
+    if(bracket[bid].l&&bracket[bid].v){
+      const gl=Math.floor(Math.random()*3),gv=Math.floor(Math.random()*2);
+      bracket[bid].gl=gl;bracket[bid].gv=gv;
+      if(gl===gv)bracket[bid].penales=Math.random()>0.5?bracket[bid].l:bracket[bid].v;
+      propagarGanador(bid);
+      propagarPerdedor(bid);
+    }
+  });
+  // Final y 3er lugar
+  [103,104].forEach(bid=>{
+    if(!bracket[bid])bracket[bid]={};
+    if(bracket[bid].l&&bracket[bid].v){
+      bracket[bid].gl=Math.floor(Math.random()*3);
+      bracket[bid].gv=Math.floor(Math.random()*2);
+      if(bracket[bid].gl===bracket[bid].gv)bracket[bid].penales=Math.random()>0.5?bracket[bid].l:bracket[bid].v;
+    }
+  });
+
+  // Simular resultados demo y calcular puntos
+  const resultadosDemo={};
+  PARTIDOS.forEach(p=>{resultadosDemo[p.id]={l:Math.floor(Math.random()*4),v:Math.floor(Math.random()*3)};});
+  resultadosDemo._goleador=FAVORITOS_SIM[Math.floor(Math.random()*FAVORITOS_SIM.length)];
+  resultadosDemo._bracketRes={};
+  BRACKET_RONDAS.forEach(ronda=>{
+    ronda.partidos.forEach(m=>{
+      const b=bracket[m.bid]||{};
+      const gl=Math.floor(Math.random()*3),gv=Math.floor(Math.random()*2);
+      const ganador=gl>gv?(b.l||'A'):gv>gl?(b.v||'B'):Math.random()>0.5?(b.l||'A'):(b.v||'B');
+      resultadosDemo._bracketRes[m.bid]={gl,gv,ganador};
+    });
+  });
+
+  // Calcular puntos para participantes demo
+  rankingSimulado=DEMO_RANK.map((p,i)=>{
+    const pts=Math.floor(Math.random()*180)+10;
+    return{id:'demo_'+i,alias:p.alias,nombre:p.nombre,pts,goleador:FAVORITOS_SIM[Math.floor(Math.random()*FAVORITOS_SIM.length)]};
+  }).sort((a,b)=>b.pts-a.pts);
+  rankingSimulado._resultados=resultadosDemo;
+  resultadosAdmin=resultadosDemo;
+
   participantes=DEMO_RANK.map((p,i)=>({...p,id:'demo_'+i}));
   actualizarContadores();renderGrupoTabs();renderPartidosGrupo();renderBracket();renderGoleador();renderRanking();aplicarCierreUI();
-  alert('Modo demo activado. Navega por todas las secciones.');
+  alert('Modo demo activado. El bracket está completo hasta la Final y el ranking muestra puntos simulados.');
 }
 
 function salirDemo(){
@@ -1674,6 +1765,14 @@ function aplicarConfig(){
     else localStorage.removeItem('premio'+i+'_desc');
   }
   renderPremios();
+  // Textos del hero
+  const badge=document.getElementById('cfg-hero-badge')?.value.trim()||'';
+  const titulo=document.getElementById('cfg-hero-titulo')?.value.trim()||'';
+  const subtitulo=document.getElementById('cfg-hero-subtitulo')?.value.trim()||'';
+  if(badge)localStorage.setItem('hero_badge',badge);
+  if(titulo)localStorage.setItem('hero_titulo',titulo);
+  if(subtitulo)localStorage.setItem('hero_subtitulo',subtitulo);
+  cargarTextosHero();
   alert('Configuracion aplicada.');
 }
 
@@ -1693,6 +1792,27 @@ function cargarAdsGuardados(){
     if(imgEl)imgEl.value=localStorage.getItem('premio'+i+'_img')||'';
     if(descEl)descEl.value=localStorage.getItem('premio'+i+'_desc')||'';
   }
+  // Cargar textos del hero
+  cargarTextosHero();
+}
+
+function cargarTextosHero(){
+  const badge=localStorage.getItem('hero_badge');
+  const titulo=localStorage.getItem('hero_titulo');
+  const subtitulo=localStorage.getItem('hero_subtitulo');
+  const heroBadge=document.getElementById('hero-badge-txt');
+  const heroTitulo=document.getElementById('hero-titulo-txt');
+  const heroSubtitulo=document.getElementById('hero-subtitulo-txt');
+  if(badge&&heroBadge)heroBadge.textContent=badge;
+  if(titulo&&heroTitulo)heroTitulo.innerHTML=titulo;
+  if(subtitulo&&heroSubtitulo)heroSubtitulo.textContent=subtitulo;
+  // Cargar en inputs de admin
+  const bEl=document.getElementById('cfg-hero-badge');
+  const tEl=document.getElementById('cfg-hero-titulo');
+  const sEl=document.getElementById('cfg-hero-subtitulo');
+  if(bEl)bEl.value=badge||'';
+  if(tEl)tEl.value=titulo||'';
+  if(sEl)sEl.value=subtitulo||'';
 }
 
 // ============================================================
