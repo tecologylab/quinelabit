@@ -467,6 +467,84 @@ async function guardarQuinielaCompleta(){
   } else {localStorage.setItem('quiniela_'+(usuarioActual?.id||'demo'),JSON.stringify(datos));}
 }
 
+
+// ============================================================
+// PREDICTOR DE FAVORITOS — Ranking FIFA 2025
+// ============================================================
+const FIFA_RANKING = {
+  'Francia':1890,'Espana':1876,'Inglaterra':1856,'Brasil':1840,'Argentina':1830,
+  'Portugal':1820,'Belgica':1780,'Paises Bajos':1760,'Alemania':1755,'Uruguay':1720,
+  'Colombia':1710,'EEUU':1690,'Mexico':1680,'Marruecos':1660,'Japon':1640,
+  'Senegal':1620,'Croacia':1610,'Suiza':1600,'Australia':1580,'Corea del Sur':1570,
+  'Iran':1550,'Canada':1540,'Ecuador':1530,'Panama':1520,'Tunez':1510,
+  'Noruega':1500,'Austria':1490,'Suecia':1480,'Turkiye':1470,'Egypte':1460,
+  'Egipto':1460,'Escocia':1450,'Uzbekistan':1440,'Bolivia':1430,'Paraguay':1420,
+  'Iraq':1410,'Jordania':1400,'Arabia Saudita':1390,'Ghana':1380,'Argelia':1370,
+  'Colombia':1710,'DR Congo':1360,'Cabo Verde':1350,'Rep. Checa':1340,
+  'Bosnia-Herzegovina':1330,'Nueva Zelanda':1320,'Haiti':1310,'Curazao':1300,
+  'Qatar':1290,'Sudafrica':1280,'Uzbekistan':1440,'Indonesia':1270,
+  'Australia':1580,'Iran':1550,
+};
+
+function getProbabilidad(local, visita) {
+  const ptsL = FIFA_RANKING[local] || 1300;
+  const ptsV = FIFA_RANKING[visita] || 1300;
+  const total = ptsL + ptsV;
+  const pctL = Math.round((ptsL / total) * 100);
+  const pctV = 100 - pctL;
+  return { pctL, pctV, favoritoL: ptsL >= ptsV };
+}
+
+function predictorHTML(local, visita, pid) {
+  const { pctL, pctV, favoritoL } = getProbabilidad(local, visita);
+  const barL = Math.round(pctL * 0.7); // max 70% de la barra
+  const barV = Math.round(pctV * 0.7);
+  // Mayoría de predicciones
+  const mayoria = calcMayoria(pid);
+  return `<div class="predictor-wrap">
+    <div class="pred-bar-row">
+      <span class="pred-pct${favoritoL ? ' pred-fav' : ''}">${pctL}%</span>
+      <div class="pred-bar">
+        <div class="pred-fill-l" style="width:${barL}%"></div>
+        <div class="pred-fill-r" style="width:${barV}%"></div>
+      </div>
+      <span class="pred-pct${!favoritoL ? ' pred-fav' : ''}">${pctV}%</span>
+    </div>
+    <div class="pred-label">Favorito según ranking FIFA${mayoria ? ` &nbsp;·&nbsp; 👥 Mayoría: <strong>${mayoria}</strong>` : ''}</div>
+  </div>`;
+}
+
+function calcMayoria(pid) {
+  // Calcular el marcador más predicho entre todos los participantes
+  // Solo funciona si tenemos datos cargados
+  if (!window._predMayoria || !window._predMayoria[pid]) return null;
+  const counts = window._predMayoria[pid];
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  if (!sorted.length) return null;
+  const [marcador, count] = sorted[0];
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  return `${marcador} (${count}/${total})`;
+}
+
+async function cargarMayorias() {
+  if (!sbClient) return;
+  try {
+    const { data } = await sbClient.from('quinielas').select('predicciones');
+    if (!data || !data.length) return;
+    const conteos = {};
+    data.forEach(q => {
+      const preds = parseMaybeJSON(q.predicciones, {});
+      Object.entries(preds).forEach(([pid, pr]) => {
+        if (pr.l === undefined || pr.v === undefined) return;
+        if (!conteos[pid]) conteos[pid] = {};
+        const key = `${pr.l}-${pr.v}`;
+        conteos[pid][key] = (conteos[pid][key] || 0) + 1;
+      });
+    });
+    window._predMayoria = conteos;
+  } catch (e) {}
+}
+
 // ============================================================
 // 1ERA RONDA — GRUPOS
 // ============================================================
@@ -1823,6 +1901,6 @@ async function init(){
   const emp=localStorage.getItem('cfg_empresa');const col=localStorage.getItem('cfg_color');
   if(emp)document.getElementById('empresa-label').textContent=emp;
   if(col)document.documentElement.style.setProperty('--verde',col);
-  await cargarSDK();await autoConectar();await cargarConfiguracion();aplicarCierreUI();cargarAdsGuardados();
+  await cargarSDK();await autoConectar();await cargarConfiguracion();aplicarCierreUI();cargarAdsGuardados();cargarMayorias();
 }
 document.addEventListener('DOMContentLoaded',init);
