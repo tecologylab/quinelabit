@@ -285,6 +285,17 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 /* Zona 2 sidebar ad */
 #ad-zona2{margin-top:.75rem}
 
+
+/* PREDICTOR FIFA */
+.predictor-wrap{margin:6px 0 2px;padding:4px 0}
+.pred-bar-row{display:flex;align-items:center;gap:6px}
+.pred-bar{flex:1;height:6px;background:#e8e8e8;border-radius:3px;display:flex;overflow:hidden}
+.pred-fill-l{background:var(--verde);height:100%;border-radius:3px 0 0 3px;transition:width .3s}
+.pred-fill-r{background:#c0392b;height:100%;border-radius:0 3px 3px 0;transition:width .3s}
+.pred-pct{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--muted);min-width:28px}
+.pred-pct.pred-fav{color:var(--verde)}
+.pred-label{font-size:10px;color:var(--muted);margin-top:3px}
+
 </style>
 </head>
 <body>
@@ -334,7 +345,7 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
     <button class="nav-btn" onclick="goSec('segunda',this)">2da Ronda</button>
     <button class="nav-btn" onclick="goSec('goleador',this)">País Goleador</button>
     <button class="nav-btn" onclick="goSec('ranking',this)">Ranking</button>
-    <button class="nav-btn" onclick="goSec('admin',this)">Admin</button>
+    <a href="admin.html" class="nav-btn" style="display:flex;align-items:center;text-decoration:none;height:48px">Admin</a>
   </nav>
 </div>
 
@@ -474,7 +485,13 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 </section>
 
 <section id="sec-admin" class="section">
-  <div id="admin-content">
+  <div style="text-align:center;padding:3rem;color:var(--muted)">
+    <div style="font-size:3rem;margin-bottom:1rem">🔒</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;margin-bottom:.5rem">Panel de Administración</div>
+    <p style="font-size:14px;margin-bottom:1.5rem">El panel de admin está en una página separada.</p>
+    <a href="admin.html" style="display:inline-block;background:var(--verde);color:#fff;padding:11px 24px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;text-decoration:none;letter-spacing:.05em">Ir al panel de Admin →</a>
+  </div>
+  <div id="admin-content" style="display:none">
   <div class="card">
     <div class="card-hdr">
       <div class="card-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg></div>
