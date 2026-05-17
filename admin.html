@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Quiniela FIFA 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--verde:#0a5c2e;--verde2:#1a8c48;--oro:#c9a84c;--oro2:#f0cb6a;--bg:#f5f3ef;--card:#fff;--text:#1a1a1a;--muted:#6b6b6b;--borde:rgba(0,0,0,0.1);--r:12px;--rs:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{overflow-x:hidden}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+.header{background:var(--verde);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
+.hbrand{display:flex;align-items:center;gap:10px}
+.htitle{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:#fff}
+.hbadge{font-size:11px;color:rgba(255,255,255,0.55);background:rgba(255,255,255,0.1);padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.15)}
+.btn-back{background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn-back:hover{background:rgba(255,255,255,0.25)}
+
+.admin-nav{background:var(--card);border-bottom:1px solid var(--borde);overflow-x:auto;position:sticky;top:60px;z-index:90}
+.admin-nav-inner{display:flex;max-width:1100px;margin:0 auto;padding:0 1rem}
+.anav-btn{padding:0 1rem;height:44px;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;transition:all .15s}
+.anav-btn:hover{color:var(--verde)}
+.anav-btn.active{color:var(--verde);border-bottom-color:var(--oro)}
+
+.main{max-width:1100px;margin:0 auto;padding:1.5rem 1rem}
+.tab-section{display:none}
+.tab-section.active{display:block}
+
+.card{background:var(--card);border:1px solid var(--borde);border-radius:var(--r);padding:1.25rem;margin-bottom:1rem}
+.card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--borde)}
+.card-icon{width:34px;height:34px;background:#f0f8f4;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.03em;text-transform:uppercase}
+
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.fgrid{grid-template-columns:1fr}}
+.fg.full{grid-column:1/-1}
+label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+input[type=text],input[type=email],input[type=number],input[type=datetime-local],select,textarea{width:100%;padding:9px 13px;border:1.5px solid var(--borde);border-radius:var(--rs);background:#fafafa;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--verde);background:#fff}
+.btn-primary{width:100%;padding:11px;background:var(--verde);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-top:1rem}
+.btn-primary:hover{background:#084a25}
+.btn-sec{padding:9px 18px;background:transparent;color:var(--verde);border:1.5px solid var(--verde);border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.btn-sec:hover{background:var(--verde);color:#fff}
+.btn-save{padding:9px 20px;background:var(--verde);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.btn-save:hover{background:#084a25}
+.btn-oro{padding:9px 18px;background:var(--oro);color:var(--verde);border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.btn-danger{padding:9px 18px;background:transparent;color:#c0392b;border:1.5px solid #c0392b;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer}
+.btn-warning{padding:9px 18px;background:transparent;color:#e67e22;border:1.5px solid #e67e22;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer}
+
+.alert{padding:11px 15px;border-radius:var(--rs);font-size:13px;margin-top:.75rem;display:none}
+.alert.success{background:#eaf5ee;color:#0a5c2e;border:1px solid #9fd4b0;display:block}
+.alert.error{background:#fef0f0;color:#c0392b;border:1px solid #f5b7b1;display:block}
+
+.savebar{background:var(--card);border:1px solid var(--borde);border-radius:var(--rs);padding:11px 15px;display:flex;justify-content:space-between;align-items:center;margin-top:.75rem;gap:10px;flex-wrap:wrap}
+.savestatus{font-size:13px;color:var(--muted)}
+
+.gtab{padding:5px 11px;border-radius:20px;border:1.5px solid var(--borde);background:var(--bg);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .12s}
+.gtab.active{background:var(--verde);color:#fff;border-color:var(--verde)}
+.gtab.done{border-color:#9fd4b0}
+
+.pcard{background:#fafafa;border:1.5px solid var(--borde);border-radius:var(--rs);padding:10px 12px;margin-bottom:7px}
+.pcard.ok{border-color:#9fd4b0;background:#f8fdf9}
+.psede{font-size:10px;color:var(--muted);margin-bottom:7px}
+.prow{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.ecol{display:flex;align-items:center;gap:6px}
+.ecol.r{justify-content:flex-end;flex-direction:row-reverse}
+.ename{font-size:12px;font-weight:600}
+.sinputs{display:flex;align-items:center;gap:5px;justify-content:center}
+.sinput{width:42px;height:34px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;border:2px solid var(--borde);border-radius:6px;background:#fff;color:var(--muted);-moz-appearance:textfield;padding:0}
+.sinput::-webkit-outer-spin-button,.sinput::-webkit-inner-spin-button{-webkit-appearance:none}
+.sinput:focus{outline:none;border-color:var(--verde);color:var(--text)}
+.sinput.v{color:var(--verde);border-color:#9fd4b0;font-weight:800}
+.ssep{font-size:16px;font-weight:700;color:var(--muted)}
+.flbl{font-size:10px;color:var(--oro);padding:.6rem 0 .2rem;border-top:1px solid var(--borde);margin-top:.4rem;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+
+.codigo-chip{display:inline-flex;align-items:center;gap:4px;margin:3px;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:.05em}
+.codigo-chip.libre{background:#eaf5ee;color:#0a5c2e;border:1px solid #9fd4b0}
+.codigo-chip.usado{background:#fef0f0;color:#c0392b;border:1px solid #f5b7b1;cursor:pointer}
+
+.rankrow{display:grid;grid-template-columns:32px 32px 1fr auto auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(0,0,0,0.05)}
+.rankavatar{width:30px;height:30px;border-radius:50%;background:#f0f8f4;border:1.5px solid #9fd4b0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--verde)}
+.rankname{font-size:13px;font-weight:600;color:var(--verde)}
+.rankpts{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;color:var(--verde);text-align:right;min-width:52px}
+.ptslbl{font-size:10px;color:var(--muted);display:block;font-weight:400}
+
+.loading{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Modal perfil */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.on{display:flex}
+.modal{background:var(--card);border-radius:var(--r);padding:1.25rem;width:100%;max-width:500px;max-height:85vh;overflow-y:auto}
+.modal-close{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="hbrand">
+    <img src="LOGO BIT-02.png" alt="Business IT" style="height:36px;width:auto;object-fit:contain" onerror="this.style.display='none'">
+    <div class="htitle">Admin — Quiniela FIFA 2026</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="index.html" class="btn-back">← Volver al sitio</a>
+    <span class="hbadge" id="empresa-label">Business IT</span>
+  </div>
+</header>
+
+<div class="admin-nav">
+  <div class="admin-nav-inner">
+    <button class="anav-btn active" onclick="showTab('participantes',this)">Participantes</button>
+    <button class="anav-btn" onclick="showTab('codigos',this)">Códigos</button>
+    <button class="anav-btn" onclick="showTab('resultados',this)">Resultados</button>
+    <button class="anav-btn" onclick="showTab('simulador',this)">Simulador</button>
+    <button class="anav-btn" onclick="showTab('configuracion',this)">Configuración</button>
+    <button class="anav-btn" onclick="showTab('backup',this)">Backup</button>
+  </div>
+</div>
+
+<main class="main">
+
+<!-- TAB: PARTICIPANTES -->
+<div id="tab-participantes" class="tab-section active">
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-icon">👥</div>
+      <div class="card-title">Participantes registrados</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+      <button class="btn-save" onclick="exportarCSV()">Exportar CSV</button>
+      <button class="btn-oro" onclick="activarDemoAdmin()">Activar demo</button>
+    </div>
+    <div id="admin-table"><p style="color:var(--muted);font-size:13px">Cargando...</p></div>
+  </div>
+</div>
+
+<!-- TAB: CODIGOS -->
+<div id="tab-codigos" class="tab-section">
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-icon">🔑</div>
+      <div class="card-title">Códigos de participante</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:.75rem">Códigos alfanuméricos únicos (ej: BIT-K7X2M). Genera y distribuye antes de lanzar.</p>
+    <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:1rem;flex-wrap:wrap">
+      <div style="flex:1;min-width:120px">
+        <label>Cantidad a generar</label>
+        <input type="number" id="cant-codigos" value="20" min="1" max="500">
+      </div>
+      <button class="btn-save" onclick="generarCodigos()">Generar</button>
+      <button class="btn-sec" onclick="exportarCodigos()">Exportar CSV</button>
+      <button class="btn-warning" onclick="borrarCodigosLibres()">Borrar libres</button>
+      <button class="btn-danger" onclick="borrarTodosCodigosLibres()">Borrar todos</button>
+    </div>
+    <div id="codigos-list" style="font-size:13px;color:var(--muted)">Cargando...</div>
+  </div>
+</div>
+
+<!-- TAB: RESULTADOS OFICIALES -->
+<div id="tab-resultados" class="tab-section">
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-icon">⚽</div>
+      <div class="card-title">Resultados oficiales — 1era Ronda</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:.75rem">Ingresa los resultados reales de cada partido. Se guardan en Supabase y actualizan los puntos de todos los participantes.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+      <button class="btn-oro" onclick="cargarDesdeAPI()">🔄 Sincronizar desde API</button>
+      <button class="btn-save" onclick="guardarResultadosOficiales()">💾 Guardar en Supabase</button>
+    </div>
+    <div style="margin-bottom:.75rem">
+      <label>País goleador del torneo (resultado oficial)</label>
+      <select id="res-goleador-oficial" style="max-width:280px">
+        <option value="">Sin definir</option>
+        <option>Mexico</option><option>Sudafrica</option><option>Rep. Checa</option><option>Corea del Sur</option>
+        <option>Canada</option><option>Bosnia-Herzegovina</option><option>Qatar</option><option>Suiza</option>
+        <option>Brasil</option><option>Marruecos</option><option>Haiti</option><option>Escocia</option>
+        <option>EEUU</option><option>Paraguay</option><option>Australia</option><option>Turkiye</option>
+        <option>Alemania</option><option>Curazao</option><option>Costa de Marfil</option><option>Ecuador</option>
+        <option>Paises Bajos</option><option>Japon</option><option>Suecia</option><option>Tunez</option>
+        <option>Belgica</option><option>Egipto</option><option>Iran</option><option>Nueva Zelanda</option>
+        <option>Espana</option><option>Cabo Verde</option><option>Arabia Saudita</option><option>Uruguay</option>
+        <option>Francia</option><option>Senegal</option><option>Iraq</option><option>Noruega</option>
+        <option>Argentina</option><option>Argelia</option><option>Austria</option><option>Jordania</option>
+        <option>Portugal</option><option>DR Congo</option><option>Uzbekistan</option><option>Colombia</option>
+        <option>Inglaterra</option><option>Croacia</option><option>Ghana</option><option>Panama</option>
+      </select>
+    </div>
+    <div id="res-grupo-tabs" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:.75rem"></div>
+    <div id="res-partidos-container"></div>
+    <div class="alert" id="res-alert"></div>
+  </div>
+</div>
+
+<!-- TAB: SIMULADOR -->
+<div id="tab-simulador" class="tab-section">
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-icon">🎮</div>
+      <div class="card-title">Simulador de resultados</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:.75rem">Genera resultados aleatorios para verificar el cálculo de puntos. No se guardan como resultados reales.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+      <button class="btn-oro" onclick="generarResultadosAleatorios()">Generar aleatorios</button>
+      <button class="btn-sec" onclick="limpiarResultadosAdmin()">Limpiar</button>
+      <button class="btn-save" onclick="calcularPuntosSimulados()">Calcular puntos</button>
+    </div>
+    <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+      <div style="flex:1;min-width:180px">
+        <label>País goleador simulado</label>
+        <select id="sim-goleador" onchange="setGoleadorAdmin(this.value)" style="width:100%">
+          <option value="">Sin seleccionar</option>
+          <option>Mexico</option><option>Sudafrica</option><option>Rep. Checa</option><option>Corea del Sur</option>
+          <option>Canada</option><option>Bosnia-Herzegovina</option><option>Qatar</option><option>Suiza</option>
+          <option>Brasil</option><option>Marruecos</option><option>Haiti</option><option>Escocia</option>
+          <option>EEUU</option><option>Paraguay</option><option>Australia</option><option>Turkiye</option>
+          <option>Alemania</option><option>Curazao</option><option>Costa de Marfil</option><option>Ecuador</option>
+          <option>Paises Bajos</option><option>Japon</option><option>Suecia</option><option>Tunez</option>
+          <option>Belgica</option><option>Egipto</option><option>Iran</option><option>Nueva Zelanda</option>
+          <option>Espana</option><option>Cabo Verde</option><option>Arabia Saudita</option><option>Uruguay</option>
+          <option>Francia</option><option>Senegal</option><option>Iraq</option><option>Noruega</option>
+          <option>Argentina</option><option>Argelia</option><option>Austria</option><option>Jordania</option>
+          <option>Portugal</option><option>DR Congo</option><option>Uzbekistan</option><option>Colombia</option>
+          <option>Inglaterra</option><option>Croacia</option><option>Ghana</option><option>Panama</option>
+        </select>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Grupos</div>
+    <div id="sim-grupo-tabs" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:.75rem"></div>
+    <div id="sim-partidos-container"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:.75rem 0 .5rem">2da Ronda</div>
+    <div id="sim-bracket-container"></div>
+    <div class="alert" id="sim-alert"></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-icon">🏆</div>
+      <div class="card-title">Ranking simulado</div>
+    </div>
+    <div id="sim-ranking-container"><p style="color:var(--muted);font-size:13px">Calcula los puntos para ver el ranking.</p></div>
+  </div>
+</div>
+
+<!-- TAB: CONFIGURACION -->
+<div id="tab-configuracion" class="tab-section">
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-icon">⚙️</div>
+      <div class="card-title">Configuración del torneo</div>
+    </div>
+    <div class="fgrid">
+      <div class="fg">
+        <label>Fecha y hora de cierre</label>
+        <input type="datetime-local" id="cfg-fecha-cierre">
+      </div>
+      <div class="fg">
+        <label>Permitir edición</label>
+        <select id="cfg-permitir-edicion">
+          <option value="true">Sí — abierto</option>
+          <option value="false">No — cerrado</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-primary" style="margin-top:.75rem" onclick="guardarConfiguracionAdmin()">Guardar configuración</button>
+    <div class="alert" id="cfg-alert"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-icon">🎨</div>
+      <div class="card-title">Personalización visual</div>
+    </div>
+    <div class="fgrid">
+      <div class="fg"><label>Nombre de empresa</label><input type="text" id="cfg-empresa" placeholder="Business IT"></div>
+      <div class="fg"><label>Color principal (hex)</label><input type="text" id="cfg-color" placeholder="#0a5c2e"></div>
+      <div class="fg"><label>Badge del hero</label><input type="text" id="cfg-hero-badge" placeholder="Campaña de clientes 2026"></div>
+      <div class="fg"><label>Título principal</label><input type="text" id="cfg-hero-titulo" placeholder="La gran quiniela mundialista"></div>
+      <div class="fg full"><label>Subtítulo</label><input type="text" id="cfg-hero-subtitulo" placeholder="Predice, compite y gana con tus colegas"></div>
+    </div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--borde)">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Zonas publicitarias</div>
+      <div class="fgrid">
+        <div class="fg"><label>Zona 1 — Banner superior (728×90)</label><input type="text" id="ad-zona1-input" placeholder="URL imagen o HTML"></div>
+        <div class="fg"><label>Zona 2 — Sidebar 1era Ronda (300×250)</label><input type="text" id="ad-zona2-input" placeholder="URL imagen o HTML"></div>
+        <div class="fg full"><label>Zona 6 — Ranking (728×90)</label><input type="text" id="ad-zona6-input" placeholder="URL imagen o HTML"></div>
+      </div>
+    </div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--borde)">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Premios</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="background:var(--bg);border-radius:8px;padding:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--verde);margin-bottom:8px">🥇 1er Premio</div>
+          <div class="fgrid">
+            <div class="fg"><label>URL imagen</label><input type="text" id="premio1-img" placeholder="https://..."></div>
+            <div class="fg"><label>Descripción</label><input type="text" id="premio1-desc" placeholder="Ej: iPhone 16"></div>
+          </div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px">
+          <div style="font-size:12px;font-weight:700;color:#aaa;margin-bottom:8px">🥈 2do Premio</div>
+          <div class="fgrid">
+            <div class="fg"><label>URL imagen</label><input type="text" id="premio2-img" placeholder="https://..."></div>
+            <div class="fg"><label>Descripción</label><input type="text" id="premio2-desc" placeholder="Ej: Tablet"></div>
+          </div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px">
+          <div style="font-size:12px;font-weight:700;color:#cd7f32;margin-bottom:8px">🥉 3er Premio</div>
+          <div class="fgrid">
+            <div class="fg"><label>URL imagen</label><input type="text" id="premio3-img" placeholder="https://..."></div>
+            <div class="fg"><label>Descripción</label><input type="text" id="premio3-desc" placeholder="Ej: Audífonos"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary" style="margin-top:.75rem" onclick="aplicarConfig()">Aplicar cambios</button>
+  </div>
+</div>
+
+<!-- TAB: BACKUP -->
+<div id="tab-backup" class="tab-section">
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-icon">💾</div>
+      <div class="card-title">Exportar backup completo</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">Exporta todos los datos de participantes con sus predicciones completas, bracket y país goleador.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-save" onclick="exportarBackupCompleto()">📦 Exportar JSON completo</button>
+      <button class="btn-sec" onclick="exportarCSV()">📊 Exportar CSV participantes</button>
+      <button class="btn-sec" onclick="exportarCodigos()">🔑 Exportar CSV códigos</button>
+    </div>
+    <div class="alert" id="backup-alert" style="margin-top:.75rem"></div>
+  </div>
+</div>
+
+</main>
+
+<!-- Modal perfil participante -->
+<div class="modal-overlay" id="perfil-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('perfil-modal').classList.remove('on')">×</button>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;text-transform:uppercase;color:var(--verde);margin-bottom:1rem">Perfil del participante</div>
+    <div id="perfil-body"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
