@@ -310,6 +310,13 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 .pred-info-link{font-size:11px;color:var(--verde);font-weight:700;cursor:pointer;margin-top:6px;display:inline-flex;align-items:center;gap:4px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em;text-transform:uppercase}
 .pred-info-link:hover{text-decoration:underline}
 
+
+/* Resultado oficial en partido */
+.res-oficial-row{background:#f0f8f4;border-left:3px solid var(--verde);border-radius:6px;padding:6px 10px;margin-bottom:6px;text-align:center}
+.res-oficial-marcador{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;color:var(--verde);letter-spacing:.04em}
+.res-oficial-pred{font-size:11px;color:var(--muted);margin-top:3px;display:flex;align-items:center;justify-content:center;gap:6px}
+.res-badge{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:11px;padding:2px 8px;border-radius:10px;letter-spacing:.04em}
+
 </style>
 </head>
 <body>
@@ -355,6 +362,7 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 <div class="nav-wrap">
   <nav class="nav">
     <button class="nav-btn active" onclick="goSec('registro',this)">Registro</button>
+    <button class="nav-btn" onclick="goSec('premios',this)">Premios</button>
     <button class="nav-btn" onclick="goSec('quiniela',this)">1era Ronda</button>
     <button class="nav-btn" onclick="goSec('segunda',this)">2da Ronda</button>
     <button class="nav-btn" onclick="goSec('goleador',this)">País Goleador</button>
