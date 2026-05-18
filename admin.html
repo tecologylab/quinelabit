@@ -108,7 +108,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--verde);b
   </div>
 </header>
 
-<div class="admin-nav">
+<div class="admin-nav" id="admin-nav" style="display:none">
   <div class="admin-nav-inner">
     <button class="anav-btn active" onclick="showTab('participantes',this)">Participantes</button>
     <button class="anav-btn" onclick="showTab('codigos',this)">Códigos</button>
@@ -120,6 +120,21 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--verde);b
 </div>
 
 <main class="main">
+
+<!-- LOGIN WALL -->
+<div id="admin-login-wall" style="display:flex;align-items:center;justify-content:center;min-height:60vh">
+  <div style="background:var(--card);border:1px solid var(--borde);border-radius:var(--r);padding:2rem;width:100%;max-width:380px;text-align:center">
+    <div style="font-size:2.5rem;margin-bottom:.75rem">🔐</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;text-transform:uppercase;color:var(--verde);margin-bottom:.5rem">Panel de Admin</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1.5rem">Ingresa la contraseña para continuar</p>
+    <input type="password" id="admin-pass-input" placeholder="Contraseña" style="width:100%;padding:11px 14px;border:1.5px solid var(--borde);border-radius:var(--rs);font-size:15px;margin-bottom:.75rem;text-align:center;letter-spacing:.1em" onkeydown="if(event.key==='Enter')loginAdmin()">
+    <button class="btn-primary" style="margin-top:0" onclick="loginAdmin()">Entrar</button>
+    <div id="login-error" style="color:#c0392b;font-size:12px;margin-top:.5rem;display:none">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<!-- CONTENIDO ADMIN (oculto hasta login) -->
+<div id="admin-content-wrap" style="display:none">
 
 <!-- TAB: PARTICIPANTES -->
 <div id="tab-participantes" class="tab-section active">
@@ -358,6 +373,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--verde);b
   </div>
 </div>
 
+</div><!-- end admin-content-wrap -->
 </main>
 
 <!-- Modal perfil participante -->
