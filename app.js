@@ -570,16 +570,16 @@ function predictorHTML(local, visita, pid) {
   const barV = Math.round(pctV * 0.7);
   // Mayoría de predicciones
   const mayoria = calcMayoria(pid);
-  return `<div class="predictor-wrap">
-    <div class="pred-bar-row">
-      <span class="pred-pct${favoritoL ? ' pred-fav' : ''}">${pctL}%</span>
-      <div class="pred-bar">
-        <div class="pred-fill-l" style="width:${barL}%"></div>
-        <div class="pred-fill-r" style="width:${barV}%"></div>
+  return `<div class='predictor-wrap'>
+    <div class='pred-bar-row'>
+      <span class='pred-pct${favoritoL ? ' pred-fav' : ''}'>${pctL}%</span>
+      <div class='pred-bar'>
+        <div class='pred-fill-l' style='width:${barL}%'></div>
+        <div class='pred-fill-r' style='width:${barV}%'></div>
       </div>
-      <span class="pred-pct${!favoritoL ? ' pred-fav' : ''}">${pctV}%</span>
+      <span class='pred-pct${!favoritoL ? ' pred-fav' : ''}'>${pctV}%</span>
     </div>
-    <div class="pred-label">Favorito según ranking FIFA${mayoria ? ` &nbsp;·&nbsp; 👥 Mayoría: <strong>${mayoria}</strong>` : ''}</div>
+    <div class='pred-label'>Favorito FIFA${mayoria ? ' &nbsp;·&nbsp; 👥 Mayoría: <b>' + mayoria + '</b>' : ''}</div>
   </div>`;
 }
 
