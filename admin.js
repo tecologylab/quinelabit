@@ -287,7 +287,12 @@ async function cargarConfigAdmin() {
           const inputId = mapeo[r.clave];
           if (inputId) {
             const el = document.getElementById(inputId);
-            if (el) el.value = r.valor || '';
+            if (el) {
+              let val = r.valor || '';
+              const match = val.match(/src="([^"]+)"/);
+              if (match) val = match[1];
+              el.value = val;
+            }
           }
         });
       }
