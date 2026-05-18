@@ -1022,16 +1022,21 @@ function matchCard(m,ronda){
   const esEmpate=ok&&gl===gv;
   const penales=b.penales||null;
   const cerrada=estaCerrada();
-  const lCheck=ganador===lN?'<span class="bcheck">&#10003;</span>':'';
-  const vCheck=ganador===vN?'<span class="bcheck">&#10003;</span>':'';
   const resB=resultadosAdmin._bracketRes?resultadosAdmin._bracketRes[m.bid]:(rankingSimulado&&rankingSimulado._resultados&&rankingSimulado._resultados._bracketRes?rankingSimulado._resultados._bracketRes[m.bid]:null);
   // Calcular puntos bracket si hay resultado real
-  let bracketPtsBadge='';
+  let bracketPtsBadge=''; let cardBg=''; let cardBorder='';
   if(resB&&b.gl!==undefined&&b.gv!==undefined){
     const ganPred=b.gl>b.gv?lN:b.gv>b.gl?vN:(b.penales||null);
-    if(b.gl===resB.gl&&b.gv===resB.gv){bracketPtsBadge=`<span class='res-badge' style='background:#0a5c2e;color:#fff'>+${ronda.pts_ex}pts ✓</span>`;}
-    else if(ganPred===resB.ganador){bracketPtsBadge=`<span class='res-badge' style='background:#f0cb6a;color:#7a5500'>+${ronda.pts_res}pts</span>`;}
-    else{bracketPtsBadge=`<span class='res-badge' style='background:#c0392b;color:#fff'>0pts ✗</span>`;}
+    if(b.gl===resB.gl&&b.gv===resB.gv){
+      bracketPtsBadge=`<span class='res-badge' style='background:#0a5c2e;color:#fff'>+${ronda.pts_ex}pts ✓</span>`;
+      cardBg='background:#eaf5ee';cardBorder='border-color:#9fd4b0';
+    } else if(ganPred===resB.ganador){
+      bracketPtsBadge=`<span class='res-badge' style='background:#f0cb6a;color:#7a5500'>+${ronda.pts_res}pts</span>`;
+      cardBg='background:#fffbf0';cardBorder='border-color:#f0cb6a';
+    } else {
+      bracketPtsBadge=`<span class='res-badge' style='background:#c0392b;color:#fff'>0pts ✗</span>`;
+      cardBg='background:#fef0f0';cardBorder='border-color:#f5b7b1';
+    }
   }
   const penBadge=esEmpate&&penales?`<span class="bpen-badge">Pen: ${flagBadge(penales,14)} ${penales}</span>`:'';
   // Color simulacion
@@ -1043,20 +1048,18 @@ function matchCard(m,ronda){
     else if(ganador===ganadorReal)simClass=' sim-correcto';
     else simClass=' sim-fallo';
   }
-  return `<div class="bmatch${ok?' ok':''}${cerrada?' locked':''}${simClass}" onclick="abrirModal(${m.bid})" title="${cerrada?'Quiniela cerrada':'Clic para editar'}">
+  return `<div class="bmatch${ok?' ok':''}${cerrada?' locked':''}${simClass}" style="${cardBg};${cardBorder}" onclick="abrirModal(${m.bid})" title="${cerrada?'Quiniela cerrada':'Clic para editar'}">
     <div class="bmlbl">${m.desc} <span class="pts-pill">${ronda.pts_ex}pts MAX</span></div>
     <div class="bteam${!lN?' empty':''}${ganador===lN?' winner':''}">
       ${lN?flagBadge(lN,18):'<span class="bq">?</span>'}
       <span class="btn">${lN||'Seleccionar'}</span>
       <span class="bsc">${gl!==null?gl:''}</span>
-      ${lCheck}
     </div>
     <div class="bdiv"></div>
     <div class="bteam${!vN?' empty':''}${ganador===vN?' winner':''}">
       ${vN?flagBadge(vN,18):'<span class="bq">?</span>'}
       <span class="btn">${vN||'Seleccionar'}</span>
       <span class="bsc">${gv!==null?gv:''}</span>
-      ${vCheck}
     </div>
     ${resB?`<div style='text-align:center;margin-top:4px;font-size:11px;color:var(--muted)'>Resultado oficial: <b>${resB.gl}-${resB.gv}</b> ${bracketPtsBadge}</div>`:''}
     ${penBadge}
@@ -1116,13 +1119,31 @@ function setSliceActive(btn){
 
 function renderBracket(){
   const c=document.getElementById('bracket-container');if(!c)return;
+  // Calcular espaciado progresivo para efecto árbol
+  // R32=8 partidos, R16=4, QF=2, SF=1, Final=1
+  // Cada ronda el gap entre partidos se duplica
   let html='<div class="bracket-cols">';
-  BRACKET_RONDAS.forEach(ronda=>{
-    html+=`<div class="bcol" id="ronda-${ronda.id}"><div class="bcol-title">${ronda.nombre}</div><div class="bcol-matches">`;
+  const gapBase=8; // px entre partidos en R32
+  BRACKET_RONDAS.forEach((ronda,ri)=>{
+    const factor=Math.pow(2,ri); // 1,2,4,8,16
+    const paddingTop=ri>0?(factor-1)*gapBase/2:0;
+    const gap=factor*gapBase;
+    html+=`<div class="bcol" id="ronda-${ronda.id}">
+      <div class="bcol-title">${ronda.nombre}</div>
+      <div class="bcol-matches" style="gap:${gap}px;padding-top:${paddingTop}px">`;
     ronda.partidos.forEach(m=>{html+=matchCard(m,ronda);});
     html+=`</div></div>`;
   });
   html+='</div>';c.innerHTML=html;
+  // Sync scroll entre top y main
+  const mainScroll=document.getElementById('bracket-outer-main');
+  const topScroll=document.getElementById('bracket-outer-top');
+  const shadow=document.getElementById('bracket-shadow-top');
+  if(mainScroll&&topScroll&&shadow){
+    shadow.style.width=mainScroll.scrollWidth+'px';
+    mainScroll.addEventListener('scroll',()=>{ topScroll.scrollLeft=mainScroll.scrollLeft; },{ passive:true });
+    topScroll.addEventListener('scroll',()=>{ mainScroll.scrollLeft=topScroll.scrollLeft; },{ passive:true });
+  }
 }
 
 function abrirModal(bid){
