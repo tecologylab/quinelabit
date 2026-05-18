@@ -263,38 +263,97 @@ async function exportarBackupCompleto() {
 // ============================================================
 // CONFIGURACION ADMIN
 // ============================================================
-function cargarConfigAdmin() {
-  // Cargar valores guardados en inputs
-  const emp = localStorage.getItem('cfg_empresa');
-  const col = localStorage.getItem('cfg_color');
-  if (emp) { const el = document.getElementById('cfg-empresa'); if (el) el.value = emp; }
-  if (col) { const el = document.getElementById('cfg-color'); if (el) el.value = col; }
-  // Hero
-  ['badge', 'titulo', 'subtitulo'].forEach(k => {
-    const val = localStorage.getItem('hero_' + k);
-    const el = document.getElementById('cfg-hero-' + k);
-    if (val && el) el.value = val;
-  });
-  // Ads
-  ['1', '2', '6'].forEach(z => {
-    const val = localStorage.getItem('ad_zona' + z);
-    const el = document.getElementById('ad-zona' + z + '-input');
-    if (val && el) el.value = val;
-  });
-  // Premios
-  for (let i = 1; i <= 3; i++) {
-    const imgEl = document.getElementById('premio' + i + '-img');
-    const descEl = document.getElementById('premio' + i + '-desc');
-    if (imgEl) imgEl.value = localStorage.getItem('premio' + i + '_img') || '';
-    if (descEl) descEl.value = localStorage.getItem('premio' + i + '_desc') || '';
+async function cargarConfigAdmin() {
+  // Cargar config visual desde Supabase
+  if (sbClient) {
+    try {
+      const { data } = await sbClient.from('configuracion_visual').select('*');
+      if (data) {
+        data.forEach(r => {
+          // Mapear clave a input ID
+          const mapeo = {
+            'cfg_empresa': 'cfg-empresa',
+            'cfg_color': 'cfg-color',
+            'hero_badge': 'cfg-hero-badge',
+            'hero_titulo': 'cfg-hero-titulo',
+            'hero_subtitulo': 'cfg-hero-subtitulo',
+            'ad_zona1': 'ad-zona1-input',
+            'ad_zona2': 'ad-zona2-input',
+            'ad_zona6': 'ad-zona6-input',
+            'premio1_img': 'premio1-img', 'premio1_desc': 'premio1-desc',
+            'premio2_img': 'premio2-img', 'premio2_desc': 'premio2-desc',
+            'premio3_img': 'premio3-img', 'premio3_desc': 'premio3-desc',
+          };
+          const inputId = mapeo[r.clave];
+          if (inputId) {
+            const el = document.getElementById(inputId);
+            if (el) el.value = r.valor || '';
+          }
+        });
+      }
+    } catch(e) {}
   }
-  // Fecha cierre
-  if (configGlobal.fecha_cierre) {
-    const el = document.getElementById('cfg-fecha-cierre');
-    if (el) el.value = new Date(configGlobal.fecha_cierre).toISOString().slice(0, 16);
-  }
+
+  // Fechas de cierre
+  const setFecha = (id, valor) => {
+    const el = document.getElementById(id);
+    if (el && valor) el.value = new Date(valor).toISOString().slice(0, 16);
+  };
+  setFecha('cfg-fecha-cierre', configGlobal.fecha_cierre);
+  setFecha('cfg-fecha-r32', configGlobal.fecha_cierre_r32);
+  setFecha('cfg-fecha-r16', configGlobal.fecha_cierre_r16);
+  setFecha('cfg-fecha-qf', configGlobal.fecha_cierre_qf);
+  setFecha('cfg-fecha-sf', configGlobal.fecha_cierre_sf);
+  setFecha('cfg-fecha-final', configGlobal.fecha_cierre_final);
+
   const editEl = document.getElementById('cfg-permitir-edicion');
   if (editEl) editEl.value = configGlobal.permitir_edicion ? 'true' : 'false';
+
+  // Empresa label
+  const emp = document.getElementById('cfg-empresa')?.value;
+  const empLabel = document.getElementById('empresa-label');
+  if (emp && empLabel) empLabel.textContent = emp;
+}
+
+// ============================================================
+// CONFIGURACION VISUAL — Guardar en Supabase
+// ============================================================
+async function aplicarConfig() {
+  const pares = [];
+  const emp = document.getElementById('cfg-empresa')?.value.trim();
+  const col = document.getElementById('cfg-color')?.value.trim();
+  if (emp) pares.push({ clave: 'cfg_empresa', valor: emp });
+  if (col && /^#[0-9a-fA-F]{6}$/.test(col)) pares.push({ clave: 'cfg_color', valor: col });
+  ['badge','titulo','subtitulo'].forEach(k => {
+    const val = document.getElementById('cfg-hero-' + k)?.value.trim();
+    if (val) pares.push({ clave: 'hero_' + k, valor: val });
+  });
+  ['1','2','6'].forEach(z => {
+    const val = document.getElementById('ad-zona' + z + '-input')?.value.trim();
+    if (val) {
+      const html = val.startsWith('http')||val.endsWith('.jpg')||val.endsWith('.png')
+        ? `<img src="${val}" style="max-width:100%;height:auto;display:block;margin:0 auto">` : val;
+      pares.push({ clave: 'ad_zona' + z, valor: html });
+    }
+  });
+  for (let i = 1; i <= 3; i++) {
+    const img = document.getElementById('premio' + i + '-img')?.value.trim() || '';
+    const desc = document.getElementById('premio' + i + '-desc')?.value.trim() || '';
+    pares.push({ clave: 'premio' + i + '_img', valor: img });
+    pares.push({ clave: 'premio' + i + '_desc', valor: desc });
+  }
+  if (!pares.length) { alert('No hay cambios para guardar.'); return; }
+  try {
+    if (sbClient) {
+      const { error } = await sbClient.from('configuracion_visual')
+        .upsert(pares, { onConflict: 'clave' });
+      if (error) throw error;
+      alert('✅ Configuración guardada en Supabase. Todos los participantes verán los cambios.');
+    } else {
+      pares.forEach(p => { if(p.valor) localStorage.setItem(p.clave, p.valor); else localStorage.removeItem(p.clave); });
+      alert('✅ Guardado localmente (sin conexión a Supabase).');
+    }
+  } catch(e) { alert('Error guardando: ' + e.message); }
 }
 
 // ============================================================
@@ -347,17 +406,33 @@ function fmtFecha(str) {
 // INIT ADMIN
 // ============================================================
 async function initAdmin() {
-  // Cargar SDK y conectar Supabase (reutiliza funciones de app.js)
   await cargarSDK();
   await autoConectar();
   await cargarConfiguracion();
+  // Verificar password desde Supabase
+  await verificarPasswordAdmin();
   renderAdminParticipantes();
-  // Cargar config en inputs
-  const emp = localStorage.getItem('cfg_empresa');
-  if (emp) {
-    const el = document.getElementById('empresa-label');
-    if (el) el.textContent = emp;
-  }
+  cargarConfigAdmin();
+}
+
+async function verificarPasswordAdmin() {
+  // Obtener password guardado en Supabase (si existe)
+  if (!sbClient) return;
+  try {
+    const { data } = await sbClient
+      .from('configuracion')
+      .select('admin_password')
+      .limit(1)
+      .maybeSingle();
+    if (data?.admin_password) {
+      // Actualizar ADMIN_PASS en memoria
+      window._adminPassActual = data.admin_password;
+    }
+  } catch(e) {}
+}
+
+function getAdminPass() {
+  return window._adminPassActual || 'BIT2026ADMIN';
 }
 
 document.addEventListener('DOMContentLoaded', initAdmin);
