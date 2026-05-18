@@ -478,14 +478,55 @@ function fmtFecha(str) {
 // ============================================================
 // INIT ADMIN
 // ============================================================
+async function loginAdmin() {
+  const input = document.getElementById('admin-pass-input');
+  const errEl = document.getElementById('login-error');
+  if (!input) return;
+  const pass = input.value.trim();
+  if (!pass) return;
+
+  // Cargar password de Supabase primero
+  await verificarPasswordAdmin();
+  const correctPass = getAdminPass();
+
+  if (pass === correctPass) {
+    // Login exitoso
+    sessionStorage.setItem('adminAuth', '1');
+    document.getElementById('admin-login-wall').style.display = 'none';
+    document.getElementById('admin-content-wrap').style.display = '';
+    document.getElementById('admin-nav').style.display = '';
+    if (errEl) errEl.style.display = 'none';
+    renderAdminParticipantes();
+    cargarConfigAdmin();
+  } else {
+    if (errEl) { errEl.style.display = ''; errEl.textContent = 'Contraseña incorrecta'; }
+    input.value = '';
+    input.focus();
+  }
+}
+
 async function initAdmin() {
   await cargarSDK();
   await autoConectar();
   await cargarConfiguracion();
-  // Verificar password desde Supabase
-  await verificarPasswordAdmin();
-  renderAdminParticipantes();
-  cargarConfigAdmin();
+
+  // Verificar si ya está autenticado en esta sesión
+  if (sessionStorage.getItem('adminAuth') === '1') {
+    await verificarPasswordAdmin();
+    document.getElementById('admin-login-wall').style.display = 'none';
+    document.getElementById('admin-content-wrap').style.display = '';
+    document.getElementById('admin-nav').style.display = '';
+    renderAdminParticipantes();
+    cargarConfigAdmin();
+  }
+  // Si no está autenticado, muestra el login wall (ya visible por defecto)
+
+  // Cargar empresa label
+  const emp = localStorage.getItem('cfg_empresa');
+  if (emp) {
+    const el = document.getElementById('empresa-label');
+    if (el) el.textContent = emp;
+  }
 }
 
 async function verificarPasswordAdmin() {
