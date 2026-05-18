@@ -566,8 +566,8 @@ function getProbabilidad(local, visita) {
 
 function predictorHTML(local, visita, pid) {
   const { pctL, pctV, favoritoL } = getProbabilidad(local, visita);
-  const barL = Math.round(pctL * 0.7); // max 70% de la barra
-  const barV = Math.round(pctV * 0.7);
+  const barL = pctL; // usar el % directamente
+  const barV = pctV;
   // Mayoría de predicciones
   const mayoria = calcMayoria(pid);
   return `<div class='predictor-wrap'>
@@ -655,7 +655,6 @@ function renderPartidosGrupo(){
     }
     pHtml+=`<div class="pcard${ok?' ok':''}${lClass?' '+lClass:''}">
       <div class="psede">${p.s}${ptsBadge}</div>
-      ${predictorHTML(p.l,p.v,p.id)}
       <div class="prow">
         <div class="ecol">${flagBadge(p.l,20)}<span class="ename">${p.l}</span></div>
         <div class="sinputs">
@@ -665,6 +664,7 @@ function renderPartidosGrupo(){
         </div>
         <div class="ecol r"><span class="ename">${p.v}</span>${flagBadge(p.v,20)}</div>
       </div>
+      ${predictorHTML(p.l,p.v,p.id)}
     </div>`;
   });
   const tablaHtml=renderTablaGrupo(grupoActivo);
