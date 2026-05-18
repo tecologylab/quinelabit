@@ -65,10 +65,64 @@ function activarDemoAdmin() {
 // RESULTADOS OFICIALES
 // ============================================================
 function initResultadosOficiales() {
-  // Cargar resultados guardados en Supabase
   cargarResultadosOficialesSupabase();
   renderResGrupoTabs();
   renderResPartidos();
+  renderResBracket();
+}
+
+function renderResBracket(){
+  const c=document.getElementById('res-bracket-container');if(!c)return;
+  let html='';
+  BRACKET_RONDAS.forEach(ronda=>{
+    html+=`<div style="margin-bottom:1rem">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--oro);margin-bottom:.5rem;padding-bottom:.4rem;border-bottom:1px solid var(--borde)">${ronda.nombre}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px">`;
+    ronda.partidos.forEach(m=>{
+      const r=resultadosOficiales['b'+m.bid]||{};
+      const gl=r.gl!==undefined?r.gl:'';
+      const gv=r.gv!==undefined?r.gv:'';
+      const ganador=r.ganador||'';
+      // Equipos del bracket actual
+      const lTeam=r.lTeam||'Local';
+      const vTeam=r.vTeam||'Visitante';
+      html+=`<div style="background:#fafafa;border:1.5px solid var(--borde);border-radius:8px;padding:8px 10px">
+        <div style="font-size:9px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px">Partido ${m.bid} — ${m.desc}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="font-size:11px;font-weight:600;flex:1">${lTeam}</span>
+          <input type="number" min="0" max="20" value="${gl}" placeholder="0" style="width:40px;height:30px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;border:1.5px solid var(--borde);border-radius:5px;padding:0" oninput="setResOficialBracket(${m.bid},'gl',this.value,'${lTeam}','${vTeam}')">
+          <span style="color:var(--muted);font-weight:700">–</span>
+          <input type="number" min="0" max="20" value="${gv}" placeholder="0" style="width:40px;height:30px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;border:1.5px solid var(--borde);border-radius:5px;padding:0" oninput="setResOficialBracket(${m.bid},'gv',this.value,'${lTeam}','${vTeam}')">
+          <span style="font-size:11px;font-weight:600;flex:1;text-align:right">${vTeam}</span>
+        </div>
+        <div style="font-size:10px;color:var(--muted)">
+          Ganador: <select style="font-size:11px;border:1px solid var(--borde);border-radius:4px;padding:2px 4px" onchange="setResOficialBracketGanador(${m.bid},this.value)">
+            <option value="">Seleccionar</option>
+            <option value="${lTeam}"${ganador===lTeam?' selected':''}>${lTeam}</option>
+            <option value="${vTeam}"${ganador===vTeam?' selected':''}>${vTeam}</option>
+          </select>
+        </div>
+      </div>`;
+    });
+    html+=`</div></div>`;
+  });
+  c.innerHTML=html||'<p style="color:var(--muted);font-size:13px">Completa el bracket en 2da Ronda primero para ver los equipos aquí.</p>';
+}
+
+function setResOficialBracket(bid,lado,val,lTeam,vTeam){
+  const num=parseInt(val,10);
+  if(!resultadosOficiales['b'+bid])resultadosOficiales['b'+bid]={lTeam,vTeam,ganador:''};
+  if(!isNaN(num)&&num>=0)resultadosOficiales['b'+bid][lado]=num;
+  const r=resultadosOficiales['b'+bid];
+  if(r.gl!==undefined&&r.gv!==undefined&&r.gl!==r.gv){
+    r.ganador=r.gl>r.gv?lTeam:vTeam;
+    renderResBracket();
+  }
+}
+
+function setResOficialBracketGanador(bid,ganador){
+  if(!resultadosOficiales['b'+bid])resultadosOficiales['b'+bid]={};
+  resultadosOficiales['b'+bid].ganador=ganador;
 }
 
 async function cargarResultadosOficialesSupabase() {
@@ -77,15 +131,19 @@ async function cargarResultadosOficialesSupabase() {
   if (data) {
     data.forEach(r => {
       if (r.partido_idx === 0) {
-        // Goleador guardado con idx=0
         const sel = document.getElementById('res-goleador-oficial');
         if (sel && r.ganador) sel.value = r.ganador;
+      } else if (r.partido_idx >= 1000) {
+        // Resultado de bracket
+        const bid = r.partido_idx - 1000;
+        resultadosOficiales['b'+bid] = { gl: r.goles_local, gv: r.goles_visita, ganador: r.ganador||'' };
       } else {
         resultadosOficiales[r.partido_idx] = { l: r.goles_local, v: r.goles_visita };
       }
     });
     renderResGrupoTabs();
     renderResPartidos();
+    renderResBracket();
   }
 }
 
@@ -137,19 +195,28 @@ function setResOficial(id, lado, val) {
 async function guardarResultadosOficiales() {
   if (!sbClient) { alertaAdmin('res-alert', 'error', 'Conecta Supabase primero.'); return; }
   const rows = [];
-  // Guardar goleador oficial
+  // Goleador oficial (partido_idx=0)
   const goleadorOficial = document.getElementById('res-goleador-oficial')?.value;
   if (goleadorOficial) rows.push({ partido_idx: 0, goles_local: 0, goles_visita: 0, ganador: goleadorOficial });
-  // Guardar partidos
+  // Partidos de grupos
   Object.entries(resultadosOficiales).forEach(([id, r]) => {
+    if (id.startsWith('b')) return; // skip bracket
     if (r.l !== undefined && r.v !== undefined) {
       rows.push({ partido_idx: parseInt(id), goles_local: r.l, goles_visita: r.v });
+    }
+  });
+  // Partidos de bracket (partido_idx = 1000+bid para diferenciar)
+  Object.entries(resultadosOficiales).forEach(([id, r]) => {
+    if (!id.startsWith('b')) return;
+    const bid = parseInt(id.slice(1));
+    if (r.gl !== undefined && r.gv !== undefined) {
+      rows.push({ partido_idx: 1000+bid, goles_local: r.gl, goles_visita: r.gv, ganador: r.ganador||null });
     }
   });
   if (!rows.length) { alertaAdmin('res-alert', 'error', 'No hay resultados para guardar.'); return; }
   const { error } = await sbClient.from('resultados_reales').upsert(rows, { onConflict: 'partido_idx' });
   if (error) { alertaAdmin('res-alert', 'error', 'Error: ' + error.message); return; }
-  alertaAdmin('res-alert', 'success', `${rows.length} resultados guardados en Supabase. Los puntos se actualizarán en el ranking.`);
+  alertaAdmin('res-alert', 'success', `${rows.length} resultados guardados en Supabase.`);
 }
 
 // ============================================================
@@ -289,6 +356,7 @@ async function cargarConfigAdmin() {
             const el = document.getElementById(inputId);
             if (el) {
               let val = r.valor || '';
+              // Si el valor guardado es HTML, extraer solo la URL
               const match = val.match(/src="([^"]+)"/);
               if (match) val = match[1];
               el.value = val;
