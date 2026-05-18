@@ -1136,15 +1136,30 @@ function renderBracket(){
     html+=`</div></div>`;
   });
   html+='</div>';c.innerHTML=html;
-  // Sync scroll entre top y main
-  const mainScroll=document.getElementById('bracket-outer-main');
-  const topScroll=document.getElementById('bracket-outer-top');
-  const shadow=document.getElementById('bracket-shadow-top');
-  if(mainScroll&&topScroll&&shadow){
-    shadow.style.width=mainScroll.scrollWidth+'px';
-    mainScroll.addEventListener('scroll',()=>{ topScroll.scrollLeft=mainScroll.scrollLeft; },{ passive:true });
-    topScroll.addEventListener('scroll',()=>{ mainScroll.scrollLeft=topScroll.scrollLeft; },{ passive:true });
-  }
+
+  // Spacing dinámico basado en altura real de tarjeta
+  setTimeout(()=>{
+    const firstCard=c.querySelector('.bmatch');
+    if(!firstCard)return;
+    const cardH=firstCard.offsetHeight;
+    const gapB=12;
+    const cols=c.querySelectorAll('.bcol-matches');
+    cols.forEach((col,ri)=>{
+      if(ri===0){col.style.gap=gapB+'px';return;}
+      const factor=Math.pow(2,ri);
+      col.style.gap=(factor*(cardH+gapB)-cardH)+'px';
+      col.style.paddingTop=((factor-1)/2*(cardH+gapB))+'px';
+    });
+    // Sync scroll
+    const mainScroll=document.getElementById('bracket-outer-main');
+    const topScroll=document.getElementById('bracket-outer-top');
+    const shadow=document.getElementById('bracket-shadow-top');
+    if(mainScroll&&topScroll&&shadow){
+      shadow.style.width=mainScroll.scrollWidth+'px';
+      mainScroll.addEventListener('scroll',()=>{topScroll.scrollLeft=mainScroll.scrollLeft;},{passive:true});
+      topScroll.addEventListener('scroll',()=>{mainScroll.scrollLeft=topScroll.scrollLeft;},{passive:true});
+    }
+  },50);
 }
 
 function abrirModal(bid){
