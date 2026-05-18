@@ -537,6 +537,94 @@ async function guardarQuinielaCompleta(){
 }
 
 
+
+const EDITORIAL = {
+  // GRUPO A
+  1: {fav:'Mexico',conf:'Alta',exp:'México tiene ventaja por localía, mejor Elo relativo y experiencia mundialista. Sudáfrica llega como rival físico, pero con menor profundidad.',grupo:'México parte como favorito; Corea y Rep. Checa pelean cerrado por el segundo lugar.'},
+  2: {fav:'Corea del Sur',conf:'Baja',exp:'Es uno de los partidos más parejos del grupo. Corea tiene ritmo e intensidad, mientras Rep. Checa aporta orden europeo y juego directo.',grupo:'México parte como favorito; Corea y Rep. Checa pelean cerrado por el segundo lugar.'},
+  3: {fav:'Rep. Checa',conf:'Media',exp:'Rep. Checa parte mejor por estructura táctica y roce UEFA. Sudáfrica puede igualarlo si lleva el partido a duelo físico.',grupo:'México parte como favorito; Corea y Rep. Checa pelean cerrado por el segundo lugar.'},
+  4: {fav:'Mexico',conf:'Media-baja',exp:'México tendrá apoyo regional y mejor contexto, pero Corea puede castigar con velocidad y presión alta. Partido incómodo.',grupo:'México parte como favorito; Corea y Rep. Checa pelean cerrado por el segundo lugar.'},
+  5: {fav:'Mexico',conf:'Media-baja',exp:'México luce ligeramente superior por localía y jerarquía, aunque Rep. Checa puede complicarlo si necesita puntos para clasificar.',grupo:'México parte como favorito; Corea y Rep. Checa pelean cerrado por el segundo lugar.'},
+  6: {fav:'Corea del Sur',conf:'Media',exp:'Corea tiene más continuidad mundialista y mejor dinámica competitiva. Sudáfrica necesitaría un partido muy disciplinado para sorprender.',grupo:'México parte como favorito; Corea y Rep. Checa pelean cerrado por el segundo lugar.'},
+  // GRUPO B
+  7: {fav:'Canada',conf:'Media',exp:'Canadá tiene localía, velocidad y mejor momento competitivo. Bosnia tiene talento técnico, pero menor profundidad reciente.',grupo:'Suiza y Canadá lucen como los más fuertes; el duelo directo puede definir el primer lugar.'},
+  8: {fav:'Suiza',conf:'Alta',exp:'Suiza tiene ventaja clara por Elo, experiencia europea y solidez defensiva. Qatar tendría que jugar a marcador bajo para competir.',grupo:'Suiza y Canadá lucen como los más fuertes; el duelo directo puede definir el primer lugar.'},
+  9: {fav:'Suiza',conf:'Alta',exp:'Suiza es el equipo más estable del grupo y suele competir bien en torneos. Bosnia puede incomodar, pero parte abajo.',grupo:'Suiza y Canadá lucen como los más fuertes; el duelo directo puede definir el primer lugar.'},
+  10: {fav:'Canada',conf:'Alta',exp:'Canadá combina localía, físico y transiciones rápidas. Qatar luce como el rival más vulnerable del grupo.',grupo:'Suiza y Canadá lucen como los más fuertes; el duelo directo puede definir el primer lugar.'},
+  11: {fav:'Suiza',conf:'Baja',exp:'Suiza tiene mejor estructura, pero Canadá juega en casa y puede convertirlo en una final del grupo. Muy cerrado.',grupo:'Suiza y Canadá lucen como los más fuertes; el duelo directo puede definir el primer lugar.'},
+  12: {fav:'Bosnia-Herzegovina',conf:'Media',exp:'Bosnia tiene más argumentos técnicos y mejor roce competitivo. Qatar puede resistir si controla el ritmo.',grupo:'Suiza y Canadá lucen como los más fuertes; el duelo directo puede definir el primer lugar.'},
+  // GRUPO C
+  13: {fav:'Brasil',conf:'Media',exp:'Brasil tiene más techo individual, pero llega con ruido por lesiones y decisiones de convocatoria. Marruecos es tácticamente fuerte.',grupo:'Brasil y Marruecos parten arriba; Escocia tiene perfil de tercero peligroso.'},
+  14: {fav:'Escocia',conf:'Media-alta',exp:'Escocia tiene mejor Elo relativo, más roce europeo y más oficio competitivo. Haití llega como posible sorpresa, pero parte abajo.',grupo:'Brasil y Marruecos parten arriba; Escocia tiene perfil de tercero peligroso.'},
+  15: {fav:'Brasil',conf:'Alta',exp:'Diferencia fuerte en talento, profundidad y jerarquía. Haití tendría que sostener un partido defensivo casi perfecto.',grupo:'Brasil y Marruecos parten arriba; Escocia tiene perfil de tercero peligroso.'},
+  16: {fav:'Marruecos',conf:'Baja',exp:'Marruecos tiene más calidad reciente y mejor estructura, pero Escocia puede hacerlo muy físico y cerrado. Partido trampa.',grupo:'Brasil y Marruecos parten arriba; Escocia tiene perfil de tercero peligroso.'},
+  17: {fav:'Brasil',conf:'Alta',exp:'Brasil tiene una ventaja importante en ataque y profundidad de banca. Escocia puede competir, pero el diferencial individual pesa.',grupo:'Brasil y Marruecos parten arriba; Escocia tiene perfil de tercero peligroso.'},
+  18: {fav:'Marruecos',conf:'Alta',exp:'Marruecos llega con una base sólida y mejor actualidad internacional. Haití necesitaría orden total y efectividad máxima.',grupo:'Brasil y Marruecos parten arriba; Escocia tiene perfil de tercero peligroso.'},
+  // GRUPO D
+  19: {fav:'EEUU',conf:'Media',exp:'EEUU tiene localía y mejor profundidad, aunque llega con algunas dudas físicas recientes. Paraguay es intenso y competitivo.',grupo:'EEUU parte favorito por localía; Turquía y Paraguay pelean fuerte por clasificación.'},
+  20: {fav:'Turkiye',conf:'Media-baja',exp:'Turquía tiene más talento técnico y mejor techo ofensivo. Australia suele competir bien físicamente y no será fácil de quebrar.',grupo:'EEUU parte favorito por localía; Turquía y Paraguay pelean fuerte por clasificación.'},
+  21: {fav:'Turkiye',conf:'Baja',exp:'Partido muy parejo. Turquía tiene más recursos creativos, pero Paraguay puede hacerlo incómodo con presión, orden y duelos.',grupo:'EEUU parte favorito por localía; Turquía y Paraguay pelean fuerte por clasificación.'},
+  22: {fav:'EEUU',conf:'Media-alta',exp:'La localía y el ritmo del equipo estadounidense pesan bastante. Australia puede resistir, pero le costará generar volumen ofensivo.',grupo:'EEUU parte favorito por localía; Turquía y Paraguay pelean fuerte por clasificación.'},
+  23: {fav:'EEUU',conf:'Media-baja',exp:'EEUU tendrá ventaja de entorno, pero Turquía tiene calidad para disputar posesión y castigar errores. Partido de alto riesgo.',grupo:'EEUU parte favorito por localía; Turquía y Paraguay pelean fuerte por clasificación.'},
+  24: {fav:'Paraguay',conf:'Media-baja',exp:'Paraguay tiene mejor perfil sudamericano para partidos tensos. Australia puede igualar por físico y balón parado.',grupo:'EEUU parte favorito por localía; Turquía y Paraguay pelean fuerte por clasificación.'},
+  // GRUPO E
+  25: {fav:'Alemania',conf:'Alta',exp:'Alemania tiene ventaja enorme en Elo, profundidad y experiencia. Curazao llega como historia linda, pero con una brecha grande.',grupo:'Alemania es favorito claro; Ecuador y Costa de Marfil se perfilan como duelo clave por el segundo puesto.'},
+  26: {fav:'Ecuador',conf:'Media-baja',exp:'Ecuador tiene una base competitiva fuerte y buen historial reciente en eliminatorias. Costa de Marfil puede equilibrar por potencia física.',grupo:'Alemania es favorito claro; Ecuador y Costa de Marfil se perfilan como duelo clave por el segundo puesto.'},
+  27: {fav:'Alemania',conf:'Alta',exp:'Alemania parte superior por estructura y variantes ofensivas. Costa de Marfil puede generar peligro físico, pero necesitaría alta efectividad.',grupo:'Alemania es favorito claro; Ecuador y Costa de Marfil se perfilan como duelo clave por el segundo puesto.'},
+  28: {fav:'Ecuador',conf:'Alta',exp:'Ecuador tiene mayor calidad colectiva y más experiencia en partidos de alta presión. Curazao necesitaría defender muy bajo.',grupo:'Alemania es favorito claro; Ecuador y Costa de Marfil se perfilan como duelo clave por el segundo puesto.'},
+  29: {fav:'Alemania',conf:'Media',exp:'Alemania tiene más jerarquía, pero Ecuador es de los rivales más incómodos del grupo. Puede ser partido cerrado si hay puntos en juego.',grupo:'Alemania es favorito claro; Ecuador y Costa de Marfil se perfilan como duelo clave por el segundo puesto.'},
+  30: {fav:'Costa de Marfil',conf:'Media-alta',exp:'Costa de Marfil tiene más físico, talento y experiencia internacional. Curazao puede competir si mantiene orden y calma.',grupo:'Alemania es favorito claro; Ecuador y Costa de Marfil se perfilan como duelo clave por el segundo puesto.'},
+  // GRUPO F
+  31: {fav:'Paises Bajos',conf:'Media',exp:'Países Bajos tiene más jerarquía y poder físico. Japón llega competitivo, aunque con bajas ofensivas importantes recientes.',grupo:'Países Bajos es el favorito; Japón y Suecia pueden definir el segundo lugar en duelo directo.'},
+  32: {fav:'Suecia',conf:'Media',exp:'Suecia tiene más peso europeo y mejor estructura ofensiva. Túnez puede hacerlo cerrado si ordena bien el bloque medio.',grupo:'Países Bajos es el favorito; Japón y Suecia pueden definir el segundo lugar en duelo directo.'},
+  33: {fav:'Paises Bajos',conf:'Media-alta',exp:'Países Bajos tiene ventaja por talento y experiencia en grandes torneos. Suecia puede incomodar con juego directo y balón parado.',grupo:'Países Bajos es el favorito; Japón y Suecia pueden definir el segundo lugar en duelo directo.'},
+  34: {fav:'Japon',conf:'Media',exp:'Japón tiene mejor ritmo técnico y mayor dinámica colectiva. Túnez puede reducir diferencias con disciplina defensiva.',grupo:'Países Bajos es el favorito; Japón y Suecia pueden definir el segundo lugar en duelo directo.'},
+  35: {fav:'Paises Bajos',conf:'Alta',exp:'Países Bajos tiene una ventaja clara en calidad y profundidad. Túnez necesitaría un partido perfecto para sostenerlo.',grupo:'Países Bajos es el favorito; Japón y Suecia pueden definir el segundo lugar en duelo directo.'},
+  36: {fav:'Japon',conf:'Baja',exp:'Partido muy parejo. Japón tiene más movilidad y automatismos, mientras Suecia puede castigar por físico y pelota aérea.',grupo:'Países Bajos es el favorito; Japón y Suecia pueden definir el segundo lugar en duelo directo.'},
+  // GRUPO G
+  37: {fav:'Belgica',conf:'Media',exp:'Bélgica tiene mejor Elo y más profundidad, pero Egipto puede ser peligroso si Salah llega en forma. Partido con alerta.',grupo:'Bélgica parte favorita; Egipto e Irán pueden jugarse el segundo lugar en un duelo muy cerrado.'},
+  38: {fav:'Iran',conf:'Media-alta',exp:'Irán tiene más experiencia mundialista y mejor estructura competitiva. Nueva Zelanda puede competir por físico, pero parte abajo.',grupo:'Bélgica parte favorita; Egipto e Irán pueden jugarse el segundo lugar en un duelo muy cerrado.'},
+  39: {fav:'Belgica',conf:'Media-alta',exp:'Bélgica tiene más variantes ofensivas y calidad individual. Irán puede volverlo incómodo si protege bien el centro.',grupo:'Bélgica parte favorita; Egipto e Irán pueden jugarse el segundo lugar en un duelo muy cerrado.'},
+  40: {fav:'Egipto',conf:'Media-alta',exp:'Egipto tiene más talento diferencial y mayor jerarquía competitiva. Nueva Zelanda dependerá del orden y balón parado.',grupo:'Bélgica parte favorita; Egipto e Irán pueden jugarse el segundo lugar en un duelo muy cerrado.'},
+  41: {fav:'Belgica',conf:'Alta',exp:'La diferencia de profundidad y talento favorece claramente a Bélgica. Nueva Zelanda necesitaría una sorpresa grande.',grupo:'Bélgica parte favorita; Egipto e Irán pueden jugarse el segundo lugar en un duelo muy cerrado.'},
+  42: {fav:'Egipto',conf:'Baja',exp:'Duelo muy parejo por estilo y experiencia. Egipto tiene ligera ventaja por mayor peso ofensivo, pero Irán puede cerrar espacios.',grupo:'Bélgica parte favorita; Egipto e Irán pueden jugarse el segundo lugar en un duelo muy cerrado.'},
+  // GRUPO H
+  43: {fav:'Espana',conf:'Alta',exp:'España llega como una de las selecciones más fuertes por Elo y juego colectivo. Cabo Verde compite bien, pero la brecha es grande.',grupo:'España y Uruguay son favoritos claros; el duelo directo debe definir el primer puesto.'},
+  44: {fav:'Uruguay',conf:'Alta',exp:'Uruguay tiene más jerarquía, intensidad y experiencia en torneos grandes. Arabia Saudita puede incomodar si baja el ritmo.',grupo:'España y Uruguay son favoritos claros; el duelo directo debe definir el primer puesto.'},
+  45: {fav:'Espana',conf:'Alta',exp:'España tiene ventaja clara en posesión, calidad técnica y profundidad. Arabia Saudita necesitaría resistir y salir muy bien.',grupo:'España y Uruguay son favoritos claros; el duelo directo debe definir el primer puesto.'},
+  46: {fav:'Uruguay',conf:'Alta',exp:'Uruguay tiene mayor oficio competitivo y mejor capacidad física. Cabo Verde puede pelear, pero parte abajo.',grupo:'España y Uruguay son favoritos claros; el duelo directo debe definir el primer puesto.'},
+  47: {fav:'Espana',conf:'Media-baja',exp:'España tiene mejor Elo, pero Uruguay es uno de los rivales más duros del grupo. Partido intenso y de detalles.',grupo:'España y Uruguay son favoritos claros; el duelo directo debe definir el primer puesto.'},
+  48: {fav:'Arabia Saudita',conf:'Baja',exp:'Partido parejo. Arabia tiene más experiencia mundialista, pero Cabo Verde puede competir físicamente y aprovechar transiciones.',grupo:'España y Uruguay son favoritos claros; el duelo directo debe definir el primer puesto.'},
+  // GRUPO I
+  49: {fav:'Francia',conf:'Media',exp:'Francia es candidata por Elo y profundidad, pero Deschamps ha pedido cautela: Senegal es fuerte, físico y muy competitivo.',grupo:'Francia parte arriba; Senegal y Noruega pueden jugarse una clasificación muy apretada.'},
+  50: {fav:'Noruega',conf:'Media-alta',exp:'Noruega tiene mayor peso ofensivo y figuras diferenciales. Iraq puede competir con orden, pero parte abajo estadísticamente.',grupo:'Francia parte arriba; Senegal y Noruega pueden jugarse una clasificación muy apretada.'},
+  51: {fav:'Francia',conf:'Alta',exp:'Francia tiene una ventaja clara por talento, profundidad y experiencia. Iraq necesitaría un partido defensivo de altísimo nivel.',grupo:'Francia parte arriba; Senegal y Noruega pueden jugarse una clasificación muy apretada.'},
+  52: {fav:'Senegal',conf:'Baja',exp:'Partido muy parejo. Senegal tiene más balance colectivo, mientras Noruega puede cambiar el partido con su poder ofensivo.',grupo:'Francia parte arriba; Senegal y Noruega pueden jugarse una clasificación muy apretada.'},
+  53: {fav:'Francia',conf:'Media',exp:'Francia tiene mejor plantilla, pero Noruega puede hacer daño si encuentra espacios. Partido de cuidado para el favorito.',grupo:'Francia parte arriba; Senegal y Noruega pueden jugarse una clasificación muy apretada.'},
+  54: {fav:'Senegal',conf:'Alta',exp:'Senegal tiene más físico, experiencia y jerarquía reciente. Iraq necesita orden total para sostenerlo.',grupo:'Francia parte arriba; Senegal y Noruega pueden jugarse una clasificación muy apretada.'},
+  // GRUPO J
+  55: {fav:'Argentina',conf:'Alta',exp:'Argentina llega con jerarquía de campeón, alto Elo y mucha experiencia. Argelia tiene talento, pero necesita máxima eficiencia.',grupo:'Argentina es favorita clara; Austria y Argelia deben pelear el segundo lugar.'},
+  56: {fav:'Austria',conf:'Alta',exp:'Austria tiene una estructura europea muy competitiva y mayor profundidad. Jordania llega con bajas recientes importantes.',grupo:'Argentina es favorita clara; Austria y Argelia deben pelear el segundo lugar.'},
+  57: {fav:'Argentina',conf:'Media',exp:'Argentina tiene más jerarquía, pero Austria es un rival ordenado, físico y tácticamente fuerte. Puede ser el partido clave del grupo.',grupo:'Argentina es favorita clara; Austria y Argelia deben pelear el segundo lugar.'},
+  58: {fav:'Argelia',conf:'Media',exp:'Argelia tiene más talento y experiencia internacional. Jordania puede competir con bloque bajo, pero las bajas le pesan.',grupo:'Argentina es favorita clara; Austria y Argelia deben pelear el segundo lugar.'},
+  59: {fav:'Argentina',conf:'Alta',exp:'Diferencia fuerte en calidad, experiencia y profundidad. Jordania necesitaría un partido perfecto para rascar puntos.',grupo:'Argentina es favorita clara; Austria y Argelia deben pelear el segundo lugar.'},
+  60: {fav:'Austria',conf:'Baja',exp:'Partido de clasificación probable. Austria tiene más orden, Argelia más desequilibrio individual; margen muy corto.',grupo:'Argentina es favorita clara; Austria y Argelia deben pelear el segundo lugar.'},
+  // GRUPO K
+  61: {fav:'Portugal',conf:'Alta',exp:'Portugal tiene más calidad, profundidad y experiencia en torneos. RD Congo puede competir físicamente, pero parte bastante abajo.',grupo:'Portugal y Colombia son favoritos; el duelo directo debe definir el primer lugar.'},
+  62: {fav:'Colombia',conf:'Media-alta',exp:'Colombia llega con mayor jerarquía sudamericana y mejor Elo relativo. Uzbekistán puede ser ordenado, pero le falta roce mundialista.',grupo:'Portugal y Colombia son favoritos; el duelo directo debe definir el primer lugar.'},
+  63: {fav:'Portugal',conf:'Alta',exp:'Portugal tiene ventaja clara por talento ofensivo y banca. Uzbekistán necesitaría resistir mucho sin balón.',grupo:'Portugal y Colombia son favoritos; el duelo directo debe definir el primer lugar.'},
+  64: {fav:'Colombia',conf:'Media-alta',exp:'Colombia tiene más continuidad competitiva y mejor calidad técnica. RD Congo puede incomodar por físico y transiciones.',grupo:'Portugal y Colombia son favoritos; el duelo directo debe definir el primer lugar.'},
+  65: {fav:'Portugal',conf:'Baja',exp:'Duelo premium del grupo. Portugal tiene ligera ventaja por profundidad, pero Colombia puede competir de tú a tú.',grupo:'Portugal y Colombia son favoritos; el duelo directo debe definir el primer lugar.'},
+  66: {fav:'DR Congo',conf:'Baja',exp:'Partido muy parejo. RD Congo tiene más potencia física, Uzbekistán más orden; puede definirse por detalles.',grupo:'Portugal y Colombia son favoritos; el duelo directo debe definir el primer lugar.'},
+  // GRUPO L
+  67: {fav:'Inglaterra',conf:'Media-baja',exp:'Inglaterra tiene mejor Elo y más profundidad, aunque llega con historial reciente de inconvenientes físicos. Croacia siempre compite.',grupo:'Inglaterra parte como favorita; Croacia es fuerte candidata al segundo lugar.'},
+  68: {fav:'Ghana',conf:'Media',exp:'Ghana tiene ventaja por potencia física y experiencia mundialista. Panamá puede competir si sostiene orden, presión y transiciones rápidas.',grupo:'Inglaterra parte como favorita; Croacia es fuerte candidata al segundo lugar.'},
+  69: {fav:'Inglaterra',conf:'Alta',exp:'Inglaterra tiene más variantes ofensivas y profundidad. Ghana puede ser peligroso físicamente, pero parte abajo.',grupo:'Inglaterra parte como favorita; Croacia es fuerte candidata al segundo lugar.'},
+  70: {fav:'Croacia',conf:'Media-alta',exp:'Croacia tiene más oficio, control de ritmo y experiencia. Panamá necesita intensidad, orden defensivo y máxima efectividad.',grupo:'Inglaterra parte como favorita; Croacia es fuerte candidata al segundo lugar.'},
+  71: {fav:'Inglaterra',conf:'Alta',exp:'Inglaterra tiene una brecha importante por plantilla y jerarquía. Panamá tendría que jugar un partido muy ordenado y sin errores.',grupo:'Inglaterra parte como favorita; Croacia es fuerte candidata al segundo lugar.'},
+  72: {fav:'Croacia',conf:'Media',exp:'Croacia tiene más control y experiencia en torneos. Ghana puede hacerlo incómodo con físico y velocidad.',grupo:'Inglaterra parte como favorita; Croacia es fuerte candidata al segundo lugar.'},
+};
+
 // ============================================================
 // PREDICTOR DE FAVORITOS — Ranking FIFA 2025
 // ============================================================
@@ -566,21 +654,83 @@ function getProbabilidad(local, visita) {
 
 function predictorHTML(local, visita, pid) {
   const { pctL, pctV, favoritoL } = getProbabilidad(local, visita);
-  const barL = pctL; // usar el % directamente
+  const barL = pctL;
   const barV = pctV;
-  // Mayoría de predicciones
-  const mayoria = calcMayoria(pid);
+  const may = calcMayoriaCompleta(pid, local, visita);
+  const ed = EDITORIAL[pid];
+  const confColor = {'Alta':'#0a5c2e','Media':'#c9a84c','Media-alta':'#7ab04e','Media-baja':'#e67e22','Baja':'#c0392b'}[ed?.conf||'']||'#888';
+  // Resultado oficial si existe
+  const resOf = resultadosAdmin[pid]||(window._resOficiales&&window._resOficiales[pid]);
+  let resHtml='';
+  if(resOf&&resOf.l!==undefined&&resOf.v!==undefined){
+    const pr=predicciones[pid];
+    let badge='',color='';
+    if(pr&&pr.l!==undefined){
+      if(pr.l===resOf.l&&pr.v===resOf.v){badge='+5pts';color='#0a5c2e';}
+      else if(Math.sign(pr.l-pr.v)===Math.sign(resOf.l-resOf.v)){badge='+2pts';color='#c9a84c';}
+      else{badge='0pts';color='#c0392b';}
+    }
+    resHtml=`<div class='pred-res'>⚽ Resultado oficial: <b>${local} ${resOf.l} – ${resOf.v} ${visita}</b>${pr&&pr.l!==undefined?` &nbsp;·&nbsp; Tu predicción: ${pr.l}-${pr.v} <span style='color:${color};font-weight:700'>${badge}</span>`:''}</div>`;
+  }
   return `<div class='predictor-wrap'>
+    <div class='pred-elo-lbl'>Predicción por Elo FIFA</div>
     <div class='pred-bar-row'>
-      <span class='pred-pct${favoritoL ? ' pred-fav' : ''}'>${pctL}%</span>
+      <span class='pred-pct${favoritoL?' pred-fav':''}'>${pctL}%</span>
       <div class='pred-bar'>
         <div class='pred-fill-l' style='width:${barL}%'></div>
         <div class='pred-fill-r' style='width:${barV}%'></div>
       </div>
-      <span class='pred-pct${!favoritoL ? ' pred-fav' : ''}'>${pctV}%</span>
+      <span class='pred-pct${!favoritoL?' pred-fav':''}'>${pctV}%</span>
     </div>
-    <div class='pred-label'>Favorito FIFA${mayoria ? ' &nbsp;·&nbsp; 👥 Mayoría: <b>' + mayoria + '</b>' : ''}</div>
+    ${may?`<div class='pred-mayoria'>👥 Mayoría eligió: <b>${may.equipo}</b> (${may.count} ${may.count===1?'persona':'personas'}) &nbsp;·&nbsp; Marcador más votado: <b>${may.marcador}</b></div>`:''}
+    ${resHtml}
+    ${ed?`<div class='pred-info-link' onclick='abrirEditorial(${pid})'>ℹ️ Más info para elegir →</div>`:''}
   </div>`;
+}
+
+function calcMayoriaCompleta(pid, local, visita) {
+  if (!window._predMayoria || !window._predMayoria[pid]) return null;
+  const counts = window._predMayoria[pid];
+  if (!Object.keys(counts).length) return null;
+  // Marcador más votado
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const [marcador, count] = sorted[0];
+  const total = Object.values(counts).reduce((a,b)=>a+b,0);
+  // Equipo ganador de ese marcador
+  const [gl,gv] = marcador.split('-').map(Number);
+  const equipo = gl>gv?local:gv>gl?visita:'Empate';
+  return {equipo, count, total, marcador};
+}
+
+function abrirEditorial(pid) {
+  const ed = EDITORIAL[pid];
+  if (!ed) return;
+  const p = PARTIDOS.find(x=>x.id===pid);
+  if (!p) return;
+  const confColor = {'Alta':'#0a5c2e','Media':'#888','Media-alta':'#7ab04e','Media-baja':'#e67e22','Baja':'#c0392b'}[ed.conf]||'#888';
+  const modal = document.getElementById('editorial-modal');
+  const body = document.getElementById('editorial-body');
+  if (!modal||!body) return;
+  body.innerHTML = `
+    <div style='display:flex;align-items:center;gap:10px;margin-bottom:1rem'>
+      ${flagBadge(p.l,24)} <span style='font-weight:700;font-size:15px'>${p.l}</span>
+      <span style='color:var(--muted);font-size:13px;margin:0 4px'>vs</span>
+      ${flagBadge(p.v,24)} <span style='font-weight:700;font-size:15px'>${p.v}</span>
+    </div>
+    <div style='background:#f0f8f4;border-radius:8px;padding:10px 14px;margin-bottom:.75rem'>
+      <div style='font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px'>Favorito editorial</div>
+      <div style='font-weight:700;font-size:16px;color:var(--verde)'>${flagBadge(ed.fav,20)} ${ed.fav}</div>
+    </div>
+    <div style='display:flex;align-items:center;gap:8px;margin-bottom:.75rem'>
+      <span style='font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em'>Confianza:</span>
+      <span style='font-weight:700;font-size:13px;color:${confColor};background:${confColor}22;padding:2px 10px;border-radius:12px'>${ed.conf}</span>
+    </div>
+    <div style='font-size:13px;color:var(--text);line-height:1.6;margin-bottom:1rem'>${ed.exp}</div>
+    <div style='border-top:1px solid var(--borde);padding-top:.75rem'>
+      <div style='font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px'>Lectura del grupo</div>
+      <div style='font-size:12px;color:var(--muted);line-height:1.5;font-style:italic'>${ed.grupo}</div>
+    </div>`;
+  modal.classList.add('on');
 }
 
 function calcMayoria(pid) {
