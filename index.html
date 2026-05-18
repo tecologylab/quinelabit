@@ -326,6 +326,13 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 .prow{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center}
 .ecol.r{display:flex;align-items:center;gap:6px;justify-content:flex-end}
 
+
+/* BRACKET ÁRBOL */
+.bcol-matches{display:flex;flex-direction:column;justify-content:flex-start}
+.bracket-outer{overflow-x:auto}
+#bracket-outer-main{overflow-x:auto}
+#bracket-outer-top{overflow-x:auto}
+
 </style>
 </head>
 <body>
@@ -468,20 +475,21 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
       <span class="pbadge ex">Exacto: 6→8→10→12→15 pts por ronda</span>
       <span class="pbadge re">Resultado: 3→4→5→6→8 pts</span>
     </div>
-    <p style="font-size:12px;color:var(--muted);margin:.5rem 0 1rem">Haz clic en cualquier partido para seleccionar el equipo y el marcador. Los dropdowns muestran solo los equipos posibles para cada posición (formato Grupo — País).</p>
-    <div class="bracket-outer">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.75rem">
+      <button class="btn-sec editable-action" onclick="autoCalcularBracket()" title="Rellena el bracket con tus selecciones de 1era Ronda">▶ Usar mis selecciones de 1era Ronda</button>
+      <button class="btn-sec editable-action" onclick="resetBracket()" style="color:#c0392b;border-color:#c0392b">🗑 Borrar todo</button>
+      <button class="btn-save editable-action" onclick="guardarBracket()">Guardar bracket</button>
+    </div>
+    <div class="alert" id="b-alert"></div>
+    <p style="font-size:12px;color:var(--muted);margin:.5rem 0 1rem">Haz clic en cualquier partido para seleccionar el equipo y el marcador.</p>
+    <div class="bracket-outer" id="bracket-outer-top" style="overflow-x:auto;margin-bottom:4px">
+      <div id="bracket-shadow-top" style="height:12px;min-width:900px"></div>
+    </div>
+    <div class="bracket-outer" id="bracket-outer-main">
       <div id="bracket-container"></div>
     </div>
   </div>
-  <div class="savebar">
-    <span class="savestatus" id="b-status">Llena el bracket para guardar</span>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn-sec" onclick="autoCalcularBracket()" title="Rellena el bracket con los clasificados de tu 1era Ronda">&#9654; Calcular desde 1era Ronda</button>
-      <button class="btn-sec" onclick="resetBracket()" style="color:#c0392b;border-color:#c0392b" title="Borrar toda la seleccion">&#128465; Borrar todo</button>
-      <button class="btn-save" onclick="guardarBracket()">Guardar bracket</button>
-    </div>
-  </div>
-  <div class="alert" id="b-alert"></div>
+  <div class="alert" id="b-status-bottom" style="display:none"></div>
 </section>
 
 <section id="sec-goleador" class="section">
