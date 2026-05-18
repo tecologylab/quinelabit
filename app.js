@@ -673,6 +673,7 @@ function predictorHTML(local, visita, pid) {
     </div>`;
   }
   return `<div class='predictor-wrap'>
+    ${resHtml}
     <div class='pred-elo-lbl' style='font-family:Barlow Condensed,sans-serif;font-weight:700;letter-spacing:.06em'>PREDICCIÓN X RANKING FIFA</div>
     <div class='pred-bar-row'>
       <span class='pred-pct${favoritoL?' pred-fav':''}'>${pctL}%</span>
@@ -683,7 +684,6 @@ function predictorHTML(local, visita, pid) {
       <span class='pred-pct${!favoritoL?' pred-fav':''}'>${pctV}%</span>
     </div>
     ${may?`<div class='pred-mayoria'>👥 Mayoría eligió: <b>${may.equipo}</b> (${may.count} ${may.count===1?'persona':'personas'}) &nbsp;·&nbsp; Marcador más votado: <b>${may.marcador}</b></div>`:''}
-    ${resHtml}
     ${ed?`<div class='pred-info-link' data-pid='${pid}' onclick='abrirEditorial(parseInt(this.dataset.pid))'>ℹ️ Más info para elegir →</div>`:''}
   </div>`;
 }
