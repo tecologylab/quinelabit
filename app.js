@@ -221,14 +221,15 @@ let adminAutenticado=false;
 // ============================================================
 // PREMIOS
 // ============================================================
-function renderPremios(){
+function renderPremios(cfg=null){
   const c=document.getElementById('premios-container');
   const empty=document.getElementById('premios-empty');
   if(!c)return;
+  const src=cfg||window._configVisual||{};
   const premios=[];
   for(let i=1;i<=3;i++){
-    const img=localStorage.getItem('premio'+i+'_img');
-    const desc=localStorage.getItem('premio'+i+'_desc');
+    const img=src['premio'+i+'_img']||localStorage.getItem('premio'+i+'_img');
+    const desc=src['premio'+i+'_desc']||localStorage.getItem('premio'+i+'_desc');
     if(img||desc)premios.push({n:i,img,desc});
   }
   if(!premios.length){
@@ -305,11 +306,25 @@ function generarCodigoAlfanum(){
   let code='BIT-';for(let i=0;i<5;i++)code+=c[Math.floor(Math.random()*c.length)];
   return code;
 }
-function estaCerrada(){
+function estaCerrada(ronda=null){
   if(modoDemo)return false;
   if(configGlobal.permitir_edicion===false)return true;
-  if(!configGlobal.fecha_cierre)return false;
-  return new Date()>new Date(configGlobal.fecha_cierre);
+  // Cierre global
+  if(configGlobal.fecha_cierre&&new Date()>new Date(configGlobal.fecha_cierre))return true;
+  // Cierre por ronda
+  if(ronda){
+    const mapaCierre={
+      'grupos':'fecha_cierre',
+      'r32':'fecha_cierre_r32',
+      'r16':'fecha_cierre_r16',
+      'qf':'fecha_cierre_qf',
+      'sf':'fecha_cierre_sf',
+      'final':'fecha_cierre_final',
+    };
+    const clave=mapaCierre[ronda];
+    if(clave&&configGlobal[clave]&&new Date()>new Date(configGlobal[clave]))return true;
+  }
+  return false;
 }
 function aplicarCierreUI(){
   const cerrada=estaCerrada();
@@ -341,20 +356,74 @@ async function cargarConfiguracion(){
   try{
     if(sbClient){
       const{data}=await sbClient.from('configuracion').select('*').limit(1).maybeSingle();
-      if(data)configGlobal={permitir_edicion:data.permitir_edicion!==false,fecha_cierre:data.fecha_cierre||null};
+      if(data){
+        configGlobal={
+          permitir_edicion:data.permitir_edicion!==false,
+          fecha_cierre:data.fecha_cierre||null,
+          fecha_cierre_r32:data.fecha_cierre_r32||null,
+          fecha_cierre_r16:data.fecha_cierre_r16||null,
+          fecha_cierre_qf:data.fecha_cierre_qf||null,
+          fecha_cierre_sf:data.fecha_cierre_sf||null,
+          fecha_cierre_final:data.fecha_cierre_final||null,
+        };
+      }
+      // Cargar configuracion visual desde Supabase
+      await cargarConfigVisualSupabase();
     } else {
       const loc=parseMaybeJSON(localStorage.getItem('configuracion_local'),null);
       if(loc)configGlobal=loc;
+      // Fallback localStorage para config visual
+      cargarConfigVisualLocal();
     }
-  }catch(e){}
-  const fi=document.getElementById('cfg-fecha-cierre');
-  const ei=document.getElementById('cfg-permitir-edicion');
-  if(fi&&configGlobal.fecha_cierre){
-    const d=new Date(configGlobal.fecha_cierre);
-    fi.value=d.toISOString().slice(0,16);
-  }
-  if(ei)ei.value=configGlobal.permitir_edicion?'true':'false';
+  }catch(e){console.error('Error cargando config:',e);}
   aplicarCierreUI();
+}
+
+async function cargarConfigVisualSupabase(){
+  try{
+    const{data}=await sbClient.from('configuracion_visual').select('*');
+    if(!data||!data.length)return;
+    const cfg={};
+    data.forEach(r=>{cfg[r.clave]=r.valor;});
+    aplicarConfigVisual(cfg);
+  }catch(e){}
+}
+
+function cargarConfigVisualLocal(){
+  const claves=['cfg_empresa','cfg_color','hero_badge','hero_titulo','hero_subtitulo',
+    'ad_zona1','ad_zona2','ad_zona6',
+    'premio1_img','premio1_desc','premio2_img','premio2_desc','premio3_img','premio3_desc'];
+  const cfg={};
+  claves.forEach(k=>{const v=localStorage.getItem(k);if(v)cfg[k]=v;});
+  aplicarConfigVisual(cfg);
+}
+
+function aplicarConfigVisual(cfg){
+  // Empresa y color
+  if(cfg.cfg_empresa){
+    const el=document.getElementById('empresa-label');
+    if(el)el.textContent=cfg.cfg_empresa;
+  }
+  if(cfg.cfg_color&&/^#[0-9a-fA-F]{6}$/.test(cfg.cfg_color)){
+    document.documentElement.style.setProperty('--verde',cfg.cfg_color);
+  }
+  // Hero texts
+  const heroBadge=document.getElementById('hero-badge-txt');
+  const heroTitulo=document.getElementById('hero-titulo-txt');
+  const heroSub=document.getElementById('hero-subtitulo-txt');
+  if(cfg.hero_badge&&heroBadge)heroBadge.textContent=cfg.hero_badge;
+  if(cfg.hero_titulo&&heroTitulo)heroTitulo.innerHTML=cfg.hero_titulo;
+  if(cfg.hero_subtitulo&&heroSub)heroSub.textContent=cfg.hero_subtitulo;
+  // Ads
+  ['1','2','6'].forEach(z=>{
+    const val=cfg['ad_zona'+z];
+    const zona=document.getElementById('ad-zona'+z);
+    const contenido=document.getElementById('ad-zona'+z+'-content');
+    if(val&&zona&&contenido){contenido.innerHTML=val;zona.style.display='';}
+  });
+  // Premios
+  window._configVisual=cfg;
+  renderPremios(cfg);
 }
 
 async function guardarConfiguracionAdmin(){
@@ -671,7 +740,7 @@ function actualizarProgreso(){
 }
 
 async function guardarQuiniela(){
-  if(estaCerrada()){alerta('q-alert','error','La quiniela esta cerrada.');return;}
+  if(estaCerrada('grupos')){alerta('q-alert','error','La 1era Ronda esta cerrada.');return;}
   if(!usuarioActual&&!modoDemo){alerta('q-alert','error','Primero registrate.');return;}
   const done=PARTIDOS.filter(p=>{const pr=predicciones[p.id];return pr&&pr.l!==undefined&&pr.v!==undefined;}).length;
   if(done<PARTIDOS.length){alerta('q-alert','error','Faltan '+(PARTIDOS.length-done)+' partidos por completar.');return;}
@@ -1108,7 +1177,7 @@ function confirmarModal(){
 function cerrarModal(){document.getElementById('bracket-modal').classList.remove('on');modalActivo=null;}
 
 async function guardarBracket(){
-  if(estaCerrada()){alerta('b-alert','error','La quiniela esta cerrada.');return;}
+  if(estaCerrada('r32')){alerta('b-alert','error','El bracket esta cerrado.');return;}
   if(!usuarioActual&&!modoDemo){alerta('b-alert','error','Primero registrate.');return;}
   try{await guardarQuinielaCompleta();alerta('b-alert','success','Bracket guardado.');}
   catch(e){alerta('b-alert','error','Error: '+e.message);}
@@ -1128,7 +1197,7 @@ function renderGoleador(){
 }
 function selGoleador(eq){if(estaCerrada())return;goleador=eq;renderGoleador();}
 async function guardarGoleador(){
-  if(estaCerrada()){alerta('g-alert','error','La quiniela esta cerrada.');return;}
+  if(estaCerrada('grupos')){alerta('g-alert','error','La quiniela esta cerrada.');return;}
   if(!usuarioActual&&!modoDemo){alerta('g-alert','error','Primero registrate.');return;}
   if(!goleador){alerta('g-alert','error','Selecciona un pais.');return;}
   try{await guardarQuinielaCompleta();alerta('g-alert','success','Pais goleador guardado: '+goleador+'.');}
@@ -1855,43 +1924,14 @@ function aplicarConfig(){
 }
 
 function cargarAdsGuardados(){
-  ['1','2','6'].forEach(z=>{
-    const saved=localStorage.getItem('ad_zona'+z);
-    const zona=document.getElementById('ad-zona'+z);
-    const contenido=document.getElementById('ad-zona'+z+'-content');
-    if(saved&&zona&&contenido){contenido.innerHTML=saved;zona.style.display='';}
-  });
-  // Cargar premios
-  renderPremios();
-  // Cargar valores en inputs del admin si existen
-  for(let i=1;i<=3;i++){
-    const imgEl=document.getElementById('premio'+i+'-img');
-    const descEl=document.getElementById('premio'+i+'-desc');
-    if(imgEl)imgEl.value=localStorage.getItem('premio'+i+'_img')||'';
-    if(descEl)descEl.value=localStorage.getItem('premio'+i+'_desc')||'';
+  // La config visual ya se carga desde cargarConfiguracion via Supabase
+  // Este fallback es para cuando no hay Supabase
+  if(!sbClient){
+    cargarConfigVisualLocal();
   }
-  // Cargar textos del hero
-  cargarTextosHero();
 }
 
-function cargarTextosHero(){
-  const badge=localStorage.getItem('hero_badge');
-  const titulo=localStorage.getItem('hero_titulo');
-  const subtitulo=localStorage.getItem('hero_subtitulo');
-  const heroBadge=document.getElementById('hero-badge-txt');
-  const heroTitulo=document.getElementById('hero-titulo-txt');
-  const heroSubtitulo=document.getElementById('hero-subtitulo-txt');
-  if(badge&&heroBadge)heroBadge.textContent=badge;
-  if(titulo&&heroTitulo)heroTitulo.innerHTML=titulo;
-  if(subtitulo&&heroSubtitulo)heroSubtitulo.textContent=subtitulo;
-  // Cargar en inputs de admin
-  const bEl=document.getElementById('cfg-hero-badge');
-  const tEl=document.getElementById('cfg-hero-titulo');
-  const sEl=document.getElementById('cfg-hero-subtitulo');
-  if(bEl)bEl.value=badge||'';
-  if(tEl)tEl.value=titulo||'';
-  if(sEl)sEl.value=subtitulo||'';
-}
+// cargarTextosHero movido a aplicarConfigVisual
 
 // ============================================================
 // INIT
