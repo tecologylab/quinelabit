@@ -665,7 +665,9 @@ function predictorHTML(local, visita, pid) {
       else if(Math.sign(pr.l-pr.v)===Math.sign(resOf.l-resOf.v)){badge='+2pts';bgColor='#f0cb6a';txtColor='#7a5500';}
       else{badge='0pts ✗';bgColor='#c0392b';txtColor='#fff';}
     }
-    resHtml=`<div class='res-oficial-row'>
+    const rowBg=badge.includes('5')?'#eaf5ee':badge.includes('2')?'#fffbf0':'#fef0f0';
+    const rowBorder=badge.includes('5')?'var(--verde)':badge.includes('2')?'var(--oro)':'#c0392b';
+    resHtml=`<div class='res-oficial-row' style='background:${rowBg};border-left-color:${rowBorder}'>
       <div class='res-oficial-marcador'>⚽ Resultado oficial: ${resOf.l} – ${resOf.v}</div>
       ${pr&&pr.l!==undefined?`<div class='res-oficial-pred'>Tu predicción: ${pr.l}-${pr.v} <span class='res-badge' style='background:${bgColor};color:${txtColor}'>${badge}</span></div>`:''}
     </div>`;
@@ -810,7 +812,7 @@ function renderPartidosGrupo(){
           <span class="ssep">–</span>
           <input type="number" min="0" max="20" value="${vv}" placeholder="?" class="sinput${pr.v!==undefined?' v':''}" ${cerrada?'disabled':''} oninput="setPred(${p.id},'v',this.value)">
         </div>
-        <div class="ecol r"><span class="ename">${p.v}</span>${flagBadge(p.v,20)}</div>
+        <div class="ecol r" style="justify-content:flex-end;margin-left:auto"><span class="ename">${p.v}</span>${flagBadge(p.v,20)}</div>
       </div>
       ${predictorHTML(p.l,p.v,p.id)}
     </div>`;
@@ -846,6 +848,7 @@ function renderTablaGrupo(grupo){
   if(!hayDatos)return '';
   return `<div class="gtabla-wrap">
     <div class="gtabla-title">Tabla — Grupo ${grupo}</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:4px;font-style:italic">Tu predicción</div>
     <table class="gtabla">
       <thead><tr><th>Pos</th><th style="text-align:left">Pais</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DIF</th><th>Pts</th></tr></thead>
       <tbody>${rows.map((r,i)=>`<tr class="${i<2?'clasif':''}${i===2?' tercero':''}">
@@ -1041,12 +1044,11 @@ function matchCard(m,ronda){
     else simClass=' sim-fallo';
   }
   return `<div class="bmatch${ok?' ok':''}${cerrada?' locked':''}${simClass}" onclick="abrirModal(${m.bid})" title="${cerrada?'Quiniela cerrada':'Clic para editar'}">
-    <div class="bmlbl">${m.desc} <span class="pts-pill">${ronda.pts_ex}pts</span></div>
+    <div class="bmlbl">${m.desc} <span class="pts-pill">${ronda.pts_ex}pts MAX</span></div>
     <div class="bteam${!lN?' empty':''}${ganador===lN?' winner':''}">
       ${lN?flagBadge(lN,18):'<span class="bq">?</span>'}
       <span class="btn">${lN||'Seleccionar'}</span>
       <span class="bsc">${gl!==null?gl:''}</span>
-      ${resB?`<span class="bsc-real">(${resB.gl})</span>`:''}
       ${lCheck}
     </div>
     <div class="bdiv"></div>
@@ -1054,7 +1056,6 @@ function matchCard(m,ronda){
       ${vN?flagBadge(vN,18):'<span class="bq">?</span>'}
       <span class="btn">${vN||'Seleccionar'}</span>
       <span class="bsc">${gv!==null?gv:''}</span>
-      ${resB?`<span class="bsc-real">(${resB.gv})</span>`:''}
       ${vCheck}
     </div>
     ${resB?`<div style='text-align:center;margin-top:4px;font-size:11px;color:var(--muted)'>Resultado oficial: <b>${resB.gl}-${resB.gv}</b> ${bracketPtsBadge}</div>`:''}
@@ -1103,11 +1104,21 @@ function autoCalcularBracket(){
   alerta('b-alert','success','Bracket calculado desde tu seleccion de 1era Ronda. Ahora agrega los marcadores.');
 }
 
+function scrollToRonda(rondaId){
+  const el=document.getElementById('ronda-'+rondaId);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'});
+}
+
+function setSliceActive(btn){
+  document.querySelectorAll('.bslice-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
 function renderBracket(){
   const c=document.getElementById('bracket-container');if(!c)return;
   let html='<div class="bracket-cols">';
   BRACKET_RONDAS.forEach(ronda=>{
-    html+=`<div class="bcol"><div class="bcol-title">${ronda.nombre}</div><div class="bcol-matches">`;
+    html+=`<div class="bcol" id="ronda-${ronda.id}"><div class="bcol-title">${ronda.nombre}</div><div class="bcol-matches">`;
     ronda.partidos.forEach(m=>{html+=matchCard(m,ronda);});
     html+=`</div></div>`;
   });
@@ -1465,16 +1476,51 @@ async function verPerfilPublico(pid){
       <span style="margin-left:auto">${badge}</span>
     </div>`;
   });
+  // Bracket predicciones
+  let bracketHtml='';
+  if(q){
+    const brac=parseMaybeJSON(q.bracket,{});
+    BRACKET_RONDAS.forEach(ronda=>{
+      if(ronda.id==='final'||ronda.id==='sf'||ronda.id==='qf'||ronda.id==='r16'||ronda.id==='r32'){
+        bracketHtml+=`<div style="font-size:11px;font-weight:700;color:var(--oro);text-transform:uppercase;letter-spacing:.06em;margin:.75rem 0 .3rem;font-family:'Barlow Condensed',sans-serif">${ronda.nombre}</div>`;
+        ronda.partidos.forEach(m=>{
+          const b=brac[m.bid]||{};
+          if(!b.l&&!b.v)return;
+          const resOf=resultadosAdmin._bracketRes&&resultadosAdmin._bracketRes[m.bid];
+          let badge='',bgColor='',txtColor='';
+          if(resOf&&b.gl!==undefined){
+            const ganPred=b.gl>b.gv?b.l:b.gv>b.gl?b.v:(b.penales||null);
+            if(b.gl===resOf.gl&&b.gv===resOf.gv){badge='+'+ronda.pts_ex+'pts ✓';bgColor='#0a5c2e';txtColor='#fff';}
+            else if(ganPred===resOf.ganador){badge='+'+ronda.pts_res+'pts';bgColor='#f0cb6a';txtColor='#7a5500';}
+            else{badge='0pts ✗';bgColor='#c0392b';txtColor='#fff';}
+          }
+          bracketHtml+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid var(--borde);font-size:12px">
+            <span>${flagBadge(b.l||'?',14)} ${b.l||'?'}</span>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--verde);margin:0 4px">${b.gl!==undefined?b.gl:'-'} – ${b.gv!==undefined?b.gv:'-'}</span>
+            <span>${b.v||'?'} ${flagBadge(b.v||'?',14)}</span>
+            ${badge?`<span style="margin-left:auto;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;background:${bgColor};color:${txtColor}">${badge}</span>`:''}
+          </div>`;
+        });
+      }
+    });
+  }
+  // Goleador
+  const golAcerto=gol&&resultadosAdmin._goleador&&gol===resultadosAdmin._goleador;
+  const golBadge=resultadosAdmin._goleador?(golAcerto?'+30pts ✓':'0pts ✗'):'';
+  const golBg=golAcerto?'#0a5c2e':'#c0392b';
+
   document.getElementById('perfil-body').innerHTML=`
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--borde)">
       <div style="width:44px;height:44px;border-radius:50%;background:#eaf5ee;border:2px solid #9fd4b0;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:var(--verde)">${(p.alias||p.nombre).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
       <div>
         <div style="font-weight:700;font-size:16px;color:var(--verde)">${p.alias||p.nombre}</div>
-        <div style="font-size:12px;color:var(--muted)">${done}/72 partidos predichos · Goleador: ${gol||'Sin selección'}</div>
+        <div style="font-size:12px;color:var(--muted)">${done}/72 predichos · País goleador: ${gol?`${flagBadge(gol,14)} ${gol}`:'Sin selección'} ${golBadge?`<span style="background:${golBg};color:#fff;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700">${golBadge}</span>`:''}</div>
       </div>
     </div>
-    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Predicciones — ${PARTIDOS.length} partidos</div>
-    <div style="max-height:400px;overflow-y:auto">${predsHtml}</div>`;
+    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">1era Ronda — ${PARTIDOS.length} partidos</div>
+    <div style="max-height:250px;overflow-y:auto;margin-bottom:.75rem">${predsHtml}</div>
+    ${bracketHtml?`<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">2da Ronda</div><div style="max-height:300px;overflow-y:auto">${bracketHtml}</div>`:''}
+  `;
   document.getElementById('perfil-modal').classList.add('on');
 }
 
@@ -1513,7 +1559,7 @@ function renderSimPartidos(){
           <span class="ssep">–</span>
           <input type="number" min="0" max="20" value="${vv}" placeholder="?" class="sinput${r.v!==undefined?' v':''}" oninput="setResultadoAdmin(${p.id},'v',this.value)">
         </div>
-        <div class="ecol r"><span class="ename">${p.v}</span>${flagBadge(p.v,20)}</div>
+        <div class="ecol r" style="justify-content:flex-end;margin-left:auto"><span class="ename">${p.v}</span>${flagBadge(p.v,20)}</div>
       </div>
     </div>`;
   });
@@ -1580,6 +1626,12 @@ async function calcularPuntosSimulados(){
     if(qs)qs.forEach(q=>{quinielasMap[String(q.participante_id)]=q;});
   }
 
+  // Guardar resultados para que renderPartidosGrupo los use
+  window._resOficiales={};
+  Object.entries(resultadosAdmin).forEach(([k,v])=>{
+    if(!k.startsWith('_')&&!k.startsWith('b'))window._resOficiales[parseInt(k)]=v;
+  });
+
   rankingSimulado = base.map(p=>{
     let preds={}, brac={}, gol=null;
     const qSupa=quinielasMap[String(p.id)];
@@ -1592,7 +1644,8 @@ async function calcularPuntosSimulados(){
       if(qLocal){const qd=JSON.parse(qLocal);preds=parseMaybeJSON(qd.predicciones,{});brac=parseMaybeJSON(qd.bracket,{});gol=qd.goleador||null;}
     }
     const pts=calcPuntosConDesglose(preds,brac,gol,resultadosAdmin);
-    return{id:p.id,alias:p.alias||p.nombre,nombre:p.nombre,pts:pts.total,goleador:gol,desglose:pts};
+    const golAcerto=gol&&resultadosAdmin._goleador&&gol===resultadosAdmin._goleador;
+    return{id:p.id,alias:p.alias||p.nombre,nombre:p.nombre,pts:pts.total,goleador:gol,golAcerto,desglose:pts};
   }).sort((a,b)=>b.pts-a.pts);
 
   renderRanking();
