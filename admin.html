@@ -363,11 +363,16 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--verde);b
       <div class="card-icon">💾</div>
       <div class="card-title">Exportar backup completo</div>
     </div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">Exporta todos los datos de participantes con sus predicciones completas, bracket y país goleador.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn-save" onclick="exportarBackupCompleto()">📦 Exportar JSON completo</button>
-      <button class="btn-sec" onclick="exportarCSV()">📊 Exportar CSV participantes</button>
-      <button class="btn-sec" onclick="exportarCodigos()">🔑 Exportar CSV códigos</button>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">Exporta todos los datos. El archivo <b>reimportable</b> puede restaurarse a Supabase en caso de pérdida de datos.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+      <button class="btn-save" onclick="exportarBackupCompleto()">📦 Exportar backups (general + reimportable)</button>
+      <button class="btn-sec" onclick="exportarCSV()">📊 CSV participantes</button>
+      <button class="btn-sec" onclick="exportarCodigos()">🔑 CSV códigos</button>
+    </div>
+    <div style="padding-top:1rem;border-top:1px solid var(--borde)">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Restaurar desde backup</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:.75rem">Selecciona un archivo <b>backup_reimportable_*.json</b> para restaurar los datos en Supabase.</p>
+      <button class="btn-warning" onclick="importarBackup()">⬆️ Importar backup a Supabase</button>
     </div>
     <div class="alert" id="backup-alert" style="margin-top:.75rem"></div>
   </div>
