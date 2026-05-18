@@ -298,33 +298,100 @@ function buscarIdPartido(homeAPI, awayAPI) {
 // ============================================================
 async function exportarBackupCompleto() {
   alertaAdmin('backup-alert', 'success', 'Generando backup...');
-  let quinielas = [];
+  let quinielas = [], codigos = [], configVisual = [], config = null, resultados = [];
   if (sbClient) {
-    const { data } = await sbClient.from('quinielas').select('*');
-    quinielas = data || [];
+    const [q, c, cv, cfg, r] = await Promise.all([
+      sbClient.from('quinielas').select('*'),
+      sbClient.from('codigos_participante').select('*'),
+      sbClient.from('configuracion_visual').select('*'),
+      sbClient.from('configuracion').select('*').limit(1).maybeSingle(),
+      sbClient.from('resultados_reales').select('*'),
+    ]);
+    quinielas = q.data || [];
+    codigos = c.data || [];
+    configVisual = cv.data || [];
+    config = cfg.data || null;
+    resultados = r.data || [];
   }
+
+  // Backup general (legible)
   const backup = {
-    fecha: new Date().toISOString(),
-    version: '7.0',
-    participantes: participantes,
+    meta: { fecha: new Date().toISOString(), version: '7.0', total_participantes: participantes.length },
+    participantes,
     quinielas: quinielas.map(q => ({
       participante_id: q.participante_id,
       predicciones: parseMaybeJSON(q.predicciones, {}),
       bracket: parseMaybeJSON(q.bracket, {}),
       goleador: q.goleador,
       puntos: q.puntos,
-      fecha: q.fecha
     })),
     resultados_oficiales: resultadosOficiales,
-    total_participantes: participantes.length,
-    total_quinielas: quinielas.length,
   };
-  const json = JSON.stringify(backup, null, 2);
+  descargarJSON(backup, `backup_quiniela2026_${new Date().toISOString().slice(0,10)}.json`);
+
+  // Backup reimportable (estructura exacta Supabase)
+  const reimportable = {
+    meta: { fecha: new Date().toISOString(), version: '7.0', instrucciones: 'Usar importarBackup() para restaurar' },
+    tablas: {
+      participantes,
+      quinielas,
+      codigos_participante: codigos,
+      configuracion_visual: configVisual,
+      configuracion: config ? [config] : [],
+      resultados_reales: resultados,
+    }
+  };
+  descargarJSON(reimportable, `backup_reimportable_${new Date().toISOString().slice(0,10)}.json`);
+  alertaAdmin('backup-alert', 'success', `✅ Dos archivos descargados: backup general + backup reimportable para Supabase.`);
+}
+
+function descargarJSON(data, filename) {
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
-  a.download = `backup_quiniela2026_${new Date().toISOString().slice(0, 10)}.json`;
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+  a.download = filename;
   a.click();
-  alertaAdmin('backup-alert', 'success', `Backup generado: ${participantes.length} participantes, ${quinielas.length} quinielas.`);
+}
+
+async function importarBackup() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    let data;
+    try { data = JSON.parse(text); } catch { alertaAdmin('backup-alert','error','Archivo JSON inválido.'); return; }
+
+    if (!data.tablas) { alertaAdmin('backup-alert','error','Este archivo no es un backup reimportable. Usa el archivo backup_reimportable_*.json'); return; }
+    if (!sbClient) { alertaAdmin('backup-alert','error','Conecta Supabase primero.'); return; }
+    if (!confirm(`¿Importar backup de ${data.meta?.fecha?.slice(0,10)}? Esto sobreescribirá los datos actuales.`)) return;
+
+    alertaAdmin('backup-alert','success','Importando...');
+    const tablas = data.tablas;
+    try {
+      // Restaurar en orden correcto
+      if (tablas.participantes?.length) {
+        await sbClient.from('participantes').upsert(tablas.participantes, { onConflict: 'id' });
+      }
+      if (tablas.codigos_participante?.length) {
+        await sbClient.from('codigos_participante').upsert(tablas.codigos_participante, { onConflict: 'codigo' });
+      }
+      if (tablas.quinielas?.length) {
+        await sbClient.from('quinielas').upsert(tablas.quinielas, { onConflict: 'participante_id' });
+      }
+      if (tablas.configuracion_visual?.length) {
+        await sbClient.from('configuracion_visual').upsert(tablas.configuracion_visual, { onConflict: 'clave' });
+      }
+      if (tablas.resultados_reales?.length) {
+        await sbClient.from('resultados_reales').upsert(tablas.resultados_reales, { onConflict: 'partido_idx' });
+      }
+      alertaAdmin('backup-alert','success',`✅ Backup importado exitosamente. Recarga la página para ver los datos.`);
+    } catch(e) {
+      alertaAdmin('backup-alert','error','Error importando: ' + e.message);
+    }
+  };
+  input.click();
 }
 
 // ============================================================
