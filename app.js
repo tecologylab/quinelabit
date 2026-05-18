@@ -221,10 +221,17 @@ let adminAutenticado=false;
 // ============================================================
 // PREMIOS
 // ============================================================
-function renderPremios(cfg=null){
+async function renderPremios(cfg=null){
   const c=document.getElementById('premios-container');
   const empty=document.getElementById('premios-empty');
   if(!c)return;
+  // Si no hay config cargada, intentar desde Supabase
+  if(!cfg&&!window._configVisual&&sbClient){
+    try{
+      const{data}=await sbClient.from('configuracion_visual').select('*');
+      if(data&&data.length){const cv={};data.forEach(r=>{cv[r.clave]=r.valor;});window._configVisual=cv;cfg=cv;}
+    }catch(e){}
+  }
   const src=cfg||window._configVisual||{};
   const premios=[];
   for(let i=1;i<=3;i++){
@@ -673,7 +680,7 @@ function predictorHTML(local, visita, pid) {
     resHtml=`<div class='pred-res'>⚽ Resultado oficial: <b>${local} ${resOf.l} – ${resOf.v} ${visita}</b>${pr&&pr.l!==undefined?` &nbsp;·&nbsp; Tu predicción: ${pr.l}-${pr.v} <span style='color:${color};font-weight:700'>${badge}</span>`:''}</div>`;
   }
   return `<div class='predictor-wrap'>
-    <div class='pred-elo-lbl'>Predicción por Elo FIFA</div>
+    <div class='pred-elo-lbl' style='font-family:Barlow Condensed,sans-serif;font-weight:700;letter-spacing:.06em'>PREDICCIÓN POR ELO FIFA</div>
     <div class='pred-bar-row'>
       <span class='pred-pct${favoritoL?' pred-fav':''}'>${pctL}%</span>
       <div class='pred-bar'>
@@ -684,7 +691,7 @@ function predictorHTML(local, visita, pid) {
     </div>
     ${may?`<div class='pred-mayoria'>👥 Mayoría eligió: <b>${may.equipo}</b> (${may.count} ${may.count===1?'persona':'personas'}) &nbsp;·&nbsp; Marcador más votado: <b>${may.marcador}</b></div>`:''}
     ${resHtml}
-    ${ed?`<div class='pred-info-link' onclick='abrirEditorial(${pid})'>ℹ️ Más info para elegir →</div>`:''}
+    ${ed?`<div class='pred-info-link' data-pid='${pid}' onclick='abrirEditorial(parseInt(this.dataset.pid))'>ℹ️ Más info para elegir →</div>`:''}
   </div>`;
 }
 
