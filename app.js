@@ -1123,11 +1123,12 @@ function renderBracket(){
   // R32=8 partidos, R16=4, QF=2, SF=1, Final=1
   // Cada ronda el gap entre partidos se duplica
   let html='<div class="bracket-cols">';
-  const gapBase=8; // px entre partidos en R32
+  const cardHeight=148; // altura aprox de cada tarjeta en px
+  const gapBase=12;
   BRACKET_RONDAS.forEach((ronda,ri)=>{
-    const factor=Math.pow(2,ri); // 1,2,4,8,16
-    const paddingTop=ri>0?(factor-1)*gapBase/2:0;
-    const gap=factor*gapBase;
+    const factor=Math.pow(2,ri);
+    const gap=ri===0?gapBase:(cardHeight+gapBase)*factor-cardHeight;
+    const paddingTop=ri>0?(cardHeight+gapBase)*(factor-1)/2:0;
     html+=`<div class="bcol" id="ronda-${ronda.id}">
       <div class="bcol-title">${ronda.nombre}</div>
       <div class="bcol-matches" style="gap:${gap}px;padding-top:${paddingTop}px">`;
@@ -2012,36 +2013,83 @@ async function verPerfil(pid){
   if(sbClient){const{data}=await sbClient.from('quinielas').select('*').eq('participante_id',pid).maybeSingle();q=data;}
   else{const qs=localStorage.getItem('quiniela_'+pid);if(qs)q=JSON.parse(qs);}
   const preds=q?parseMaybeJSON(q.predicciones,{}):{}; const gol=q?q.goleador:null;
+  const brac=q?parseMaybeJSON(q.bracket,{}):{};
   const done=PARTIDOS.filter(x=>{const pr=preds[x.id];return pr&&pr.l!==undefined&&pr.v!==undefined;}).length;
+  const doneBrac=BRACKET_RONDAS.reduce((acc,r)=>acc+r.partidos.filter(m=>{const b=brac[m.bid];return b&&b.gl!==undefined;}).length,0);
+
+  // 1era Ronda
   let predsHtml='';
-  PARTIDOS.slice(0,12).forEach(pa=>{
+  PARTIDOS.forEach(pa=>{
     const pr=preds[pa.id];
-    predsHtml+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--borde);font-size:12px">
-      <span>${flagBadge(pa.l,16)} ${pa.l}</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--verde);margin:0 6px">${pr?pr.l:'-'} – ${pr?pr.v:'-'}</span>
-      <span>${pa.v} ${flagBadge(pa.v,16)}</span>
+    const r=resultadosAdmin[pa.id]||(window._resOficiales&&window._resOficiales[pa.id]);
+    let color='',badge='';
+    if(pr&&r&&pr.l!==undefined&&r.l!==undefined){
+      if(pr.l===r.l&&pr.v===r.v){color='background:#eaf5ee';badge='<span style="color:#0a5c2e;font-weight:700;font-size:10px">+5pts</span>';}
+      else if(Math.sign(pr.l-pr.v)===Math.sign(r.l-r.v)){color='background:#fffbf0';badge='<span style="color:#7a5500;font-weight:700;font-size:10px">+2pts</span>';}
+      else{color='background:#fef0f0';badge='<span style="color:#c0392b;font-weight:700;font-size:10px">0pts</span>';}
+    }
+    predsHtml+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid var(--borde);font-size:12px;${color};border-radius:3px;margin-bottom:1px">
+      <span>${flagBadge(pa.l,14)} ${pa.l}</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--verde);margin:0 4px">${pr?pr.l:'-'} – ${pr?pr.v:'-'}</span>
+      <span>${pa.v} ${flagBadge(pa.v,14)}</span>
+      <span style="margin-left:auto">${badge}</span>
     </div>`;
   });
+
+  // 2da Ronda — Bracket
+  let bracketHtml='';
+  BRACKET_RONDAS.forEach(ronda=>{
+    const partidosConData=ronda.partidos.filter(m=>{const b=brac[m.bid];return b&&(b.l||b.v);});
+    if(!partidosConData.length)return;
+    bracketHtml+=`<div style="font-size:11px;font-weight:700;color:var(--oro);text-transform:uppercase;letter-spacing:.06em;margin:.75rem 0 .3rem;font-family:'Barlow Condensed',sans-serif">${ronda.nombre}</div>`;
+    partidosConData.forEach(m=>{
+      const b=brac[m.bid]||{};
+      const resOf=resultadosAdmin._bracketRes&&resultadosAdmin._bracketRes[m.bid];
+      let badge='',bgColor='',txtColor='';
+      if(resOf&&b.gl!==undefined){
+        const ganPred=b.gl>b.gv?b.l:b.gv>b.gl?b.v:(b.penales||null);
+        if(b.gl===resOf.gl&&b.gv===resOf.gv){badge='+'+ronda.pts_ex+'pts ✓';bgColor='#0a5c2e';txtColor='#fff';}
+        else if(ganPred===resOf.ganador){badge='+'+ronda.pts_res+'pts';bgColor='#f0cb6a';txtColor='#7a5500';}
+        else{badge='0pts ✗';bgColor='#c0392b';txtColor='#fff';}
+      }
+      bracketHtml+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid var(--borde);font-size:12px">
+        <span>${flagBadge(b.l||'?',14)} ${b.l||'?'}</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--verde);margin:0 4px">${b.gl!==undefined?b.gl:'-'} – ${b.gv!==undefined?b.gv:'-'}</span>
+        <span>${b.v||'?'} ${flagBadge(b.v||'?',14)}</span>
+        ${badge?`<span style="margin-left:auto;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;background:${bgColor};color:${txtColor}">${badge}</span>`:''}
+      </div>`;
+    });
+  });
+
+  // Goleador
+  const golAcerto=gol&&resultadosAdmin._goleador&&gol===resultadosAdmin._goleador;
+  const golBadge=resultadosAdmin._goleador?(golAcerto?'+30pts ✓':'0pts ✗'):'';
+  const golBg=golAcerto?'#0a5c2e':'#c0392b';
+
   document.getElementById('perfil-body').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
-      <div style="background:var(--bg);border-radius:8px;padding:12px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Nombre</div><div style="font-weight:600">${p.nombre||'—'}</div></div>
-      <div style="background:var(--bg);border-radius:8px;padding:12px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Alias</div><div style="font-weight:700;color:var(--verde)">${p.alias||'—'}</div></div>
-      <div style="background:var(--bg);border-radius:8px;padding:12px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Correo</div><div style="font-size:13px">${p.email||'—'}</div></div>
-      <div style="background:var(--bg);border-radius:8px;padding:12px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Codigo</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.05em">${p.codigo||'—'}</div></div>
+      <div style="background:var(--bg);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Nombre</div><div style="font-weight:600;font-size:13px">${p.nombre||'—'}</div></div>
+      <div style="background:var(--bg);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Alias</div><div style="font-weight:700;color:var(--verde);font-size:13px">${p.alias||'—'}</div></div>
+      <div style="background:var(--bg);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Correo</div><div style="font-size:12px">${p.email||'—'}</div></div>
+      <div style="background:var(--bg);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Código</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.05em">${p.codigo||'—'}</div></div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:1rem">
       <div style="background:#eaf5ee;color:#0a5c2e;border-radius:8px;padding:10px;flex:1;text-align:center">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.5rem">${done}/72</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.4rem">${done}/72</div>
         <div style="font-size:11px">Partidos predichos</div>
       </div>
+      <div style="background:#eef4ff;color:#1a47a0;border-radius:8px;padding:10px;flex:1;text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.4rem">${doneBrac}</div>
+        <div style="font-size:11px">Partidos bracket</div>
+      </div>
       <div style="background:#fffbf0;color:#7a5500;border-radius:8px;padding:10px;flex:1;text-align:center">
-        <div style="font-size:1rem">${gol?flagBadge(gol,20)+' ':''}</div>
-        <div style="font-size:11px">Goleador: ${gol||'Sin seleccion'}</div>
+        <div style="font-size:1rem">${gol?flagBadge(gol,18)+' ':''}</div>
+        <div style="font-size:11px">Goleador: ${gol||'Sin selección'} ${golBadge?`<span style="background:${golBg};color:#fff;padding:1px 5px;border-radius:6px;font-size:9px;font-weight:700">${golBadge}</span>`:''}</div>
       </div>
     </div>
-    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Predicciones — Primeros 12 partidos</div>
-    ${predsHtml}
-    <div style="font-size:11px;color:var(--muted);margin-top:.5rem;text-align:center">Mostrando 12 de ${PARTIDOS.length} partidos</div>`;
+    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">1era Ronda — ${PARTIDOS.length} partidos</div>
+    <div style="max-height:200px;overflow-y:auto;margin-bottom:.75rem">${predsHtml||'<p style="color:var(--muted);font-size:12px">Sin predicciones</p>'}</div>
+    ${bracketHtml?`<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">2da Ronda</div><div style="max-height:250px;overflow-y:auto">${bracketHtml}</div>`:''}`;
   document.getElementById('perfil-modal').classList.add('on');
 }
 function cerrarPerfil(){document.getElementById('perfil-modal').classList.remove('on');}
