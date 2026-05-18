@@ -250,9 +250,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--verde);b
       <div class="card-icon">⚙️</div>
       <div class="card-title">Configuración del torneo</div>
     </div>
+
+    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">🔒 Cierre global (gancho maestro)</div>
     <div class="fgrid">
       <div class="fg">
-        <label>Fecha y hora de cierre</label>
+        <label>Fecha y hora de cierre global</label>
         <input type="datetime-local" id="cfg-fecha-cierre">
       </div>
       <div class="fg">
@@ -263,6 +265,26 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--verde);b
         </select>
       </div>
     </div>
+
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--borde)">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">📅 Cierre por ronda (si no hay cierre global)</div>
+      <div class="fgrid">
+        <div class="fg"><label>1era Ronda — cierre</label><input type="datetime-local" id="cfg-fecha-grupos"></div>
+        <div class="fg"><label>Ronda de 32 — cierre</label><input type="datetime-local" id="cfg-fecha-r32"></div>
+        <div class="fg"><label>Ronda de 16 — cierre</label><input type="datetime-local" id="cfg-fecha-r16"></div>
+        <div class="fg"><label>Cuartos de Final — cierre</label><input type="datetime-local" id="cfg-fecha-qf"></div>
+        <div class="fg"><label>Semifinales — cierre</label><input type="datetime-local" id="cfg-fecha-sf"></div>
+        <div class="fg"><label>Final — cierre</label><input type="datetime-local" id="cfg-fecha-final"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--borde)">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">🔑 Seguridad</div>
+      <div class="fgrid">
+        <div class="fg"><label>Nueva contraseña de admin</label><input type="text" id="cfg-admin-pass" placeholder="Dejar vacío para no cambiar"></div>
+      </div>
+    </div>
+
     <button class="btn-primary" style="margin-top:.75rem" onclick="guardarConfiguracionAdmin()">Guardar configuración</button>
     <div class="alert" id="cfg-alert"></div>
   </div>
