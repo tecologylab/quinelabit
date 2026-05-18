@@ -160,8 +160,8 @@ const BRACKET_RONDAS = [
     {bid:102,desc:'Gan.99 vs Gan.100', sede:'Mercedes-Benz, Atlanta'},
   ]},
   { id:'final', nombre:'Final', pts_ex:15, pts_res:8, partidos:[
-    {bid:103,desc:'3er Lugar',sede:'Hard Rock, Miami'},
     {bid:104,desc:'FINAL',    sede:'MetLife, Nueva Jersey'},
+    {bid:103,desc:'3er Lugar',sede:'Hard Rock, Miami'},
   ]},
 ];
 
@@ -655,6 +655,7 @@ function renderPartidosGrupo(){
     }
     pHtml+=`<div class="pcard${ok?' ok':''}${lClass?' '+lClass:''}">
       <div class="psede">${p.s}${ptsBadge}</div>
+      ${predictorHTML(p.l,p.v,p.id)}
       <div class="prow">
         <div class="ecol">${flagBadge(p.l,20)}<span class="ename">${p.l}</span></div>
         <div class="sinputs">
