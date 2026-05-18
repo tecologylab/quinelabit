@@ -659,16 +659,19 @@ function predictorHTML(local, visita, pid) {
   let resHtml='';
   if(resOf&&resOf.l!==undefined&&resOf.v!==undefined){
     const pr=predicciones[pid];
-    let badge='',color='';
+    let badge='',bgColor='',txtColor='';
     if(pr&&pr.l!==undefined){
-      if(pr.l===resOf.l&&pr.v===resOf.v){badge='+5pts';color='#0a5c2e';}
-      else if(Math.sign(pr.l-pr.v)===Math.sign(resOf.l-resOf.v)){badge='+2pts';color='#c9a84c';}
-      else{badge='0pts';color='#c0392b';}
+      if(pr.l===resOf.l&&pr.v===resOf.v){badge='+5pts ✓';bgColor='#0a5c2e';txtColor='#fff';}
+      else if(Math.sign(pr.l-pr.v)===Math.sign(resOf.l-resOf.v)){badge='+2pts';bgColor='#f0cb6a';txtColor='#7a5500';}
+      else{badge='0pts ✗';bgColor='#c0392b';txtColor='#fff';}
     }
-    resHtml=`<div class='pred-res'>⚽ Resultado oficial: <b>${local} ${resOf.l} – ${resOf.v} ${visita}</b>${pr&&pr.l!==undefined?` &nbsp;·&nbsp; Tu predicción: ${pr.l}-${pr.v} <span style='color:${color};font-weight:700'>${badge}</span>`:''}</div>`;
+    resHtml=`<div class='res-oficial-row'>
+      <div class='res-oficial-marcador'>⚽ Resultado oficial: ${resOf.l} – ${resOf.v}</div>
+      ${pr&&pr.l!==undefined?`<div class='res-oficial-pred'>Tu predicción: ${pr.l}-${pr.v} <span class='res-badge' style='background:${bgColor};color:${txtColor}'>${badge}</span></div>`:''}
+    </div>`;
   }
   return `<div class='predictor-wrap'>
-    <div class='pred-elo-lbl' style='font-family:Barlow Condensed,sans-serif;font-weight:700;letter-spacing:.06em'>PREDICCIÓN POR ELO FIFA</div>
+    <div class='pred-elo-lbl' style='font-family:Barlow Condensed,sans-serif;font-weight:700;letter-spacing:.06em'>PREDICCIÓN X RANKING FIFA</div>
     <div class='pred-bar-row'>
       <span class='pred-pct${favoritoL?' pred-fav':''}'>${pctL}%</span>
       <div class='pred-bar'>
@@ -713,7 +716,7 @@ function abrirEditorial(pid) {
       ${flagBadge(p.v,24)} <span style='font-weight:700;font-size:15px'>${p.v}</span>
     </div>
     <div style='background:#f0f8f4;border-radius:8px;padding:10px 14px;margin-bottom:.75rem'>
-      <div style='font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px'>Favorito editorial</div>
+      <div style='font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px'>Favorito por la IA y los medios</div>
       <div style='font-weight:700;font-size:16px;color:var(--verde)'>${flagBadge(ed.fav,20)} ${ed.fav}</div>
     </div>
     <div style='display:flex;align-items:center;gap:8px;margin-bottom:.75rem'>
@@ -859,6 +862,28 @@ function renderTablaGrupo(grupo){
       <span class="legend-tercero">&#9632; Posible mejor 3ro</span>
     </div>
   </div>`;
+  // Tabla de resultados reales si hay datos
+  const tablaReal=calcTablaGrupoReal(g);
+  if(tablaReal){
+    html+=`<div class='gtabla-wrap' style='margin-top:.5rem;border-top:2px solid var(--verde)'>
+      <div class='gtabla-title' style='color:var(--verde)'>RESULTADOS REALES — GRUPO ${g}</div>
+      <table class='gtabla'><thead><tr>
+        <th>POS</th><th style='text-align:left'>PAIS</th>
+        <th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DIF</th><th>PTS</th>
+      </tr></thead><tbody>`;
+    tablaReal.forEach((r,i)=>{
+      const cls=i<2?'clasifica':i===2?'posible3ro':'';
+      html+=`<tr class='${cls}'>
+        <td>${i+1}</td>
+        <td class='pais-cell'>${flagBadge(r.eq,14)}<span>${r.eq}</span></td>
+        <td>${r.pj}</td><td>${r.g}</td><td>${r.em}</td><td>${r.p}</td>
+        <td>${r.gf}</td><td>${r.gc}</td><td>${r.dif>0?'+'+r.dif:r.dif}</td>
+        <td style='font-weight:700;color:var(--verde)'>${r.pts}</td>
+      </tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  }
+  return html;
 }
 
 function setPred(id,lado,val){
@@ -997,6 +1022,14 @@ function matchCard(m,ronda){
   const lCheck=ganador===lN?'<span class="bcheck">&#10003;</span>':'';
   const vCheck=ganador===vN?'<span class="bcheck">&#10003;</span>':'';
   const resB=resultadosAdmin._bracketRes?resultadosAdmin._bracketRes[m.bid]:(rankingSimulado&&rankingSimulado._resultados&&rankingSimulado._resultados._bracketRes?rankingSimulado._resultados._bracketRes[m.bid]:null);
+  // Calcular puntos bracket si hay resultado real
+  let bracketPtsBadge='';
+  if(resB&&b.gl!==undefined&&b.gv!==undefined){
+    const ganPred=b.gl>b.gv?lN:b.gv>b.gl?vN:(b.penales||null);
+    if(b.gl===resB.gl&&b.gv===resB.gv){bracketPtsBadge=`<span class='res-badge' style='background:#0a5c2e;color:#fff'>+${ronda.pts_ex}pts ✓</span>`;}
+    else if(ganPred===resB.ganador){bracketPtsBadge=`<span class='res-badge' style='background:#f0cb6a;color:#7a5500'>+${ronda.pts_res}pts</span>`;}
+    else{bracketPtsBadge=`<span class='res-badge' style='background:#c0392b;color:#fff'>0pts ✗</span>`;}
+  }
   const penBadge=esEmpate&&penales?`<span class="bpen-badge">Pen: ${flagBadge(penales,14)} ${penales}</span>`:'';
   // Color simulacion
   let simClass='';
@@ -1024,6 +1057,7 @@ function matchCard(m,ronda){
       ${resB?`<span class="bsc-real">(${resB.gv})</span>`:''}
       ${vCheck}
     </div>
+    ${resB?`<div style='text-align:center;margin-top:4px;font-size:11px;color:var(--muted)'>Resultado oficial: <b>${resB.gl}-${resB.gv}</b> ${bracketPtsBadge}</div>`:''}
     ${penBadge}
   </div>`;
 }
@@ -2089,4 +2123,23 @@ async function init(){
   if(col)document.documentElement.style.setProperty('--verde',col);
   await cargarSDK();await autoConectar();await cargarConfiguracion();aplicarCierreUI();cargarAdsGuardados();cargarMayorias();
 }
-document.addEventListener('DOMContentLoaded',init);
+document.addEventListener('DOMContentLoaded',init);function calcTablaGrupoReal(g){
+  const equipos=GRUPOS[g];
+  const stats={};
+  equipos.forEach(e=>{stats[e]={pts:0,pj:0,g:0,em:0,p:0,gf:0,gc:0,dif:0};});
+  let hayResultados=false;
+  PARTIDOS.filter(p=>p.g===g).forEach(p=>{
+    const r=resultadosAdmin[p.id]||(window._resOficiales&&window._resOficiales[p.id]);
+    if(!r||r.l===undefined||r.v===undefined)return;
+    hayResultados=true;
+    const gl=Number(r.l),gv=Number(r.v);
+    stats[p.l].pj++;stats[p.v].pj++;
+    stats[p.l].gf+=gl;stats[p.l].gc+=gv;stats[p.l].dif+=gl-gv;
+    stats[p.v].gf+=gv;stats[p.v].gc+=gl;stats[p.v].dif+=gv-gl;
+    if(gl>gv){stats[p.l].g++;stats[p.l].pts+=3;stats[p.v].p++;}
+    else if(gv>gl){stats[p.v].g++;stats[p.v].pts+=3;stats[p.l].p++;}
+    else{stats[p.l].em++;stats[p.l].pts++;stats[p.v].em++;stats[p.v].pts++;}
+  });
+  if(!hayResultados)return null;
+  return Object.entries(stats).map(([eq,s])=>({eq,...s})).sort((a,b)=>b.pts-a.pts||b.dif-a.dif||b.gf-a.gf);
+}
