@@ -64,7 +64,15 @@ alter table public.resultados_reales disable trigger after_resultado;
 -- Forzar a PostgREST a recargar el esquema (por si no lo hace solo)
 notify pgrst, 'reload schema';
 
--- 1) Políticas de escritura (el upsert usa onConflict=partido_idx → INSERT+UPDATE)
+-- 1) LECTURA: el ranking calcula los puntos en vivo leyendo resultados_reales
+--    con la anon key. Antes leía de la vista ranking_view (UNRESTRICTED), por
+--    eso nunca necesitó SELECT directo. Sin esta política, el ranking ve 0.
+drop policy if exists "leer_resultados" on public.resultados_reales;
+create policy "leer_resultados" on public.resultados_reales
+  for select to anon
+  using (true);
+
+-- 2) Políticas de escritura (guardado vía delete+insert desde el admin)
 drop policy if exists "guardar_resultados" on public.resultados_reales;
 create policy "guardar_resultados" on public.resultados_reales
   for insert to anon
