@@ -226,6 +226,23 @@ async function guardarResultadosOficiales() {
   alertaAdmin('res-alert', 'success', `${data.length} resultados guardados. El ranking ya los está usando.`);
 }
 
+async function borrarResultadosOficiales() {
+  if (!sbClient) { alertaAdmin('res-alert', 'error', 'Conecta Supabase primero.'); return; }
+  if (!confirm('¿Borrar TODOS los resultados oficiales de Supabase? La quiniela queda en blanco y los puntos vuelven a 0. Útil para pruebas.')) return;
+  // Borrar todas las filas (.gte('id',0) lleva WHERE, evita el candado safe-update)
+  const { data, error } = await sbClient.from('resultados_reales').delete().gte('id', 0).select();
+  if (error) { alertaAdmin('res-alert', 'error', 'Error: ' + error.message); return; }
+  // Limpiar memoria + UI
+  resultadosOficiales = {};
+  if (window._resOficiales) window._resOficiales = {};
+  const golSel = document.getElementById('res-goleador-oficial');
+  if (golSel) golSel.value = '';
+  renderResGrupoTabs(); renderResPartidos(); renderResBracket();
+  const n = data ? data.length : 0;
+  if (!n) { alertaAdmin('res-alert', 'success', 'No había resultados que borrar (la tabla ya estaba en blanco).'); return; }
+  alertaAdmin('res-alert', 'success', `${n} resultados borrados. La tabla quedó en blanco; el ranking volverá a 0.`);
+}
+
 // ============================================================
 // API FOOTBALL-DATA.ORG
 // ============================================================
