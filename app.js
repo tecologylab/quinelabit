@@ -2119,9 +2119,10 @@ async function cargarCodigos(){
   c.innerHTML=`<p style="font-size:12px;color:var(--muted);margin-bottom:.75rem"><strong>${libres}</strong> disponibles &middot; <strong>${todosCodigos.length-libres}</strong> usados &middot; <strong>${todosCodigos.length}</strong> total</p>`+
     `<div style="display:flex;flex-wrap:wrap;gap:4px">`+
     todosCodigos.map(d=>{const pid=participantes.find(p=>p.codigo===d.codigo)?.id;
-      return `<span class="codigo-chip ${d.usado?'usado':'libre'}" style="cursor:${d.usado?'pointer':'default'}" ${d.usado&&pid?`onclick="verPerfil('${pid}')" title="Ver participante"`:''}>
-        ${d.codigo}${d.usado?' ✓':''}
-      </span>`;
+      if(d.usado){
+        return `<span class="codigo-chip usado" style="cursor:${pid?'pointer':'default'}" ${pid?`onclick="verPerfil('${pid}')" title="Ver participante"`:''}>${d.codigo} ✓</span>`;
+      }
+      return `<span class="codigo-chip libre">${d.codigo}<span onclick="borrarCodigoIndividual('${d.codigo}')" title="Borrar código" style="cursor:pointer;margin-left:6px;font-weight:800;color:#c0392b">✕</span></span>`;
     }).join('')+`</div>`;
 }
 
@@ -2152,26 +2153,51 @@ async function borrarCodigosLibres(){
   const libres=todosCodigos.filter(d=>!d.usado);
   if(!libres.length){alert('No hay codigos libres para borrar.');return;}
   if(!confirm(`¿Borrar ${libres.length} codigos libres? Esta accion no se puede deshacer.`))return;
-  const{error}=await sbClient.from('codigos_participante').delete().eq('usado',false);
+  const{data,error}=await sbClient.from('codigos_participante').delete().eq('usado',false).select();
   if(error){alert('Error: '+error.message);return;}
-  alert(`${libres.length} codigos borrados.`);cargarCodigos();
+  const n=data?data.length:0;
+  if(!n){alert('No se borró ningún código. Falta la política de DELETE en Supabase (ver instrucciones de seguridad).');return;}
+  alert(`${n} codigos borrados.`);cargarCodigos();
 }
 
 async function borrarTodosCodigosLibres(){
   if(!sbClient){alert('Conecta Supabase primero.');return;}
   if(!confirm('¿Borrar TODOS los codigos (libres y usados)? Esta accion no se puede deshacer.'))return;
-  const{error}=await sbClient.from('codigos_participante').delete().neq('id',0);
+  // Filtro siempre-verdadero sobre 'codigo' (no depende de que exista columna 'id')
+  const{data,error}=await sbClient.from('codigos_participante').delete().not('codigo','is',null).select();
   if(error){alert('Error: '+error.message);return;}
-  todosCodigos=[];alert('Todos los codigos borrados.');cargarCodigos();
+  const n=data?data.length:0;
+  if(!n){alert('No se borró ningún código. Con la política "solo libres" los códigos usados no se borran, o falta la política de DELETE en Supabase.');cargarCodigos();return;}
+  todosCodigos=[];alert(`${n} codigos borrados.`);cargarCodigos();
+}
+
+async function borrarCodigoIndividual(codigo){
+  if(!sbClient){alert('Conecta Supabase primero.');return;}
+  if(!confirm(`¿Borrar el código ${codigo}?`))return;
+  // Solo borra si esta libre (coincide con la politica RLS "borrar_codigos_libres")
+  const{data,error}=await sbClient.from('codigos_participante').delete().eq('codigo',codigo).eq('usado',false).select();
+  if(error){alert('Error: '+error.message);return;}
+  if(!data||!data.length){alert('No se borró el código. Puede que ya esté usado, o falta la política de DELETE en Supabase.');return;}
+  alert(`Código ${codigo} borrado.`);cargarCodigos();
 }
 
 async function borrarParticipante(pid){
   if(!confirm('¿Borrar este participante y sus predicciones? Esta accion no se puede deshacer.'))return;
+  const part=participantes.find(p=>String(p.id)===String(pid));
   try{
     if(sbClient){
       await sbClient.from('quinielas').delete().eq('participante_id',pid);
-      const{error}=await sbClient.from('participantes').delete().eq('id',pid);
+      // .select() devuelve las filas realmente borradas: si RLS lo bloquea, viene vacio (sin error)
+      const{data,error}=await sbClient.from('participantes').delete().eq('id',pid).select();
       if(error)throw error;
+      if(!data||!data.length){
+        alert('No se borró el participante. Falta la política de DELETE en Supabase (ver instrucciones de seguridad).');
+        return;
+      }
+      // Liberar el código para que vuelva a estar disponible
+      if(part?.codigo){
+        await sbClient.from('codigos_participante').update({usado:false}).eq('codigo',part.codigo);
+      }
     } else {
       let local=JSON.parse(localStorage.getItem('participantes')||'[]');
       local=local.filter(p=>String(p.id)!==String(pid));
@@ -2180,9 +2206,11 @@ async function borrarParticipante(pid){
     }
     participantes=participantes.filter(p=>String(p.id)!==String(pid));
     actualizarContadores();
-    document.getElementById('perfil-modal').classList.remove('on');
-    alert('Participante borrado exitosamente.');
-    _renderAdminContent();
+    document.getElementById('perfil-modal')?.classList.remove('on');
+    alert('Participante borrado'+(part?.codigo?` y código ${part.codigo} liberado`:'')+'.');
+    if(typeof renderAdminParticipantes==='function')renderAdminParticipantes();
+    else _renderAdminContent();
+    if(typeof cargarCodigos==='function')cargarCodigos();
   } catch(e){alert('Error al borrar: '+e.message);}
 }
 

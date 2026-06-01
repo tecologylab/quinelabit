@@ -86,7 +86,7 @@ Plataforma web de predicciones del Mundial FIFA 2026 (quiniela) para uso corpora
 `sbClient.from('quinielas').upsert([{participante_id, predicciones, bracket, goleador}], {onConflict:'participante_id'})`
 usando solo la `anon key`. La RLS de `quinielas` es `UPDATE public`, por lo que no hay verificación de propiedad.  
 **Impacto:** Un atacante puede alterar o borrar predicciones de cualquier participante, falseando el ranking y los premios.  
-**Matiz importante (verificado):** la recomendación original `USING (auth.uid() = user_id)` **no es aplicable tal cual**: la app **no usa Supabase Auth**, así que `auth.uid()` siempre es `NULL` y esa política bloquearía *todas* las escrituras (rompería la app). El fix real requiere **una de dos rutas**: (a) migrar el login a Supabase Auth y ligar `quinielas.user_id` a `auth.uid()`, o (b) interim sin Auth — canalizar las escrituras por una función `SECURITY DEFINER` que valide `email + código` server-side y **revocar** el `INSERT/UPDATE` directo de la tabla a `anon`. Ver `sql/quinielas_rls.sql`.
+**Matiz importante (verificado):** la recomendación original `USING (auth.uid() = user_id)` **no es aplicable tal cual**: la app **no usa Supabase Auth**, así que `auth.uid()` siempre es `NULL` y esa política bloquearía *todas* las escrituras (rompería la app). El fix real requiere **una de dos rutas**: (a) migrar el login a Supabase Auth y ligar `quinielas.user_id` a `auth.uid()`, o (b) interim sin Auth — canalizar las escrituras por una función `SECURITY DEFINER` que valide `email + código` server-side y **revocar** el `INSERT/UPDATE` directo de la tabla a `anon`. *(Pendiente — ver cambio #1 de la sección 6.)*
 
 ### 3.2 MEDIA — API Key de football-data.org expuesta
 **Descripción:** La API key `f82a29de770a432ebe388346a80416a5` está en el código JavaScript del frontend, visible para cualquier usuario.  
@@ -201,7 +201,7 @@ Ordenados por prioridad. Los tiempos son de esfuerzo de desarrollo + prueba para
 
 **Total estimado:** ~16–20 h. Los puntos **1, 2, 3 y 4 son bloqueantes** para cualquier lanzamiento (incluso corporativo cerrado); 5–7 son requisitos para lanzamiento público.
 
-> **Nota de arquitectura:** el fix #1 y #3 son mucho más sencillos si primero se adopta **Supabase Auth** (hoy listado como pendiente para la versión SaaS). Sin Auth, la única forma robusta de restringir la escritura por dueño es a través de funciones `SECURITY DEFINER` que validen el secreto del participante. El archivo `sql/quinielas_rls.sql` implementa el fix #1 para `quinielas` en ambas variantes.
+> **Nota de arquitectura:** el fix #1 y #3 son mucho más sencillos si primero se adopta **Supabase Auth** (hoy listado como pendiente para la versión SaaS). Sin Auth, la única forma robusta de restringir la escritura por dueño es a través de funciones `SECURITY DEFINER` que validen el secreto del participante. *(Las políticas de DELETE del panel admin ya están en `sql/politicas_borrado.sql`; el fix de escritura-por-dueño de `quinielas` queda pendiente.)*
 
 ---
 
