@@ -1047,7 +1047,10 @@ function matchCard(m,ronda){
   const esEmpate=ok&&gl===gv;
   const penales=b.penales||null;
   const cerrada=estaCerrada();
-  const resB=resultadosAdmin._bracketRes?resultadosAdmin._bracketRes[m.bid]:(rankingSimulado&&rankingSimulado._resultados&&rankingSimulado._resultados._bracketRes?rankingSimulado._resultados._bracketRes[m.bid]:null);
+  const resB=(resultadosAdmin._bracketRes&&resultadosAdmin._bracketRes[m.bid])
+    ||(rankingSimulado&&rankingSimulado._resultados&&rankingSimulado._resultados._bracketRes&&rankingSimulado._resultados._bracketRes[m.bid])
+    ||(window._resOficiales&&window._resOficiales._bracketRes&&window._resOficiales._bracketRes[m.bid])
+    ||null;
   // Calcular puntos bracket si hay resultado real
   let bracketPtsBadge=''; let cardBg=''; let cardBorder='';
   if(resB&&b.gl!==undefined&&b.gv!==undefined){
@@ -2371,7 +2374,7 @@ async function init(){
   if(col)document.documentElement.style.setProperty('--verde',col);
   await cargarSDK();await autoConectar();await cargarConfiguracion();aplicarCierreUI();cargarAdsGuardados();cargarMayorias();
   // Cargar resultados oficiales para mostrar marcador real + puntos por partido en 1era Ronda
-  if(sbClient){window._resOficiales=await cargarResultadosReales();renderPartidosGrupo();renderGoleador();}
+  if(sbClient){window._resOficiales=await cargarResultadosReales();renderPartidosGrupo();renderGoleador();renderBracket();}
 }
 document.addEventListener('DOMContentLoaded',init);function calcTablaGrupoReal(g){
   const equipos=GRUPOS[g];
