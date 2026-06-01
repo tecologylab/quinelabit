@@ -23,6 +23,17 @@
 -- para la versión SaaS, migrar a Supabase Auth + rol admin.
 -- =====================================================================
 
+-- 0) ESQUEMA: la columna `ganador` debe existir.
+--    El código guarda en `ganador` el país goleador (partido_idx=0) y el
+--    ganador de cada partido del bracket (partido_idx>=1000). Si falta,
+--    el guardado falla con:
+--    "Could not find the 'ganador' column of 'resultados_reales'".
+alter table public.resultados_reales add column if not exists ganador text;
+
+-- Forzar a PostgREST a recargar el esquema (por si no lo hace solo)
+notify pgrst, 'reload schema';
+
+-- 1) Políticas de escritura (el upsert usa onConflict=partido_idx → INSERT+UPDATE)
 drop policy if exists "guardar_resultados" on public.resultados_reales;
 create policy "guardar_resultados" on public.resultados_reales
   for insert to anon
