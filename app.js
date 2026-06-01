@@ -824,11 +824,8 @@ function renderPartidosGrupo(){
       else if(Math.sign(pr.l-pr.v)===Math.sign(resOficial.l-resOficial.v))ptsBadge='<span class="pts-badge pts-correcto">+2pts</span>';
       else ptsBadge='<span class="pts-badge pts-fallo">0pts</span>';
     }
-    // Fila con el marcador oficial real
-    const realHtml=hayRes?`<div class="res-oficial-row"><span class="res-oficial-marcador">Resultado oficial: ${resOficial.l} – ${resOficial.v}</span></div>`:'';
     pHtml+=`<div class="pcard${ok?' ok':''}${lClass?' '+lClass:''}">
       <div class="psede">${p.s}${ptsBadge}</div>
-      ${realHtml}
       <div class="prow">
         <div class="ecol">${flagBadge(p.l,20)}<span class="ename">${p.l}</span></div>
         <div class="sinputs">
