@@ -30,6 +30,17 @@
 --    "Could not find the 'ganador' column of 'resultados_reales'".
 alter table public.resultados_reales add column if not exists ganador text;
 
+-- Si la tabla fue creada con un esquema viejo, puede tener columnas NOT NULL
+-- que el código no llena (p.ej. `resultado`). Las relajamos para no bloquear
+-- el guardado. Guardado en bloque DO para que no falle si la columna no existe.
+do $$
+begin
+  if exists (select 1 from information_schema.columns
+             where table_name='resultados_reales' and column_name='resultado') then
+    alter table public.resultados_reales alter column resultado drop not null;
+  end if;
+end $$;
+
 -- Forzar a PostgREST a recargar el esquema (por si no lo hace solo)
 notify pgrst, 'reload schema';
 
