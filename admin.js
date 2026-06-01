@@ -214,9 +214,10 @@ async function guardarResultadosOficiales() {
     }
   });
   if (!rows.length) { alertaAdmin('res-alert', 'error', 'No hay resultados para guardar.'); return; }
-  const { error } = await sbClient.from('resultados_reales').upsert(rows, { onConflict: 'partido_idx' });
+  const { data, error } = await sbClient.from('resultados_reales').upsert(rows, { onConflict: 'partido_idx' }).select();
   if (error) { alertaAdmin('res-alert', 'error', 'Error: ' + error.message); return; }
-  alertaAdmin('res-alert', 'success', `${rows.length} resultados guardados en Supabase.`);
+  if (!data || !data.length) { alertaAdmin('res-alert', 'error', 'No se guardó nada: falta la política de INSERT/UPDATE en `resultados_reales` (RLS) en Supabase.'); return; }
+  alertaAdmin('res-alert', 'success', `${data.length} resultados guardados. El ranking ya los está usando.`);
 }
 
 // ============================================================

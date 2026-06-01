@@ -1445,6 +1445,26 @@ const DEMO_RANK=[
   {alias:'PajaritoPan',nombre:'Luisa Ramos',pts:61,goleador:'Panama'},
 ];
 
+// Carga los resultados oficiales desde Supabase en el formato que espera calcPuntosConDesglose
+async function cargarResultadosReales(){
+  const res={};
+  if(!sbClient)return res;
+  try{
+    const{data}=await sbClient.from('resultados_reales').select('*');
+    if(!data)return res;
+    data.forEach(r=>{
+      if(r.partido_idx===0){ res._goleador=r.ganador||null; }
+      else if(r.partido_idx>=1000){
+        if(!res._bracketRes)res._bracketRes={};
+        res._bracketRes[r.partido_idx-1000]={gl:r.goles_local,gv:r.goles_visita,ganador:r.ganador||''};
+      } else {
+        res[r.partido_idx]={l:r.goles_local,v:r.goles_visita};
+      }
+    });
+  }catch(e){}
+  return res;
+}
+
 async function renderRanking(){
   let data=[];
   if(rankingSimulado&&Array.isArray(rankingSimulado)&&rankingSimulado.length){
@@ -1452,8 +1472,21 @@ async function renderRanking(){
   } else if(modoDemo){
     data=DEMO_RANK;
   } else if(sbClient){
-    const{data:rows}=await sbClient.from('ranking_view').select('*').order('pts',{ascending:false}).limit(100);
-    if(rows&&rows.length)data=rows;
+    // Calcular puntos EN VIVO desde los resultados oficiales + quinielas
+    const resultados=await cargarResultadosReales();
+    const{data:qs}=await sbClient.from('quinielas').select('*');
+    const qmap={};(qs||[]).forEach(q=>{qmap[String(q.participante_id)]=q;});
+    data=participantes.map(p=>{
+      const q=qmap[String(p.id)];
+      let pts=0, gol=p.favorito||null;
+      if(q){
+        const preds=parseMaybeJSON(q.predicciones,{});
+        const brac=parseMaybeJSON(q.bracket,{});
+        gol=q.goleador||null;
+        pts=calcPuntosConDesglose(preds,brac,gol,resultados).total;
+      }
+      return{id:p.id,alias:p.alias||p.nombre,nombre:p.nombre,pts,goleador:gol};
+    });
   }
   // Asegurar que todos los participantes esten en el ranking aunque tengan 0 pts
   if(participantes.length){
@@ -1463,8 +1496,8 @@ async function renderRanking(){
         data.push({id:p.id,alias:p.alias||p.nombre,nombre:p.nombre,pts:0,goleador:p.favorito||null});
       }
     });
-    data.sort((a,b)=>b.pts-a.pts);
   }
+  data.sort((a,b)=>(b.pts||0)-(a.pts||0));
   if(!data.length)data=DEMO_RANK;
   const c=document.getElementById('ranking-container');if(!c)return;
   c.innerHTML=data.map((p,i)=>{
