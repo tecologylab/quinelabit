@@ -1098,6 +1098,7 @@ function resetBracket(){
   bracket={};
   renderBracket();
   alerta('b-alert','success','Bracket reiniciado.');
+  autoGuardarBracket();
 }
 
 // Auto-calcular bracket completo desde predicciones de 1era ronda
@@ -1130,6 +1131,7 @@ function autoCalcularBracket(){
 
   renderBracket();
   alerta('b-alert','success','Bracket calculado desde tu seleccion de 1era Ronda. Ahora agrega los marcadores.');
+  autoGuardarBracket();
 }
 
 function scrollToRonda(rondaId){
@@ -1430,6 +1432,24 @@ function confirmarModal(){
   propagarGanador(bid);
   propagarPerdedor(bid);
   cerrarModal();renderBracket();
+  autoGuardarBracket();
+}
+
+// Autoguardado en tiempo real del bracket (2da ronda), con debounce
+let _autoBTimer=null;
+function autoGuardarBracket(){
+  if(modoDemo||!usuarioActual||!sbClient)return;
+  const s=document.getElementById('b-status-bottom');
+  if(s){s.className='alert success';s.style.display='block';s.textContent='Guardando…';}
+  clearTimeout(_autoBTimer);
+  _autoBTimer=setTimeout(async()=>{
+    try{
+      await guardarQuinielaCompleta();
+      if(s){s.className='alert success';s.style.display='block';s.textContent='Bracket guardado automático ✓';}
+    }catch(e){
+      if(s){s.className='alert error';s.style.display='block';s.textContent='Error al guardar: '+e.message;}
+    }
+  },700);
 }
 
 function cerrarModal(){document.getElementById('bracket-modal').classList.remove('on');modalActivo=null;}
