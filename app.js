@@ -1151,8 +1151,11 @@ function renderBracket(){
   const cardHeight=148; // altura aprox de cada tarjeta en px
   const gapBase=12;
   BRACKET_RONDAS.forEach((ronda,ri)=>{
+    const esFinal=ri===BRACKET_RONDAS.length-1;
     const factor=Math.pow(2,ri);
-    const gap=ri===0?gapBase:(cardHeight+gapBase)*factor-cardHeight;
+    // En la columna Final, el 3er lugar va pegado a la Final (gap chico),
+    // no con el espaciado de árbol que lo empujaba a la esquina de abajo.
+    const gap=ri===0?gapBase:(esFinal?gapBase:(cardHeight+gapBase)*factor-cardHeight);
     const paddingTop=ri>0?(cardHeight+gapBase)*(factor-1)/2:0;
     html+=`<div class="bcol" id="ronda-${ronda.id}">
       <div class="bcol-title">${ronda.nombre}</div>
@@ -1172,7 +1175,9 @@ function renderBracket(){
     cols.forEach((col,ri)=>{
       if(ri===0){col.style.gap=gapB+'px';return;}
       const factor=Math.pow(2,ri);
-      col.style.gap=(factor*(cardH+gapB)-cardH)+'px';
+      const esFinal=ri===cols.length-1;
+      // Columna Final: 3er lugar pegado a la Final (gap chico)
+      col.style.gap=(esFinal?gapB:(factor*(cardH+gapB)-cardH))+'px';
       col.style.paddingTop=((factor-1)/2*(cardH+gapB))+'px';
     });
     // Sync scroll
