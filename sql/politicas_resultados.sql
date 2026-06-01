@@ -41,6 +41,11 @@ begin
   end if;
 end $$;
 
+-- El upsert del admin usa onConflict=partido_idx, así que partido_idx
+-- necesita un índice ÚNICO (la PK de la tabla es `id`, no partido_idx).
+create unique index if not exists resultados_reales_partido_idx_key
+  on public.resultados_reales(partido_idx);
+
 -- Forzar a PostgREST a recargar el esquema (por si no lo hace solo)
 notify pgrst, 'reload schema';
 
