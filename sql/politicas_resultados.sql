@@ -59,3 +59,10 @@ drop policy if exists "actualizar_resultados" on public.resultados_reales;
 create policy "actualizar_resultados" on public.resultados_reales
   for update to anon
   using (true);
+
+-- El guardado borra los partidos a reescribir antes de reinsertar (evita el
+-- upsert/ON CONFLICT que choca con sql_safe_updates), así que necesita DELETE.
+drop policy if exists "borrar_resultados" on public.resultados_reales;
+create policy "borrar_resultados" on public.resultados_reales
+  for delete to anon
+  using (true);

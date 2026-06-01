@@ -214,9 +214,15 @@ async function guardarResultadosOficiales() {
     }
   });
   if (!rows.length) { alertaAdmin('res-alert', 'error', 'No hay resultados para guardar.'); return; }
-  const { data, error } = await sbClient.from('resultados_reales').upsert(rows, { onConflict: 'partido_idx' }).select();
+  // En vez de upsert (INSERT ... ON CONFLICT DO UPDATE, que choca con sql_safe_updates),
+  // borramos los partidos que vamos a escribir y los reinsertamos. El delete lleva
+  // WHERE (.in) y el insert no tiene problema con el candado de safe-update.
+  const idxs = rows.map(r => r.partido_idx);
+  const { error: delErr } = await sbClient.from('resultados_reales').delete().in('partido_idx', idxs);
+  if (delErr) { alertaAdmin('res-alert', 'error', 'Error al limpiar previos: ' + delErr.message); return; }
+  const { data, error } = await sbClient.from('resultados_reales').insert(rows).select();
   if (error) { alertaAdmin('res-alert', 'error', 'Error: ' + error.message); return; }
-  if (!data || !data.length) { alertaAdmin('res-alert', 'error', 'No se guardó nada: falta la política de INSERT/UPDATE en `resultados_reales` (RLS) en Supabase.'); return; }
+  if (!data || !data.length) { alertaAdmin('res-alert', 'error', 'No se guardó nada: revisa las políticas INSERT/DELETE de `resultados_reales` (RLS) en Supabase.'); return; }
   alertaAdmin('res-alert', 'success', `${data.length} resultados guardados. El ranking ya los está usando.`);
 }
 
