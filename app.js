@@ -807,24 +807,28 @@ function renderPartidosGrupo(){
     const pr=predicciones[p.id]||{};
     const lv=pr.l!==undefined?pr.l:'';const vv=pr.v!==undefined?pr.v:'';
     const ok=pr.l!==undefined&&pr.v!==undefined;
-    // Colores de simulacion
+    // Resultado oficial: simulador admin, ranking simulado o resultados_reales (window._resOficiales)
+    const resOficial=resultadosAdmin[p.id]||(rankingSimulado&&rankingSimulado._resultados&&rankingSimulado._resultados[p.id])||(window._resOficiales&&window._resOficiales[p.id]);
+    const hayRes=resOficial&&resOficial.l!==undefined&&resOficial.v!==undefined;
+    // Colores segun acierto
     let lClass='',vClass='';
-    if(rankingSimulado&&rankingSimulado._resultados&&rankingSimulado._resultados[p.id]&&ok){
-      const r=rankingSimulado._resultados[p.id];
-      if(pr.l===r.l&&pr.v===r.v){lClass='sim-exacto';vClass='sim-exacto';}
-      else if(Math.sign(pr.l-pr.v)===Math.sign(r.l-r.v)){lClass='sim-correcto';vClass='sim-correcto';}
+    if(hayRes&&ok){
+      if(pr.l===resOficial.l&&pr.v===resOficial.v){lClass='sim-exacto';vClass='sim-exacto';}
+      else if(Math.sign(pr.l-pr.v)===Math.sign(resOficial.l-resOficial.v)){lClass='sim-correcto';vClass='sim-correcto';}
       else{lClass='sim-fallo';vClass='sim-fallo';}
     }
-    // Badge de puntos si hay resultado
+    // Badge de puntos si hay resultado oficial
     let ptsBadge='';
-    const resOficial=resultadosAdmin[p.id]||(rankingSimulado&&rankingSimulado._resultados&&rankingSimulado._resultados[p.id]);
-    if(resOficial&&ok){
+    if(hayRes&&ok){
       if(pr.l===resOficial.l&&pr.v===resOficial.v)ptsBadge='<span class="pts-badge pts-exacto">+5pts</span>';
       else if(Math.sign(pr.l-pr.v)===Math.sign(resOficial.l-resOficial.v))ptsBadge='<span class="pts-badge pts-correcto">+2pts</span>';
       else ptsBadge='<span class="pts-badge pts-fallo">0pts</span>';
     }
+    // Fila con el marcador oficial real
+    const realHtml=hayRes?`<div class="res-oficial-row"><span class="res-oficial-marcador">Resultado oficial: ${resOficial.l} – ${resOficial.v}</span></div>`:'';
     pHtml+=`<div class="pcard${ok?' ok':''}${lClass?' '+lClass:''}">
       <div class="psede">${p.s}${ptsBadge}</div>
+      ${realHtml}
       <div class="prow">
         <div class="ecol">${flagBadge(p.l,20)}<span class="ename">${p.l}</span></div>
         <div class="sinputs">
@@ -2344,6 +2348,8 @@ async function init(){
   if(emp)document.getElementById('empresa-label').textContent=emp;
   if(col)document.documentElement.style.setProperty('--verde',col);
   await cargarSDK();await autoConectar();await cargarConfiguracion();aplicarCierreUI();cargarAdsGuardados();cargarMayorias();
+  // Cargar resultados oficiales para mostrar marcador real + puntos por partido en 1era Ronda
+  if(sbClient){window._resOficiales=await cargarResultadosReales();renderPartidosGrupo();renderGoleador();}
 }
 document.addEventListener('DOMContentLoaded',init);function calcTablaGrupoReal(g){
   const equipos=GRUPOS[g];
