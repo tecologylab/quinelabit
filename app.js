@@ -538,9 +538,29 @@ function actualizarContadores(){
 async function guardarQuinielaCompleta(){
   const datos={participante_id:usuarioActual?.id,predicciones:JSON.stringify(predicciones),bracket:JSON.stringify(bracket),goleador,fecha:new Date().toISOString()};
   if(sbClient&&!modoDemo){
-    const{error}=await sbClient.from('quinielas').upsert([datos],{onConflict:'participante_id'});
+    const{data,error}=await sbClient.from('quinielas').upsert([datos],{onConflict:'participante_id'}).select();
     if(error)throw error;
+    if(!data||!data.length)throw new Error('No se guardó (revisa políticas INSERT/UPDATE de quinielas en Supabase).');
   } else {localStorage.setItem('quiniela_'+(usuarioActual?.id||'demo'),JSON.stringify(datos));}
+}
+
+// Autoguardado en tiempo real (con debounce) al editar predicciones
+let _autoQTimer=null;
+function autoGuardarQuiniela(){
+  if(modoDemo||!usuarioActual||!sbClient)return;
+  const s=document.getElementById('q-status');
+  if(s)s.textContent='Guardando…';
+  clearTimeout(_autoQTimer);
+  _autoQTimer=setTimeout(async()=>{
+    try{
+      autoRellenarBracketDesdeGrupos();
+      await guardarQuinielaCompleta();
+      const done=PARTIDOS.filter(p=>{const pr=predicciones[p.id];return pr&&pr.l!==undefined&&pr.v!==undefined;}).length;
+      if(s)s.textContent=`Guardado automático ✓ (${done}/${PARTIDOS.length})`;
+    }catch(e){
+      if(s)s.textContent='Error al guardar: '+e.message;
+    }
+  },700);
 }
 
 
@@ -902,6 +922,8 @@ function setPred(id,lado,val){
   // Si ya estamos viendo el bracket, actualizarlo
   const bracketEl=document.getElementById('bracket-container');
   if(bracketEl&&bracketEl.children.length>0)renderBracket();
+  // Guardado en tiempo real (no hace falta completar los 72)
+  autoGuardarQuiniela();
 }
 
 function actualizarProgreso(){
@@ -917,12 +939,14 @@ async function guardarQuiniela(){
   if(estaCerrada('grupos')){alerta('q-alert','error','La 1era Ronda esta cerrada.');return;}
   if(!usuarioActual&&!modoDemo){alerta('q-alert','error','Primero registrate.');return;}
   const done=PARTIDOS.filter(p=>{const pr=predicciones[p.id];return pr&&pr.l!==undefined&&pr.v!==undefined;}).length;
-  if(done<PARTIDOS.length){alerta('q-alert','error','Faltan '+(PARTIDOS.length-done)+' partidos por completar.');return;}
   try{
     // Rellenar bracket con clasificados ANTES de guardar
     autoRellenarBracketDesdeGrupos();
     await guardarQuinielaCompleta();
-    alerta('q-alert','success','Predicciones guardadas. Ve a 2da Ronda para ver los clasificados precargados.');
+    if(done<PARTIDOS.length)
+      alerta('q-alert','success',`Guardado (${done}/${PARTIDOS.length} partidos). Puedes completar el resto cuando quieras.`);
+    else
+      alerta('q-alert','success','Predicciones guardadas. Ve a 2da Ronda para ver los clasificados precargados.');
   }
   catch(e){alerta('q-alert','error','Error: '+e.message);}
 }
@@ -1445,6 +1469,26 @@ const DEMO_RANK=[
   {alias:'PajaritoPan',nombre:'Luisa Ramos',pts:61,goleador:'Panama'},
 ];
 
+// Carga los resultados oficiales desde Supabase en el formato que espera calcPuntosConDesglose
+async function cargarResultadosReales(){
+  const res={};
+  if(!sbClient)return res;
+  try{
+    const{data}=await sbClient.from('resultados_reales').select('*');
+    if(!data)return res;
+    data.forEach(r=>{
+      if(r.partido_idx===0){ res._goleador=r.ganador||null; }
+      else if(r.partido_idx>=1000){
+        if(!res._bracketRes)res._bracketRes={};
+        res._bracketRes[r.partido_idx-1000]={gl:r.goles_local,gv:r.goles_visita,ganador:r.ganador||''};
+      } else {
+        res[r.partido_idx]={l:r.goles_local,v:r.goles_visita};
+      }
+    });
+  }catch(e){}
+  return res;
+}
+
 async function renderRanking(){
   let data=[];
   if(rankingSimulado&&Array.isArray(rankingSimulado)&&rankingSimulado.length){
@@ -1452,8 +1496,21 @@ async function renderRanking(){
   } else if(modoDemo){
     data=DEMO_RANK;
   } else if(sbClient){
-    const{data:rows}=await sbClient.from('ranking_view').select('*').order('pts',{ascending:false}).limit(100);
-    if(rows&&rows.length)data=rows;
+    // Calcular puntos EN VIVO desde los resultados oficiales + quinielas
+    const resultados=await cargarResultadosReales();
+    const{data:qs}=await sbClient.from('quinielas').select('*');
+    const qmap={};(qs||[]).forEach(q=>{qmap[String(q.participante_id)]=q;});
+    data=participantes.map(p=>{
+      const q=qmap[String(p.id)];
+      let pts=0, gol=p.favorito||null;
+      if(q){
+        const preds=parseMaybeJSON(q.predicciones,{});
+        const brac=parseMaybeJSON(q.bracket,{});
+        gol=q.goleador||null;
+        pts=calcPuntosConDesglose(preds,brac,gol,resultados).total;
+      }
+      return{id:p.id,alias:p.alias||p.nombre,nombre:p.nombre,pts,goleador:gol};
+    });
   }
   // Asegurar que todos los participantes esten en el ranking aunque tengan 0 pts
   if(participantes.length){
@@ -1463,8 +1520,8 @@ async function renderRanking(){
         data.push({id:p.id,alias:p.alias||p.nombre,nombre:p.nombre,pts:0,goleador:p.favorito||null});
       }
     });
-    data.sort((a,b)=>b.pts-a.pts);
   }
+  data.sort((a,b)=>(b.pts||0)-(a.pts||0));
   if(!data.length)data=DEMO_RANK;
   const c=document.getElementById('ranking-container');if(!c)return;
   c.innerHTML=data.map((p,i)=>{
@@ -2119,9 +2176,10 @@ async function cargarCodigos(){
   c.innerHTML=`<p style="font-size:12px;color:var(--muted);margin-bottom:.75rem"><strong>${libres}</strong> disponibles &middot; <strong>${todosCodigos.length-libres}</strong> usados &middot; <strong>${todosCodigos.length}</strong> total</p>`+
     `<div style="display:flex;flex-wrap:wrap;gap:4px">`+
     todosCodigos.map(d=>{const pid=participantes.find(p=>p.codigo===d.codigo)?.id;
-      return `<span class="codigo-chip ${d.usado?'usado':'libre'}" style="cursor:${d.usado?'pointer':'default'}" ${d.usado&&pid?`onclick="verPerfil('${pid}')" title="Ver participante"`:''}>
-        ${d.codigo}${d.usado?' ✓':''}
-      </span>`;
+      if(d.usado){
+        return `<span class="codigo-chip usado" style="cursor:${pid?'pointer':'default'}" ${pid?`onclick="verPerfil('${pid}')" title="Ver participante"`:''}>${d.codigo} ✓</span>`;
+      }
+      return `<span class="codigo-chip libre">${d.codigo}<span onclick="borrarCodigoIndividual('${d.codigo}')" title="Borrar código" style="cursor:pointer;margin-left:6px;font-weight:800;color:#c0392b">✕</span></span>`;
     }).join('')+`</div>`;
 }
 
@@ -2152,26 +2210,51 @@ async function borrarCodigosLibres(){
   const libres=todosCodigos.filter(d=>!d.usado);
   if(!libres.length){alert('No hay codigos libres para borrar.');return;}
   if(!confirm(`¿Borrar ${libres.length} codigos libres? Esta accion no se puede deshacer.`))return;
-  const{error}=await sbClient.from('codigos_participante').delete().eq('usado',false);
+  const{data,error}=await sbClient.from('codigos_participante').delete().eq('usado',false).select();
   if(error){alert('Error: '+error.message);return;}
-  alert(`${libres.length} codigos borrados.`);cargarCodigos();
+  const n=data?data.length:0;
+  if(!n){alert('No se borró ningún código. Falta la política de DELETE en Supabase (ver instrucciones de seguridad).');return;}
+  alert(`${n} codigos borrados.`);cargarCodigos();
 }
 
 async function borrarTodosCodigosLibres(){
   if(!sbClient){alert('Conecta Supabase primero.');return;}
   if(!confirm('¿Borrar TODOS los codigos (libres y usados)? Esta accion no se puede deshacer.'))return;
-  const{error}=await sbClient.from('codigos_participante').delete().neq('id',0);
+  // Filtro siempre-verdadero sobre 'codigo' (no depende de que exista columna 'id')
+  const{data,error}=await sbClient.from('codigos_participante').delete().not('codigo','is',null).select();
   if(error){alert('Error: '+error.message);return;}
-  todosCodigos=[];alert('Todos los codigos borrados.');cargarCodigos();
+  const n=data?data.length:0;
+  if(!n){alert('No se borró ningún código. Con la política "solo libres" los códigos usados no se borran, o falta la política de DELETE en Supabase.');cargarCodigos();return;}
+  todosCodigos=[];alert(`${n} codigos borrados.`);cargarCodigos();
+}
+
+async function borrarCodigoIndividual(codigo){
+  if(!sbClient){alert('Conecta Supabase primero.');return;}
+  if(!confirm(`¿Borrar el código ${codigo}?`))return;
+  // Solo borra si esta libre (coincide con la politica RLS "borrar_codigos_libres")
+  const{data,error}=await sbClient.from('codigos_participante').delete().eq('codigo',codigo).eq('usado',false).select();
+  if(error){alert('Error: '+error.message);return;}
+  if(!data||!data.length){alert('No se borró el código. Puede que ya esté usado, o falta la política de DELETE en Supabase.');return;}
+  alert(`Código ${codigo} borrado.`);cargarCodigos();
 }
 
 async function borrarParticipante(pid){
   if(!confirm('¿Borrar este participante y sus predicciones? Esta accion no se puede deshacer.'))return;
+  const part=participantes.find(p=>String(p.id)===String(pid));
   try{
     if(sbClient){
       await sbClient.from('quinielas').delete().eq('participante_id',pid);
-      const{error}=await sbClient.from('participantes').delete().eq('id',pid);
+      // .select() devuelve las filas realmente borradas: si RLS lo bloquea, viene vacio (sin error)
+      const{data,error}=await sbClient.from('participantes').delete().eq('id',pid).select();
       if(error)throw error;
+      if(!data||!data.length){
+        alert('No se borró el participante. Falta la política de DELETE en Supabase (ver instrucciones de seguridad).');
+        return;
+      }
+      // Liberar el código para que vuelva a estar disponible
+      if(part?.codigo){
+        await sbClient.from('codigos_participante').update({usado:false}).eq('codigo',part.codigo);
+      }
     } else {
       let local=JSON.parse(localStorage.getItem('participantes')||'[]');
       local=local.filter(p=>String(p.id)!==String(pid));
@@ -2180,9 +2263,11 @@ async function borrarParticipante(pid){
     }
     participantes=participantes.filter(p=>String(p.id)!==String(pid));
     actualizarContadores();
-    document.getElementById('perfil-modal').classList.remove('on');
-    alert('Participante borrado exitosamente.');
-    _renderAdminContent();
+    document.getElementById('perfil-modal')?.classList.remove('on');
+    alert('Participante borrado'+(part?.codigo?` y código ${part.codigo} liberado`:'')+'.');
+    if(typeof renderAdminParticipantes==='function')renderAdminParticipantes();
+    else _renderAdminContent();
+    if(typeof cargarCodigos==='function')cargarCodigos();
   } catch(e){alert('Error al borrar: '+e.message);}
 }
 
