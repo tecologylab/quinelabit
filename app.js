@@ -538,9 +538,29 @@ function actualizarContadores(){
 async function guardarQuinielaCompleta(){
   const datos={participante_id:usuarioActual?.id,predicciones:JSON.stringify(predicciones),bracket:JSON.stringify(bracket),goleador,fecha:new Date().toISOString()};
   if(sbClient&&!modoDemo){
-    const{error}=await sbClient.from('quinielas').upsert([datos],{onConflict:'participante_id'});
+    const{data,error}=await sbClient.from('quinielas').upsert([datos],{onConflict:'participante_id'}).select();
     if(error)throw error;
+    if(!data||!data.length)throw new Error('No se guardó (revisa políticas INSERT/UPDATE de quinielas en Supabase).');
   } else {localStorage.setItem('quiniela_'+(usuarioActual?.id||'demo'),JSON.stringify(datos));}
+}
+
+// Autoguardado en tiempo real (con debounce) al editar predicciones
+let _autoQTimer=null;
+function autoGuardarQuiniela(){
+  if(modoDemo||!usuarioActual||!sbClient)return;
+  const s=document.getElementById('q-status');
+  if(s)s.textContent='Guardando…';
+  clearTimeout(_autoQTimer);
+  _autoQTimer=setTimeout(async()=>{
+    try{
+      autoRellenarBracketDesdeGrupos();
+      await guardarQuinielaCompleta();
+      const done=PARTIDOS.filter(p=>{const pr=predicciones[p.id];return pr&&pr.l!==undefined&&pr.v!==undefined;}).length;
+      if(s)s.textContent=`Guardado automático ✓ (${done}/${PARTIDOS.length})`;
+    }catch(e){
+      if(s)s.textContent='Error al guardar: '+e.message;
+    }
+  },700);
 }
 
 
@@ -902,6 +922,8 @@ function setPred(id,lado,val){
   // Si ya estamos viendo el bracket, actualizarlo
   const bracketEl=document.getElementById('bracket-container');
   if(bracketEl&&bracketEl.children.length>0)renderBracket();
+  // Guardado en tiempo real (no hace falta completar los 72)
+  autoGuardarQuiniela();
 }
 
 function actualizarProgreso(){
@@ -917,12 +939,14 @@ async function guardarQuiniela(){
   if(estaCerrada('grupos')){alerta('q-alert','error','La 1era Ronda esta cerrada.');return;}
   if(!usuarioActual&&!modoDemo){alerta('q-alert','error','Primero registrate.');return;}
   const done=PARTIDOS.filter(p=>{const pr=predicciones[p.id];return pr&&pr.l!==undefined&&pr.v!==undefined;}).length;
-  if(done<PARTIDOS.length){alerta('q-alert','error','Faltan '+(PARTIDOS.length-done)+' partidos por completar.');return;}
   try{
     // Rellenar bracket con clasificados ANTES de guardar
     autoRellenarBracketDesdeGrupos();
     await guardarQuinielaCompleta();
-    alerta('q-alert','success','Predicciones guardadas. Ve a 2da Ronda para ver los clasificados precargados.');
+    if(done<PARTIDOS.length)
+      alerta('q-alert','success',`Guardado (${done}/${PARTIDOS.length} partidos). Puedes completar el resto cuando quieras.`);
+    else
+      alerta('q-alert','success','Predicciones guardadas. Ve a 2da Ronda para ver los clasificados precargados.');
   }
   catch(e){alerta('q-alert','error','Error: '+e.message);}
 }
