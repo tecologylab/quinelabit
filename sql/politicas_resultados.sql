@@ -47,11 +47,19 @@ create unique index if not exists resultados_reales_partido_idx_key
   on public.resultados_reales(partido_idx);
 
 -- El trigger after_resultado ejecuta recalcular_puntos() en cada INSERT/UPDATE
--- de resultados_reales. Esa función hace un UPDATE masivo de quinielas (sin
--- WHERE, a propósito: recalcula a TODOS los participantes), lo que choca con
--- el candado sql_safe_updates y devuelve "UPDATE requires a WHERE clause".
--- Permitimos el bulk update solo dentro de esa función:
-alter function public.recalcular_puntos() set sql_safe_updates = off;
+-- de resultados_reales. Esa función hace un UPDATE sin WHERE que la base
+-- rechaza ("UPDATE requires a WHERE clause") y revierte el guardado.
+--
+-- OPCIÓN A (rápida, recomendada): desactivar el trigger. El ranking calcula
+-- los puntos EN VIVO desde resultados_reales (ver renderRanking en app.js),
+-- así que no se pierde funcionalidad. (quinielas.puntos dejará de
+-- auto-actualizarse del lado del servidor, pero el ranking no lo usa.)
+alter table public.resultados_reales disable trigger after_resultado;
+
+-- OPCIÓN B (de fondo): corregir recalcular_puntos() para que su UPDATE tenga
+-- WHERE y reactivar el trigger. Requiere ver la definición de la función:
+--   select pg_get_functiondef('public.recalcular_puntos'::regproc);
+--   alter table public.resultados_reales enable trigger after_resultado;
 
 -- Forzar a PostgREST a recargar el esquema (por si no lo hace solo)
 notify pgrst, 'reload schema';
