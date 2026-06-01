@@ -46,6 +46,13 @@ end $$;
 create unique index if not exists resultados_reales_partido_idx_key
   on public.resultados_reales(partido_idx);
 
+-- El trigger after_resultado ejecuta recalcular_puntos() en cada INSERT/UPDATE
+-- de resultados_reales. Esa función hace un UPDATE masivo de quinielas (sin
+-- WHERE, a propósito: recalcula a TODOS los participantes), lo que choca con
+-- el candado sql_safe_updates y devuelve "UPDATE requires a WHERE clause".
+-- Permitimos el bulk update solo dentro de esa función:
+alter function public.recalcular_puntos() set sql_safe_updates = off;
+
 -- Forzar a PostgREST a recargar el esquema (por si no lo hace solo)
 notify pgrst, 'reload schema';
 
