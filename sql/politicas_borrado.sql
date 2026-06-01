@@ -42,9 +42,9 @@ create policy "borrar_participantes" on public.participantes
 -- El SQL Editor corre con privilegios elevados, así que esto funciona
 -- aunque las políticas de arriba no existan. Descomentar para usar:
 -- ---------------------------------------------------------------------
--- delete from quinielas;
--- delete from participantes;
--- update codigos_participante set usado = false;   -- libera todos los códigos
+-- delete from quinielas where true;
+-- delete from participantes where true;
+-- update codigos_participante set usado = false where true;   -- libera todos los códigos
 -- -- o, si los códigos también eran de prueba:
--- -- delete from codigos_participante;
+-- -- delete from codigos_participante where true;
 -- =====================================================================
