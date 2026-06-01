@@ -480,6 +480,7 @@ async function registrar(){
       local.push(nuevo);localStorage.setItem('participantes',JSON.stringify(local));usuarioActual=nuevo;
     }
     participantes.push(usuarioActual);actualizarContadores();
+    guardarSesion(email,codigo);
     mostrarUsuario(usuarioActual.alias||usuarioActual.nombre);
     alerta('reg-alert','success','Bienvenido '+alias+'. Llena tus predicciones.');
   }catch(e){alerta('reg-alert','error',e.message||'Error de registro.');}
@@ -509,6 +510,7 @@ async function login(){
       if(q){const qd=JSON.parse(q);predicciones=parseMaybeJSON(qd.predicciones,{});bracket=parseMaybeJSON(qd.bracket,{});goleador=qd.goleador||null;}
       else{predicciones={};bracket={};goleador=null;}
     }
+    guardarSesion(email,codigo);
     mostrarUsuario(usuarioActual.alias||usuarioActual.nombre);
     alerta('login-alert','success','Bienvenido de vuelta '+( usuarioActual.alias||usuarioActual.nombre)+'.');
     renderGrupoTabs();renderPartidosGrupo();renderBracket();renderGoleador();
@@ -521,6 +523,36 @@ function mostrarUsuario(nombre){
   document.getElementById('uini').textContent=ini;
   document.getElementById('unombre').textContent=nombre.split(' ')[0];
   document.getElementById('uchip').classList.add('on');
+}
+
+// ============================================================
+// SESION LOCAL (recordar correo+codigo para auto-login)
+// ============================================================
+function guardarSesion(email,codigo){
+  try{localStorage.setItem('bit_sesion',JSON.stringify({email,codigo}));}catch(e){}
+}
+function borrarSesion(){try{localStorage.removeItem('bit_sesion');}catch(e){}}
+
+async function autoLoginSesion(){
+  const s=parseMaybeJSON(localStorage.getItem('bit_sesion'),null);
+  if(!s||!s.email||!s.codigo||!sbClient||usuarioActual)return;
+  try{
+    const{data}=await sbClient.from('participantes').select('*').eq('email',s.email).eq('codigo',s.codigo).maybeSingle();
+    if(!data){borrarSesion();return;} // codigo cambiado/borrado: limpiar sesion
+    usuarioActual=data;
+    const{data:q}=await sbClient.from('quinielas').select('*').eq('participante_id',data.id).maybeSingle();
+    if(q){predicciones=parseMaybeJSON(q.predicciones,{});bracket=parseMaybeJSON(q.bracket,{});goleador=q.goleador||null;}
+    mostrarUsuario(usuarioActual.alias||usuarioActual.nombre);
+    renderGrupoTabs();renderPartidosGrupo();renderBracket();renderGoleador();
+  }catch(e){}
+}
+
+function cerrarSesion(){
+  borrarSesion();
+  usuarioActual=null;predicciones={};bracket={};goleador=null;
+  document.getElementById('uchip').classList.remove('on');
+  renderGrupoTabs();renderPartidosGrupo();renderBracket();renderGoleador();
+  const reg=document.querySelector('.nav-btn');if(reg)goSec('registro',reg);
 }
 async function cargarParticipantes(){
   if(sbClient){const{data}=await sbClient.from('participantes').select('*');participantes=data||[];}
@@ -2375,6 +2407,7 @@ async function init(){
   await cargarSDK();await autoConectar();await cargarConfiguracion();aplicarCierreUI();cargarAdsGuardados();cargarMayorias();
   // Cargar resultados oficiales para mostrar marcador real + puntos por partido en 1era Ronda
   if(sbClient){window._resOficiales=await cargarResultadosReales();renderPartidosGrupo();renderGoleador();renderBracket();}
+  await autoLoginSesion();
 }
 document.addEventListener('DOMContentLoaded',init);function calcTablaGrupoReal(g){
   const equipos=GRUPOS[g];
