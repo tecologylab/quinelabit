@@ -861,9 +861,9 @@ function renderPartidosGrupo(){
       <div class="prow">
         <div class="ecol">${flagBadge(p.l,20)}<span class="ename">${p.l}</span></div>
         <div class="sinputs">
-          <input type="number" min="0" max="20" value="${lv}" placeholder="?" class="sinput${pr.l!==undefined?' v':''}" ${cerrada?'disabled':''} oninput="setPred(${p.id},'l',this.value)">
+          <input type="number" min="0" max="20" value="${lv}" placeholder="?" class="sinput${pr.l!==undefined?' v':''}" ${cerrada?'disabled':''} onkeydown="if(['-','+','e','E'].includes(event.key))event.preventDefault()" oninput="setPred(${p.id},'l',this.value)">
           <span class="ssep">–</span>
-          <input type="number" min="0" max="20" value="${vv}" placeholder="?" class="sinput${pr.v!==undefined?' v':''}" ${cerrada?'disabled':''} oninput="setPred(${p.id},'v',this.value)">
+          <input type="number" min="0" max="20" value="${vv}" placeholder="?" class="sinput${pr.v!==undefined?' v':''}" ${cerrada?'disabled':''} onkeydown="if(['-','+','e','E'].includes(event.key))event.preventDefault()" oninput="setPred(${p.id},'v',this.value)">
         </div>
         <div class="ecol r" style="justify-content:flex-end;margin-left:auto"><span class="ename">${p.v}</span>${flagBadge(p.v,20)}</div>
       </div>
