@@ -1947,7 +1947,7 @@ function getPaisesParaSlot(m,lado){const s=getPaisesSlot(m,lado);return s?s:null
 function activarDemo(){
   modoDemo=true;
   document.getElementById('demo-banner').classList.add('on');
-  document.getElementById('demo-fab').style.display='none';
+  const _dfOn=document.getElementById('demo-fab');if(_dfOn)_dfOn.style.display='none';
   usuarioActual={id:'demo',nombre:'Demo Usuario',alias:'DemoFan2026',email:'demo@bit.com',codigo:'BIT-DEMO0'};
   mostrarUsuario('DemoFan2026');
   predicciones={};bracket={};goleador='Brasil';
@@ -2073,7 +2073,7 @@ function activarDemo(){
 function salirDemo(){
   modoDemo=false;predicciones={};bracket={};goleador=null;usuarioActual=null;rankingSimulado=null;
   document.getElementById('demo-banner').classList.remove('on');
-  document.getElementById('demo-fab').style.display='';
+  const _dfOff=document.getElementById('demo-fab');if(_dfOff)_dfOff.style.display='';
   document.getElementById('uchip').classList.remove('on');
   renderGrupoTabs();renderPartidosGrupo();renderBracket();renderGoleador();renderRanking();actualizarContadores();aplicarCierreUI();
 }
