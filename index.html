@@ -383,7 +383,6 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
     <button class="nav-btn" onclick="goSec('segunda',this)">2da Ronda</button>
     <button class="nav-btn" onclick="goSec('goleador',this)">País Goleador</button>
     <button class="nav-btn" onclick="goSec('ranking',this)">Ranking</button>
-    <a href="admin.html" class="nav-btn" style="display:flex;align-items:center;text-decoration:none;height:48px">Admin</a>
   </nav>
 </div>
 
@@ -706,9 +705,9 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
     <div id="modal-opts"></div>
     <div class="modal-score-row">
       <label>Marcador:</label>
-      <input type="number" class="mscore" id="modal-gl" min="0" max="20" placeholder="0">
+      <input type="number" class="mscore" id="modal-gl" min="0" max="20" placeholder="0" onkeydown="if(['-','+','e','E'].includes(event.key))event.preventDefault()">
       <span style="font-size:20px;font-weight:700;color:var(--muted)">–</span>
-      <input type="number" class="mscore" id="modal-gv" min="0" max="20" placeholder="0">
+      <input type="number" class="mscore" id="modal-gv" min="0" max="20" placeholder="0" onkeydown="if(['-','+','e','E'].includes(event.key))event.preventDefault()">
     </div>
     <div id="modal-pen-msg" class="pen-msg" style="display:none">Selecciona el ganador en penales para continuar.</div>
     <div class="modal-actions">
@@ -743,6 +742,6 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 
 
 
-<script src="app.js?v=20260601i"></script>
+<script src="app.js?v=20260601j"></script>
 </body>
 </html>
