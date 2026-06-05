@@ -1373,6 +1373,7 @@ function abrirModal(bid){
     html+=`<div class="modal-equipos-fijos" style="flex-direction:column;gap:6px">`;
     renderSlotAvanzado('v');
     html+=`</div>`;
+    html+=`<div style="margin-top:.75rem;padding:8px 10px;background:#fffbf0;border:1px solid #f0cb6a;border-radius:6px;font-size:11px;color:#7a5500;line-height:1.4">💡 Si eliges manualmente, selecciona los equipos que avanzaron de los partidos correspondientes de la ronda anterior, respetando el mismo orden del bracket.</div>`;
   }
 
   document.getElementById('modal-opts').innerHTML=html;
