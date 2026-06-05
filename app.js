@@ -426,7 +426,12 @@ function aplicarConfigVisual(cfg){
     const val=cfg['ad_zona'+z];
     const zona=document.getElementById('ad-zona'+z);
     const contenido=document.getElementById('ad-zona'+z+'-content');
-    if(val&&zona&&contenido){contenido.innerHTML=val;zona.style.display='';}
+    if(val&&zona&&contenido){
+      contenido.innerHTML=val;
+      // Quitar el recuadro placeholder (borde punteado) al mostrar el anuncio real
+      contenido.style.border='none';contenido.style.background='none';contenido.style.minHeight='0';contenido.style.padding='0';
+      zona.style.display='';
+    }
   });
   // Premios
   window._configVisual=cfg;
@@ -2360,6 +2365,7 @@ function aplicarConfig(){
         ?`<img src="${val}" style="max-width:100%;height:auto;display:block;margin:0 auto">`
         :val;
       contenido.innerHTML=html;
+      contenido.style.border='none';contenido.style.background='none';contenido.style.minHeight='0';contenido.style.padding='0';
       zona.style.display='';
       localStorage.setItem('ad_zona'+z,html);
     }
