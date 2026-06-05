@@ -1309,81 +1309,59 @@ function abrirModal(bid){
 
     const renderSlotAvanzado=(lado)=>{
       const feederBid=feeders[lado];
-      const equipoActual=b[lado]||null;
-
-      // Partido 103 (3er lugar) — usar perdedores de semis
+      const guardado=b[lado]||null;
       const esTercerLugar=bid===103;
-      const feederBid103={l:101,v:102};
+      let sugerido=null, posibles=[], etiquetaActual='Equipo', etiquetaPend='Partido anterior';
 
       if(esTercerLugar){
-        const semifinal=feederBid103[lado];
+        const semifinal={l:101,v:102}[lado];
         const sf=bracket[semifinal]||{};
-        const posibles=[sf.l,sf.v].filter(Boolean);
+        posibles=[sf.l,sf.v].filter(Boolean);
         const ganadorSF=getGanador(semifinal);
-        const perdedorSF=ganadorSF?(ganadorSF===sf.l?sf.v:sf.l):null;
-        if(perdedorSF){
-          html+=`<div class="equipo-fijo">
-            ${flagBadge(perdedorSF,24)}
-            <div>
-              <div class="ef-nombre">${perdedorSF}</div>
-              <div class="ef-label">Perdedor Semifinal ${semifinal}</div>
-            </div>
-          </div>`;
-          html+=`<div class="modal-opt sel" data-lado="${lado}" data-eq="${perdedorSF}" style="display:none"></div>`;
-        } else if(posibles.length===2){
-          html+=`<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Perdedor de Semifinal ${semifinal}</div>`;
-          posibles.forEach(eq=>{
-            html+=`<div class="modal-opt${b[lado]===eq?' sel':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
-              ${flagBadge(eq,20)} <span>${eq}</span>
-            </div>`;
-          });
-        } else {
-          html+=`<div class="equipo-fijo pendiente">
-            <span class="bq" style="width:36px;height:24px;font-size:12px">?</span>
-            <div><div class="ef-nombre">Pendiente</div><div class="ef-label">Completa Semifinal ${semifinal} primero</div></div>
-          </div>`;
-        }
-        return;
+        sugerido=ganadorSF?(ganadorSF===sf.l?sf.v:sf.l):null;
+        etiquetaActual='Perdedor Semifinal '+semifinal;
+        etiquetaPend='Completa Semifinal '+semifinal+' primero';
+      } else if(feederBid){
+        const fb=bracket[feederBid]||{};
+        posibles=[fb.l,fb.v].filter(Boolean);
+        sugerido=getGanador(feederBid);
+        etiquetaActual='Ganador partido '+feederBid;
+        etiquetaPend='Completa partido '+feederBid+' primero';
       }
 
-      if(!feederBid){
-        // No hay feeder mapeado — mostrar equipo actual como fijo
-        html+=`<div class="equipo-fijo${!equipoActual?' pendiente':''}">
-          ${equipoActual?flagBadge(equipoActual,24):'<span class="bq" style="width:36px;height:24px;font-size:12px">?</span>'}
-          <div><div class="ef-nombre">${equipoActual||'Pendiente'}</div><div class="ef-label">Partido anterior</div></div>
-        </div>`;
-        if(equipoActual)html+=`<div class="modal-opt sel" data-lado="${lado}" data-eq="${equipoActual}" style="display:none"></div>`;
-        return;
-      }
-      const fb=bracket[feederBid]||{};
-      const ganadorFeeder=getGanador(feederBid);
-      const posiblesEquipos=[fb.l,fb.v].filter(Boolean);
-
-      if(ganadorFeeder){
-        // Ganador ya determinado — mostrar como fijo
+      if(sugerido){
+        // Feeder decidido: equipo propagado (o el guardado si hubo override manual)
+        const eq=guardado||sugerido;
+        const manual=eq!==sugerido;
         html+=`<div class="equipo-fijo">
-          ${flagBadge(ganadorFeeder,24)}
-          <div>
-            <div class="ef-nombre">${ganadorFeeder}</div>
-            <div class="ef-label">Ganador partido ${feederBid}</div>
-          </div>
+          ${flagBadge(eq,24)}
+          <div><div class="ef-nombre">${eq}</div><div class="ef-label">${manual?'Selección manual':etiquetaActual}</div></div>
         </div>`;
-        html+=`<div class="modal-opt sel" data-lado="${lado}" data-eq="${ganadorFeeder}" style="display:none"></div>`;
-      } else if(posiblesEquipos.length===2){
-        // Partido anterior tiene equipos pero sin marcador — mostrar los 2 como opcion
-        html+=`<div style="font-size:11px;color:var(--muted);margin-bottom:6px">¿Quién ganará el partido ${feederBid}?</div>`;
-        posiblesEquipos.forEach(eq=>{
-          html+=`<div class="modal-opt${b[lado]===eq?' sel':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
+        html+=`<div class="modal-opt sel" data-lado="${lado}" data-eq="${eq}" style="display:none"></div>`;
+      } else if(posibles.length===2){
+        // Feeder con equipos pero sin ganador: elegir entre los 2
+        html+=`<div style="font-size:11px;color:var(--muted);margin-bottom:6px">${esTercerLugar?'Perdedor de Semifinal':('¿Quién ganará el partido '+feederBid+'?')}</div>`;
+        posibles.forEach(eq=>{
+          html+=`<div class="modal-opt${guardado===eq?' sel':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
             ${flagBadge(eq,20)} <span>${eq}</span>
           </div>`;
         });
+      } else if(guardado){
+        // Override manual sin info del feeder aún
+        html+=`<div class="equipo-fijo">
+          ${flagBadge(guardado,24)}
+          <div><div class="ef-nombre">${guardado}</div><div class="ef-label">Selección manual</div></div>
+        </div>`;
+        html+=`<div class="modal-opt sel" data-lado="${lado}" data-eq="${guardado}" style="display:none"></div>`;
       } else {
-        // Partido anterior no tiene equipos aún
         html+=`<div class="equipo-fijo pendiente">
           <span class="bq" style="width:36px;height:24px;font-size:12px">?</span>
-          <div><div class="ef-nombre">Pendiente</div><div class="ef-label">Completa partido ${feederBid} primero</div></div>
+          <div><div class="ef-nombre">Pendiente</div><div class="ef-label">${etiquetaPend}</div></div>
         </div>`;
       }
+      // Override manual: elegir CUALQUIER equipo (por si se equivocó en la ronda previa)
+      html+=`<button type="button" class="pred-info-link" style="margin-top:6px" onclick="mostrarSelectorManual('${lado}')">✏️ Elegir otro equipo manualmente</button>`;
+      html+=`<div id="manual-sel-${lado}"></div>`;
     };
 
     html+=`<div class="modal-sec-title">Equipo local</div>`;
@@ -1453,6 +1431,21 @@ function selOpt(el){
   document.querySelectorAll(`.modal-opt[data-lado="${lado}"]`).forEach(o=>o.classList.remove('sel'));
   el.classList.add('sel');
   actualizarModalSelbar();
+}
+
+// Despliega un selector de CUALQUIER equipo para override manual en R16+
+function mostrarSelectorManual(lado){
+  const cont=document.getElementById('manual-sel-'+lado);
+  if(!cont)return;
+  if(cont.dataset.open==='1'){cont.innerHTML='';cont.dataset.open='';return;}
+  let h='<div style="font-size:11px;color:var(--oro);font-weight:700;margin:8px 0 4px">Selección manual — elige cualquier equipo:</div>';
+  Object.keys(GRUPOS).forEach(g=>{
+    h+=`<div class="modal-grupo-lbl">Grupo ${g}</div>`;
+    GRUPOS[g].forEach(eq=>{
+      h+=`<div class="modal-opt" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">${flagBadge(eq,20)} <span>${g} — ${eq}</span></div>`;
+    });
+  });
+  cont.innerHTML=h;cont.dataset.open='1';
 }
 
 // Refleja los equipos elegidos en la barra fija de arriba (junto al marcador)
