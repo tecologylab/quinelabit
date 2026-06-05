@@ -464,6 +464,7 @@ async function cargarConfigAdmin() {
     if (el && valor) el.value = new Date(valor).toISOString().slice(0, 16);
   };
   setFecha('cfg-fecha-cierre', configGlobal.fecha_cierre);
+  setFecha('cfg-fecha-grupos', configGlobal.fecha_cierre_grupos);
   setFecha('cfg-fecha-r32', configGlobal.fecha_cierre_r32);
   setFecha('cfg-fecha-r16', configGlobal.fecha_cierre_r16);
   setFecha('cfg-fecha-qf', configGlobal.fecha_cierre_qf);

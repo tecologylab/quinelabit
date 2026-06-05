@@ -11,6 +11,11 @@
 -- sitio público lee la config vieja (abierta).
 -- =====================================================================
 
+-- Columna propia para el cierre de la 1era ronda (grupos), separada del
+-- cierre global `fecha_cierre`. Sin esto, cerrar la 1era ronda cerraba TODO
+-- porque compartían la misma columna.
+alter table public.configuracion add column if not exists fecha_cierre_grupos timestamptz;
+
 -- Lectura (el sitio público lee la config para saber si está cerrada)
 drop policy if exists "leer_configuracion" on public.configuracion;
 create policy "leer_configuracion" on public.configuracion

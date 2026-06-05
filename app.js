@@ -321,7 +321,7 @@ function estaCerrada(ronda=null){
   // Cierre por ronda
   if(ronda){
     const mapaCierre={
-      'grupos':'fecha_cierre',
+      'grupos':'fecha_cierre_grupos',
       'r32':'fecha_cierre_r32',
       'r16':'fecha_cierre_r16',
       'qf':'fecha_cierre_qf',
@@ -367,6 +367,7 @@ async function cargarConfiguracion(){
         configGlobal={
           permitir_edicion:data.permitir_edicion!==false,
           fecha_cierre:data.fecha_cierre||null,
+          fecha_cierre_grupos:data.fecha_cierre_grupos||null,
           fecha_cierre_r32:data.fecha_cierre_r32||null,
           fecha_cierre_r16:data.fecha_cierre_r16||null,
           fecha_cierre_qf:data.fecha_cierre_qf||null,
@@ -443,8 +444,9 @@ async function guardarConfiguracionAdmin(){
   const toISO=s=>s?new Date(s).toISOString():null;
   const permitir=v('cfg-permitir-edicion')==='true';
   const payload={
-    fecha_cierre: toISO(v('cfg-fecha-cierre')||v('cfg-fecha-grupos')),
+    fecha_cierre: toISO(v('cfg-fecha-cierre')),
     permitir_edicion: permitir,
+    fecha_cierre_grupos: toISO(v('cfg-fecha-grupos')),
     fecha_cierre_r32: toISO(v('cfg-fecha-r32')),
     fecha_cierre_r16: toISO(v('cfg-fecha-r16')),
     fecha_cierre_qf: toISO(v('cfg-fecha-qf')),
@@ -851,7 +853,7 @@ function selGrupo(g){grupoActivo=g;renderGrupoTabs();renderPartidosGrupo();}
 
 function renderPartidosGrupo(){
   const c=document.getElementById('partidos-container');if(!c)return;
-  const cerrada=estaCerrada();
+  const cerrada=estaCerrada('grupos');
   const ps=PARTIDOS.filter(p=>p.g===grupoActivo);
   let pHtml='';let fa='';
   ps.forEach(p=>{
@@ -963,7 +965,7 @@ function renderTablaGrupo(grupo){
 }
 
 function setPred(id,lado,val){
-  if(estaCerrada())return;
+  if(estaCerrada('grupos'))return;
   const num=parseInt(val,10);
   if(!predicciones[id])predicciones[id]={};
   if(!isNaN(num)&&num>=0&&num<=20)predicciones[id][lado]=num;
