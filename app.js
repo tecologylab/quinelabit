@@ -1100,7 +1100,7 @@ function matchCard(m,ronda){
   const ganador=getGanador(m.bid);
   const esEmpate=ok&&gl===gv;
   const penales=b.penales||null;
-  const cerrada=estaCerrada();
+  const cerrada=estaCerrada(ronda.id);
   const resB=(resultadosAdmin._bracketRes&&resultadosAdmin._bracketRes[m.bid])
     ||(rankingSimulado&&rankingSimulado._resultados&&rankingSimulado._resultados._bracketRes&&rankingSimulado._resultados._bracketRes[m.bid])
     ||(window._resOficiales&&window._resOficiales._bracketRes&&window._resOficiales._bracketRes[m.bid])
@@ -1252,16 +1252,17 @@ function renderBracket(){
 }
 
 function abrirModal(bid){
-  if(estaCerrada()){alert('La quiniela esta cerrada.');return;}
   let m=null,ronda=null;
   for(const r of BRACKET_RONDAS){const f=r.partidos.find(x=>x.bid===bid);if(f){m={...f,pts_ex:r.pts_ex};ronda=r;break;}}
   if(!m)return;
-  modalActivo={bid,match:m};
+  if(estaCerrada(ronda.id)){alert('Esta ronda ya está cerrada.');return;}
+  modalActivo={bid,match:m,ronda:ronda.id};
   const b=bracket[bid]||{};
   document.getElementById('modal-title').textContent='Partido '+bid+' — '+m.desc;
   document.getElementById('modal-gl').value=b.gl!==undefined?b.gl:'';
   document.getElementById('modal-gv').value=b.gv!==undefined?b.gv:'';
   document.getElementById('modal-pen-msg').style.display='none';
+  const _ps=document.getElementById('penales-section');if(_ps)_ps.innerHTML='';
 
   const esR32=ronda.id==='r32';
   const slotL=getPaisesSlot(m,'l');
@@ -1413,13 +1414,15 @@ function actualizarPenalesModal(){
 
   if(esEmpate&&lTeam&&vTeam){
     penSection.innerHTML=`
-      <div style="height:1px;background:var(--borde);margin:.75rem 0"></div>
-      <div class="modal-sec-title" style="color:#c0392b">Empate — ¿Quién gana en penales?</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:.5rem">Obligatorio para continuar</div>
-      ${[lTeam,vTeam].map(eq=>`
-        <div class="modal-opt${b.penales===eq?' sel':''}" data-lado="pen" data-eq="${eq}" onclick="selOpt(this)">
-          ${flagBadge(eq,20)} <span>${eq}</span>
-        </div>`).join('')}`;
+      <div style="background:#fef0f0;border:1px solid #f5b7b1;border-radius:6px;padding:8px 10px;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:700;color:#c0392b">⚽ Empate — ¿quién gana en penales? <span style="font-weight:400;font-size:11px">(obligatorio)</span></div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          ${[lTeam,vTeam].map(eq=>`
+            <div class="modal-opt${b.penales===eq?' sel':''}" data-lado="pen" data-eq="${eq}" onclick="selOpt(this)" style="flex:1">
+              ${flagBadge(eq,18)} <span>${eq}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
     document.getElementById('modal-pen-msg').style.display='none';
   } else {
     penSection.innerHTML='';
@@ -1459,7 +1462,8 @@ function actualizarModalSelbar(){
 }
 
 function confirmarModal(){
-  if(estaCerrada())return;if(!modalActivo)return;
+  if(!modalActivo)return;
+  if(estaCerrada(modalActivo.ronda))return;
   const bid=modalActivo.bid;
   if(!bracket[bid])bracket[bid]={};
   const selL=document.querySelector('.modal-opt[data-lado="l"].sel');
