@@ -1398,6 +1398,7 @@ function abrirModal(bid){
   }
 
   document.getElementById('modal-opts').innerHTML=html;
+  actualizarModalSelbar();
   document.getElementById('bracket-modal').classList.add('on');
 
   // Actualizar penales en tiempo real al cambiar marcador
@@ -1451,6 +1452,16 @@ function selOpt(el){
   const lado=el.dataset.lado;
   document.querySelectorAll(`.modal-opt[data-lado="${lado}"]`).forEach(o=>o.classList.remove('sel'));
   el.classList.add('sel');
+  actualizarModalSelbar();
+}
+
+// Refleja los equipos elegidos en la barra fija de arriba (junto al marcador)
+function actualizarModalSelbar(){
+  const selL=document.querySelector('.modal-opt[data-lado="l"].sel');
+  const selV=document.querySelector('.modal-opt[data-lado="v"].sel');
+  const lEl=document.getElementById('msel-l');const vEl=document.getElementById('msel-v');
+  if(lEl)lEl.innerHTML=selL?(flagBadge(selL.dataset.eq,18)+' '+selL.dataset.eq):'Local';
+  if(vEl)vEl.innerHTML=selV?(flagBadge(selV.dataset.eq,18)+' '+selV.dataset.eq):'Visitante';
 }
 
 function confirmarModal(){

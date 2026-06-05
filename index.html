@@ -173,7 +173,11 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 .mscore{width:52px;height:40px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;border:2px solid var(--borde);border-radius:6px;background:#fff;color:var(--text);-moz-appearance:textfield;padding:0}
 .mscore::-webkit-outer-spin-button,.mscore::-webkit-inner-spin-button{-webkit-appearance:none}
 .mscore:focus{outline:none;border-color:var(--verde)}
-.modal-actions{display:flex;gap:8px;margin-top:1rem}
+.modal-actions{display:flex;gap:8px;margin-top:1rem;position:sticky;bottom:0;background:var(--card);padding-top:8px}
+/* Barra fija con equipos seleccionados + marcador, siempre visible arriba */
+.modal-selbar{position:sticky;top:0;z-index:6;background:var(--card);display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--borde);margin-bottom:4px}
+.modal-selbar .msel{flex:1;font-size:12px;font-weight:700;color:var(--verde);display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden}
+.modal-selbar .msel-r{justify-content:flex-end;text-align:right}
 
 /* MODAL PERFIL */
 .perfil-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem}
@@ -702,13 +706,15 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
   <div class="modal">
     <button class="modal-close" onclick="cerrarModal()">×</button>
     <div class="modal-title" id="modal-title">Seleccionar partido</div>
-    <div id="modal-opts"></div>
-    <div class="modal-score-row">
-      <label>Marcador:</label>
+    <div class="modal-selbar" id="modal-selbar">
+      <div class="msel" id="msel-l">Local</div>
       <input type="number" class="mscore" id="modal-gl" min="0" max="20" placeholder="0" onkeydown="if(['-','+','e','E'].includes(event.key))event.preventDefault()">
-      <span style="font-size:20px;font-weight:700;color:var(--muted)">–</span>
+      <span style="font-size:18px;font-weight:700;color:var(--muted)">–</span>
       <input type="number" class="mscore" id="modal-gv" min="0" max="20" placeholder="0" onkeydown="if(['-','+','e','E'].includes(event.key))event.preventDefault()">
+      <div class="msel msel-r" id="msel-v">Visitante</div>
     </div>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:6px">Elige los equipos abajo · el marcador va arriba ↑</div>
+    <div id="modal-opts"></div>
     <div id="modal-pen-msg" class="pen-msg" style="display:none">Selecciona el ganador en penales para continuar.</div>
     <div class="modal-actions">
       <button class="btn-save" style="flex:1" id="modal-confirm-btn" onclick="confirmarModal()">Confirmar</button>
@@ -740,6 +746,6 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 
 
 
-<script src="app.js?v=20260601n"></script>
+<script src="app.js?v=20260601o"></script>
 </body>
 </html>
