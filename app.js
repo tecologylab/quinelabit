@@ -439,18 +439,33 @@ function aplicarConfigVisual(cfg){
 }
 
 async function guardarConfiguracionAdmin(){
-  const fecha=document.getElementById('cfg-fecha-cierre')?.value||null;
-  const permitir=document.getElementById('cfg-permitir-edicion')?.value==='true';
-  const payload={fecha_cierre:fecha?new Date(fecha).toISOString():null,permitir_edicion:permitir};
+  const v=id=>document.getElementById(id)?.value||'';
+  const toISO=s=>s?new Date(s).toISOString():null;
+  const permitir=v('cfg-permitir-edicion')==='true';
+  const payload={
+    fecha_cierre: toISO(v('cfg-fecha-cierre')||v('cfg-fecha-grupos')),
+    permitir_edicion: permitir,
+    fecha_cierre_r32: toISO(v('cfg-fecha-r32')),
+    fecha_cierre_r16: toISO(v('cfg-fecha-r16')),
+    fecha_cierre_qf: toISO(v('cfg-fecha-qf')),
+    fecha_cierre_sf: toISO(v('cfg-fecha-sf')),
+    fecha_cierre_final: toISO(v('cfg-fecha-final')),
+  };
+  const nuevaPass=v('cfg-admin-pass').trim();
+  if(nuevaPass)payload.admin_password=nuevaPass;
   try{
     if(sbClient){
       const{data:ex}=await sbClient.from('configuracion').select('id').limit(1).maybeSingle();
-      if(ex?.id){const{error}=await sbClient.from('configuracion').update(payload).eq('id',ex.id);if(error)throw error;}
-      else{const{error}=await sbClient.from('configuracion').insert([payload]);if(error)throw error;}
+      let res;
+      if(ex?.id){res=await sbClient.from('configuracion').update(payload).eq('id',ex.id).select();}
+      else{res=await sbClient.from('configuracion').insert([payload]).select();}
+      if(res.error)throw res.error;
+      if(!res.data||!res.data.length)throw new Error('No se guardó: falta política UPDATE/INSERT en `configuracion` (RLS) en Supabase.');
     } else {localStorage.setItem('configuracion_local',JSON.stringify(payload));}
-    configGlobal=payload;aplicarCierreUI();
+    configGlobal={...configGlobal,...payload};aplicarCierreUI();
     renderPartidosGrupo();renderBracket();renderGoleador();
-    alerta('cfg-alert','success','Configuracion guardada.');
+    const cerrada=estaCerrada();
+    alerta('cfg-alert','success','Configuración guardada.'+(cerrada?' La quiniela quedó CERRADA.':' La quiniela está ABIERTA.'));
   }catch(e){alerta('cfg-alert','error','Error: '+e.message);}
 }
 
