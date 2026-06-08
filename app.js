@@ -347,8 +347,8 @@ function textoCierreRonda(ronda){
   const f=fechaCierreRonda(ronda);
   if(!f)return '';
   const fecha=new Date(f);
-  const fmt=fecha.toLocaleString('es-PA',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-  return (new Date()>fecha)?('🔒 Cerró el '+fmt):('⏰ Cierra: '+fmt);
+  const fmt=fecha.toLocaleString('es-PA',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'America/Panama'});
+  return (new Date()>fecha)?('🔒 Cerró el '+fmt+' (hora Panamá)'):('⏰ Cierra: '+fmt+' (hora Panamá)');
 }
 function aplicarCierreUI(){
   const cerrada=estaCerrada();
@@ -458,7 +458,8 @@ function aplicarConfigVisual(cfg){
 
 async function guardarConfiguracionAdmin(){
   const v=id=>document.getElementById(id)?.value||'';
-  const toISO=s=>s?new Date(s).toISOString():null;
+  // El input datetime-local se interpreta SIEMPRE como hora de Panamá (UTC-5, sin horario de verano)
+  const toISO=s=>{ if(!s)return null; const conSeg=s.length===16?s+':00':s; return new Date(conSeg+'-05:00').toISOString(); };
   const permitir=v('cfg-permitir-edicion')==='true';
   const payload={
     fecha_cierre: toISO(v('cfg-fecha-cierre')),

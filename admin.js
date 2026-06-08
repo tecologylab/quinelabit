@@ -458,10 +458,13 @@ async function cargarConfigAdmin() {
     } catch(e) {}
   }
 
-  // Fechas de cierre
+  // Fechas de cierre — mostrar en hora de Panamá (UTC-5) en el input
   const setFecha = (id, valor) => {
     const el = document.getElementById(id);
-    if (el && valor) el.value = new Date(valor).toISOString().slice(0, 16);
+    if (el && valor) {
+      const pan = new Date(new Date(valor).getTime() - 5 * 3600 * 1000);
+      el.value = pan.toISOString().slice(0, 16);
+    }
   };
   setFecha('cfg-fecha-cierre', configGlobal.fecha_cierre);
   setFecha('cfg-fecha-grupos', configGlobal.fecha_cierre_grupos);
