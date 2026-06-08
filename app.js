@@ -904,13 +904,27 @@ function renderGrupoTabs(){
 }
 function selGrupo(g){grupoActivo=g;renderGrupoTabs();renderPartidosGrupo();}
 
+// Cierre automático por partido: cada partido de grupos cierra 1h antes de su inicio.
+// La hora de los partidos está en ET (EDT = UTC-4 durante el Mundial jun/jul 2026).
+function kickoffPartido(p){
+  if(!p||!p.f||!p.h)return null;
+  const d=new Date(`${p.f}T${p.h}:00-04:00`);
+  return isNaN(d.getTime())?null:d;
+}
+function partidoCerrado(p){
+  if(modoDemo)return false;
+  if(estaCerrada('grupos'))return true; // cierre global/ronda lo cierra todo
+  const ko=kickoffPartido(p);
+  return !!(ko && Date.now() > ko.getTime()-60*60*1000);
+}
+
 function renderPartidosGrupo(){
   const c=document.getElementById('partidos-container');if(!c)return;
-  const cerrada=estaCerrada('grupos');
   const ps=PARTIDOS.filter(p=>p.g===grupoActivo);
   let pHtml='';let fa='';
   ps.forEach(p=>{
     if(p.f!==fa){fa=p.f;pHtml+=`<div class="flbl">${fmtFecha(p.f)} · ${p.h} ET</div>`;}
+    const cerrada=partidoCerrado(p); // cada partido cierra 1h antes de su inicio
     const pr=predicciones[p.id]||{};
     const lv=pr.l!==undefined?pr.l:'';const vv=pr.v!==undefined?pr.v:'';
     const ok=pr.l!==undefined&&pr.v!==undefined;
@@ -942,6 +956,7 @@ function renderPartidosGrupo(){
         </div>
         <div class="ecol r" style="justify-content:flex-end;margin-left:auto"><span class="ename">${p.v}</span>${flagBadge(p.v,20)}</div>
       </div>
+      ${cerrada&&!hayRes?'<div style="font-size:10px;color:#c0392b;text-align:center;margin-top:4px;font-weight:600">🔒 Cerrado (cerró 1h antes del inicio)</div>':''}
       ${predictorHTML(p.l,p.v,p.id)}
     </div>`;
   });
@@ -1020,7 +1035,7 @@ function renderTablaGrupo(grupo){
 }
 
 function setPred(id,lado,val){
-  if(estaCerrada('grupos'))return;
+  if(partidoCerrado(PARTIDOS.find(p=>p.id===id)))return;
   const num=parseInt(val,10);
   if(!predicciones[id])predicciones[id]={};
   if(!isNaN(num)&&num>=0&&num<=20)predicciones[id][lado]=num;
