@@ -532,9 +532,9 @@ async function registrar(){
   const nombre=document.getElementById('r-nombre').value.trim();
   const alias=document.getElementById('r-alias').value.trim();
   const email=document.getElementById('r-email').value.trim();
-  const tel=document.getElementById('r-tel').value.trim();
+  const tel=document.getElementById('r-tel')?.value.trim()||'';
   const codigo=document.getElementById('r-codigo').value.trim().toUpperCase();
-  const favorito=document.getElementById('r-favorito').value;
+  const favorito=document.getElementById('r-favorito')?.value||'';
   if(!nombre||!alias||!email||!codigo){alerta('reg-alert','error','Completa nombre, alias, correo y codigo.');return;}
   const btn=document.getElementById('btn-reg');
   btn.innerHTML='<span class="loading"></span> Verificando...';btn.disabled=true;
