@@ -1671,8 +1671,14 @@ async function renderRanking(){
     });
   }
   data.sort((a,b)=>(b.pts||0)-(a.pts||0));
-  if(!data.length)data=DEMO_RANK;
   const c=document.getElementById('ranking-container');if(!c)return;
+  // Solo mostrar datos demo en modo demo; si no hay participantes reales, estado vacío
+  if(!data.length){
+    if(modoDemo){data=DEMO_RANK;}
+    else{c.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:1.5rem">Aún no hay participantes en el ranking. ¡Sé el primero en registrarte y predecir!</p>';
+      const st=document.getElementById('stat-total');if(st)st.textContent=participantes.length||0;
+      return;}
+  }
   c.innerHTML=data.map((p,i)=>{
     const ini=(p.alias||p.nombre).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const pos=i===0?'&#127951;':i===1?'&#127952;':i===2?'&#127953;':(i+1);
