@@ -923,7 +923,7 @@ function renderPartidosGrupo(){
   const ps=PARTIDOS.filter(p=>p.g===grupoActivo);
   let pHtml='';let fa='';
   ps.forEach(p=>{
-    if(p.f!==fa){fa=p.f;pHtml+=`<div class="flbl">${fmtFecha(p.f)} · ${p.h} ET</div>`;}
+    const _fh=p.f+'|'+p.h;if(_fh!==fa){fa=_fh;pHtml+=`<div class="flbl">${fmtFecha(p.f)} · ${p.h} ET</div>`;}
     const cerrada=partidoCerrado(p); // cada partido cierra 1h antes de su inicio
     const pr=predicciones[p.id]||{};
     const lv=pr.l!==undefined?pr.l:'';const vv=pr.v!==undefined?pr.v:'';
@@ -1810,7 +1810,7 @@ function renderSimPartidos(){
   const ps = PARTIDOS.filter(p=>p.g===simGrupoActivo);
   let html=''; let fa='';
   ps.forEach(p=>{
-    if(p.f!==fa){fa=p.f; html+=`<div class="flbl">${fmtFecha(p.f)} · ${p.h} ET</div>`;}
+    const _fh=p.f+'|'+p.h;if(_fh!==fa){fa=_fh; html+=`<div class="flbl">${fmtFecha(p.f)} · ${p.h} ET</div>`;}
     const r = resultadosAdmin[p.id]||{};
     const lv = r.l!==undefined?r.l:''; const vv = r.v!==undefined?r.v:'';
     const ok = r.l!==undefined&&r.v!==undefined;
