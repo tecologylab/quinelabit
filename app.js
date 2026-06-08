@@ -423,6 +423,30 @@ function cargarConfigVisualLocal(){
   aplicarConfigVisual(cfg);
 }
 
+// ============================================================
+// SANITIZACIÓN (anti-XSS) para config visual escrita en Supabase
+// ============================================================
+// Permite solo etiquetas de formato seguras; elimina scripts, on*=, javascript:, y otros tags
+function sanitizarHTML(str){
+  if(!str)return '';
+  let s=String(str);
+  s=s.replace(/<\/?(?:script|style|iframe|object|embed|link|meta|svg|img|video|audio|form|input)[^>]*>/gi,'');
+  s=s.replace(/\son\w+\s*=\s*"[^"]*"/gi,'').replace(/\son\w+\s*=\s*'[^']*'/gi,'').replace(/\son\w+\s*=\s*[^\s>]+/gi,'');
+  s=s.replace(/javascript:/gi,'');
+  // dejar solo tags de formato permitidos; quitar cualquier otro tag
+  s=s.replace(/<(?!\/?(?:span|b|strong|i|em|br)\b)[^>]*>/gi,'');
+  return s;
+}
+// Devuelve una URL de imagen segura (http/https) extraída del valor, o null
+function urlImagenSegura(val){
+  if(!val)return null;
+  let url=String(val).trim();
+  const m=url.match(/src\s*=\s*["']([^"']+)["']/i);
+  if(m)url=m[1].trim();
+  if(/^https?:\/\//i.test(url)&&!/["'<>]/.test(url)&&!/javascript:/i.test(url))return url;
+  return null;
+}
+
 function aplicarConfigVisual(cfg){
   // Empresa y color
   if(cfg.cfg_empresa){
@@ -437,15 +461,17 @@ function aplicarConfigVisual(cfg){
   const heroTitulo=document.getElementById('hero-titulo-txt');
   const heroSub=document.getElementById('hero-subtitulo-txt');
   if(cfg.hero_badge&&heroBadge)heroBadge.textContent=cfg.hero_badge;
-  if(cfg.hero_titulo&&heroTitulo)heroTitulo.innerHTML=cfg.hero_titulo;
+  if(cfg.hero_titulo&&heroTitulo)heroTitulo.innerHTML=sanitizarHTML(cfg.hero_titulo);
   if(cfg.hero_subtitulo&&heroSub)heroSub.textContent=cfg.hero_subtitulo;
-  // Ads
+  // Ads — solo imágenes desde URL validada (nunca HTML arbitrario -> evita XSS)
   ['1','2','6'].forEach(z=>{
     const val=cfg['ad_zona'+z];
     const zona=document.getElementById('ad-zona'+z);
     const contenido=document.getElementById('ad-zona'+z+'-content');
-    if(val&&zona&&contenido){
-      contenido.innerHTML=val;
+    if(!zona||!contenido)return;
+    const url=urlImagenSegura(val);
+    if(url){
+      contenido.innerHTML=`<img src="${url}" style="max-width:100%;height:auto;display:block;margin:0 auto">`;
       // Quitar el recuadro placeholder (borde punteado) al mostrar el anuncio real
       contenido.style.border='none';contenido.style.background='none';contenido.style.minHeight='0';contenido.style.padding='0';
       zona.style.display='';
@@ -2408,14 +2434,15 @@ function aplicarConfig(){
     if(!inp||!zona||!contenido)return;
     const val=inp.value.trim();
     if(val){
-      // Si es URL de imagen, envolver en img tag
-      const html=val.startsWith('http')||val.endsWith('.jpg')||val.endsWith('.png')||val.endsWith('.gif')
-        ?`<img src="${val}" style="max-width:100%;height:auto;display:block;margin:0 auto">`
-        :val;
-      contenido.innerHTML=html;
-      contenido.style.border='none';contenido.style.background='none';contenido.style.minHeight='0';contenido.style.padding='0';
-      zona.style.display='';
-      localStorage.setItem('ad_zona'+z,html);
+      // Solo imágenes desde URL validada (anti-XSS)
+      const url=urlImagenSegura(val);
+      if(url){
+        const html=`<img src="${url}" style="max-width:100%;height:auto;display:block;margin:0 auto">`;
+        contenido.innerHTML=html;
+        contenido.style.border='none';contenido.style.background='none';contenido.style.minHeight='0';contenido.style.padding='0';
+        zona.style.display='';
+        localStorage.setItem('ad_zona'+z,html);
+      }
     }
   });
 

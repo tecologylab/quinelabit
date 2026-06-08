@@ -499,8 +499,10 @@ async function aplicarConfig() {
   ['1','2','6'].forEach(z => {
     const val = document.getElementById('ad-zona' + z + '-input')?.value.trim();
     if (val) {
-      const html = val.startsWith('http')||val.endsWith('.jpg')||val.endsWith('.png')
-        ? `<img src="${val}" style="max-width:100%;height:auto;display:block;margin:0 auto">` : val;
+      // Solo guardar imágenes desde URL validada (anti-XSS); urlImagenSegura viene de app.js
+      const url = (typeof urlImagenSegura==='function') ? urlImagenSegura(val) : (val.startsWith('http')?val:null);
+      if(!url){ alert(`Zona ${z}: usa una URL de imagen válida (http/https). No se permite HTML.`); return; }
+      const html = `<img src="${url}" style="max-width:100%;height:auto;display:block;margin:0 auto">`;
       pares.push({ clave: 'ad_zona' + z, valor: html });
     }
   });
