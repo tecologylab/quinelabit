@@ -3,9 +3,8 @@
 // Business IT
 // =============================================
 
-const FOOTBALL_API_KEY = 'f82a29de770a432ebe388346a80416a5';
-const FOOTBALL_API_URL = 'https://api.football-data.org/v4';
-const FIFA_2026_ID = 2000; // ID del Mundial FIFA 2026 en football-data.org
+// La API key de football-data.org ya NO vive en el frontend.
+// Se consume vía la Edge Function 'football-proxy' (key como secreto del servidor).
 
 let resGrupoActivo = 'A';
 let resultadosOficiales = {}; // {partidoId: {l, v}}
@@ -247,15 +246,13 @@ async function borrarResultadosOficiales() {
 // API FOOTBALL-DATA.ORG
 // ============================================================
 async function cargarDesdeAPI() {
+  if (!sbClient) { alertaAdmin('res-alert', 'error', 'Conecta Supabase primero.'); return; }
   alertaAdmin('res-alert', 'success', 'Consultando API...');
   try {
-    // Usar un proxy via Supabase Edge Function para no exponer la key
-    // Por ahora llamada directa (funciona en desarrollo)
-    const res = await fetch(`${FOOTBALL_API_URL}/competitions/${FIFA_2026_ID}/matches?status=FINISHED`, {
-      headers: { 'X-Auth-Token': FOOTBALL_API_KEY }
-    });
-    if (!res.ok) throw new Error('Error API: ' + res.status);
-    const data = await res.json();
+    // La key NO está en el frontend: se llama a la Edge Function 'football-proxy'
+    // (la key vive como secreto del servidor). Ver supabase/functions/football-proxy.
+    const { data, error } = await sbClient.functions.invoke('football-proxy');
+    if (error) throw new Error('Edge Function football-proxy: ' + error.message + ' (¿está desplegada?)');
     let count = 0;
     if (data.matches) {
       data.matches.forEach(m => {
@@ -582,11 +579,20 @@ async function loginAdmin() {
   const pass = input.value.trim();
   if (!pass) return;
 
-  // Cargar password de Supabase primero
-  await verificarPasswordAdmin();
-  const correctPass = getAdminPass();
+  // Verificación segura por RPC (hash en el servidor; no expone la contraseña).
+  // Fallback temporal a la comparación vieja solo si la RPC aún no está desplegada.
+  let ok = false;
+  if (sbClient) {
+    try {
+      const { data, error } = await sbClient.rpc('verificar_admin', { p_pass: pass });
+      if (error) { await verificarPasswordAdmin(); ok = (pass === getAdminPass()); }
+      else ok = (data === true);
+    } catch (e) { await verificarPasswordAdmin(); ok = (pass === getAdminPass()); }
+  } else {
+    ok = (pass === getAdminPass());
+  }
 
-  if (pass === correctPass) {
+  if (ok) {
     // Login exitoso
     sessionStorage.setItem('adminAuth', '1');
     document.getElementById('admin-login-wall').style.display = 'none';
@@ -609,7 +615,6 @@ async function initAdmin() {
 
   // Verificar si ya está autenticado en esta sesión
   if (sessionStorage.getItem('adminAuth') === '1') {
-    await verificarPasswordAdmin();
     document.getElementById('admin-login-wall').style.display = 'none';
     document.getElementById('admin-content-wrap').style.display = '';
     document.getElementById('admin-nav').style.display = '';

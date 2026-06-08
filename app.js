@@ -498,7 +498,6 @@ async function guardarConfiguracionAdmin(){
     fecha_cierre_final: toISO(v('cfg-fecha-final')),
   };
   const nuevaPass=v('cfg-admin-pass').trim();
-  if(nuevaPass)payload.admin_password=nuevaPass;
   try{
     if(sbClient){
       const{data:ex}=await sbClient.from('configuracion').select('id').limit(1).maybeSingle();
@@ -512,6 +511,17 @@ async function guardarConfiguracionAdmin(){
     renderPartidosGrupo();renderBracket();renderGoleador();
     const cerrada=estaCerrada();
     alerta('cfg-alert','success','Configuración guardada.'+(cerrada?' La quiniela quedó CERRADA.':' La quiniela está ABIERTA.'));
+    // Cambio de contraseña admin (vía RPC con hash; requiere la contraseña actual)
+    if(nuevaPass&&sbClient){
+      const actual=prompt('Para cambiar la contraseña de admin, ingresa la contraseña ACTUAL:');
+      if(actual){
+        const{data:ok,error}=await sbClient.rpc('cambiar_admin_password',{p_actual:actual,p_nueva:nuevaPass});
+        if(error)alerta('cfg-alert','error','No se pudo cambiar la contraseña (¿falta la RPC en Supabase?): '+error.message);
+        else if(ok)alerta('cfg-alert','success','Contraseña de admin actualizada.');
+        else alerta('cfg-alert','error','La contraseña actual no es correcta. No se cambió.');
+      }
+      const passInput=document.getElementById('cfg-admin-pass');if(passInput)passInput.value='';
+    }
   }catch(e){alerta('cfg-alert','error','Error: '+e.message);}
 }
 
