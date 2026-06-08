@@ -47,6 +47,9 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
 .card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--borde)}
 .card-icon{width:34px;height:34px;background:#f0f8f4;border-radius:8px;display:flex;align-items:center;justify-content:center}
 .card-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.03em;text-transform:uppercase}
+.cierre-info{font-size:12px;font-weight:700;color:#7a5500;background:#fffbf0;border:1px solid #f0cb6a;border-radius:6px;padding:5px 10px;margin-bottom:.75rem;display:none}
+.cierre-info.on{display:block}
+.bcol-cierre{font-size:9px;font-weight:600;color:#7a5500;margin:-4px 0 6px}
 
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:560px){.fgrid{grid-template-columns:1fr}}
@@ -443,6 +446,7 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
       <div class="card-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="#0a5c2e"><path d="M3 5h14v2H3V5zm0 4h14v2H3V9zm0 4h8v2H3v-2z"/></svg></div>
       <div class="card-title">1era Ronda — Fase de grupos (72 partidos)</div>
     </div>
+    <div id="cierre-grupos" class="cierre-info"></div>
     <div class="pinfo">
       <span class="pbadge ex">5 pts marcador exacto</span>
       <span class="pbadge re">2 pts resultado correcto</span>
@@ -747,6 +751,6 @@ input:focus,select:focus{outline:none;border-color:var(--verde);background:#fff}
 
 
 
-<script src="app.js?v=20260601r"></script>
+<script src="app.js?v=20260601s"></script>
 </body>
 </html>

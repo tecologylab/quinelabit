@@ -333,6 +333,23 @@ function estaCerrada(ronda=null){
   }
   return false;
 }
+// Fecha de cierre efectiva de una ronda (round-specific o global, la más temprana)
+function fechaCierreRonda(ronda){
+  const mapa={grupos:'fecha_cierre_grupos',r32:'fecha_cierre_r32',r16:'fecha_cierre_r16',qf:'fecha_cierre_qf',sf:'fecha_cierre_sf',final:'fecha_cierre_final'};
+  const propia=configGlobal[mapa[ronda]]||null;
+  const global=configGlobal.fecha_cierre||null;
+  if(propia&&global)return new Date(propia)<new Date(global)?propia:global;
+  return propia||global||null;
+}
+// Texto para mostrar bajo el título de cada ronda
+function textoCierreRonda(ronda){
+  if(configGlobal.permitir_edicion===false)return '🔒 Edición cerrada por el administrador';
+  const f=fechaCierreRonda(ronda);
+  if(!f)return '';
+  const fecha=new Date(f);
+  const fmt=fecha.toLocaleString('es-PA',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  return (new Date()>fecha)?('🔒 Cerró el '+fmt):('⏰ Cierra: '+fmt);
+}
 function aplicarCierreUI(){
   const cerrada=estaCerrada();
   const lb=document.getElementById('lock-banner');if(lb)lb.classList.toggle('on',cerrada);
@@ -897,6 +914,8 @@ function renderPartidosGrupo(){
   const zona2Html=zona2?`<div id="ad-zona2" style="margin-top:.75rem">${zona2}</div>`:'';
   c.innerHTML=`<div class="grupo-layout"><div class="grupo-partidos">${pHtml}</div><div class="grupo-tabla" id="tabla-grupo">${tablaHtml}${zona2Html}</div></div>`;
   actualizarProgreso();
+  const ci=document.getElementById('cierre-grupos');
+  if(ci){const t=textoCierreRonda('grupos');ci.textContent=t;ci.classList.toggle('on',!!t);}
 }
 
 function calcTablaGrupo(grupo){
@@ -1216,8 +1235,10 @@ function renderBracket(){
     // no con el espaciado de árbol que lo empujaba a la esquina de abajo.
     const gap=ri===0?gapBase:(esFinal?gapBase:(cardHeight+gapBase)*factor-cardHeight);
     const paddingTop=ri>0?(cardHeight+gapBase)*(factor-1)/2:0;
+    const cierreTxt=textoCierreRonda(ronda.id);
     html+=`<div class="bcol" id="ronda-${ronda.id}">
       <div class="bcol-title">${ronda.nombre}</div>
+      ${cierreTxt?`<div class="bcol-cierre">${cierreTxt}</div>`:''}
       <div class="bcol-matches" style="gap:${gap}px;padding-top:${paddingTop}px">`;
     ronda.partidos.forEach(m=>{html+=matchCard(m,ronda);});
     html+=`</div></div>`;
