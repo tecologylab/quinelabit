@@ -579,17 +579,19 @@ async function loginAdmin() {
   const pass = input.value.trim();
   if (!pass) return;
 
-  // Verificación segura por RPC (hash en el servidor; no expone la contraseña).
-  // Fallback temporal a la comparación vieja solo si la RPC aún no está desplegada.
+  // Verificación segura por RPC (hash bcrypt en el servidor; no hay contraseña en el frontend)
   let ok = false;
-  if (sbClient) {
-    try {
-      const { data, error } = await sbClient.rpc('verificar_admin', { p_pass: pass });
-      if (error) { await verificarPasswordAdmin(); ok = (pass === getAdminPass()); }
-      else ok = (data === true);
-    } catch (e) { await verificarPasswordAdmin(); ok = (pass === getAdminPass()); }
-  } else {
-    ok = (pass === getAdminPass());
+  if (!sbClient) {
+    if (errEl) { errEl.style.display = ''; errEl.textContent = 'Sin conexión a Supabase.'; }
+    return;
+  }
+  try {
+    const { data, error } = await sbClient.rpc('verificar_admin', { p_pass: pass });
+    if (error) { if (errEl) { errEl.style.display = ''; errEl.textContent = 'No se pudo verificar. Intenta de nuevo.'; } return; }
+    ok = (data === true);
+  } catch (e) {
+    if (errEl) { errEl.style.display = ''; errEl.textContent = 'Error de verificación.'; }
+    return;
   }
 
   if (ok) {
@@ -631,24 +633,7 @@ async function initAdmin() {
   }
 }
 
-async function verificarPasswordAdmin() {
-  // Obtener password guardado en Supabase (si existe)
-  if (!sbClient) return;
-  try {
-    const { data } = await sbClient
-      .from('configuracion')
-      .select('admin_password')
-      .limit(1)
-      .maybeSingle();
-    if (data?.admin_password) {
-      // Actualizar ADMIN_PASS en memoria
-      window._adminPassActual = data.admin_password;
-    }
-  } catch(e) {}
-}
-
-function getAdminPass() {
-  return window._adminPassActual || 'BIT2026ADMIN';
-}
+// (verificarPasswordAdmin / getAdminPass eliminados: el login ahora usa la RPC
+//  verificar_admin con hash en el servidor; ya no hay contraseña en el frontend.)
 
 document.addEventListener('DOMContentLoaded', initAdmin);

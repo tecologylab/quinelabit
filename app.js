@@ -6,7 +6,6 @@
 const SB_URL = "https://zriyqyeoiommrnyvwjto.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpyaXlxeWVvaW9tbXJueXZ3anRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NzQ1ODMsImV4cCI6MjA5MjE1MDU4M30.fylrPptB3VpnkXw2qMxh2PgLPBpt5OvIjoPgOzTTjog";
 const FECHA_INICIO = new Date('2026-06-11T00:00:00');
-const ADMIN_PASS = 'BIT2026ADMIN';
 
 // BANDERAS
 const ISO2 = {
@@ -2175,11 +2174,12 @@ function verificarAdmin(callback){
   callback();
 }
 
-function confirmarAdminPass(){
+async function confirmarAdminPass(){
   const val=document.getElementById('admin-pass-input').value;
-  if(val===ADMIN_PASS){
+  let ok=false;
+  if(sbClient){try{const{data,error}=await sbClient.rpc('verificar_admin',{p_pass:val});ok=(!error&&data===true);}catch(e){}}
+  if(ok){
     adminAutenticado=true;
-    localStorage.setItem('admin_auth',val);
     document.getElementById('admin-pass-modal').classList.remove('on');
     if(window._adminCallback)window._adminCallback();
   } else {
