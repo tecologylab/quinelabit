@@ -8,12 +8,13 @@
 -- (Auditoría hallazgo 3.6 / Fase 2-A.)
 -- =====================================================================
 
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 -- 1) Hashear la contraseña ACTUAL en su lugar (sea 'BIT2026ADMIN' u otra que
 --    hayas puesto). Idempotente: si ya está hasheada (bcrypt empieza con $2), no la toca.
+--    En Supabase pgcrypto vive en el schema `extensions`, por eso se califica.
 update public.configuracion
-  set admin_password = crypt(coalesce(nullif(admin_password,''),'BIT2026ADMIN'), gen_salt('bf'))
+  set admin_password = extensions.crypt(coalesce(nullif(admin_password,''),'BIT2026ADMIN'), extensions.gen_salt('bf'))
   where admin_password is null or admin_password not like '$2%';
 
 -- 2) Verificar contraseña (no devuelve el hash, solo true/false)
@@ -21,11 +22,11 @@ create or replace function public.verificar_admin(p_pass text)
   returns boolean
   language sql
   security definer
-  set search_path = public
+  set search_path = public, extensions
 as $$
   select exists(
     select 1 from public.configuracion
-    where admin_password = crypt(p_pass, admin_password)
+    where admin_password = extensions.crypt(p_pass, admin_password)
   );
 $$;
 grant execute on function public.verificar_admin(text) to anon;
@@ -35,16 +36,16 @@ create or replace function public.cambiar_admin_password(p_actual text, p_nueva 
   returns boolean
   language plpgsql
   security definer
-  set search_path = public
+  set search_path = public, extensions
 as $$
 declare ok boolean;
 begin
   select exists(
     select 1 from public.configuracion
-    where admin_password = crypt(p_actual, admin_password)
+    where admin_password = extensions.crypt(p_actual, admin_password)
   ) into ok;
   if ok then
-    update public.configuracion set admin_password = crypt(p_nueva, gen_salt('bf'));
+    update public.configuracion set admin_password = extensions.crypt(p_nueva, extensions.gen_salt('bf'));
   end if;
   return ok;
 end;
