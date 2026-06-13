@@ -53,7 +53,7 @@ const PARTIDOS = [
   {id:2,g:'A',l:'Corea del Sur',v:'Rep. Checa',f:'2026-06-11',h:'22:00',s:'Akron, Zapopan'},
   {id:3,g:'B',l:'Canada',v:'Bosnia-Herzegovina',f:'2026-06-12',h:'15:00',s:'BMO Field, Toronto'},
   {id:4,g:'D',l:'EEUU',v:'Paraguay',f:'2026-06-12',h:'21:00',s:'SoFi, Inglewood'},
-  {id:5,g:'D',l:'Australia',v:'Turkiye',f:'2026-06-13',h:'00:00',s:'BC Place, Vancouver'},
+  {id:5,g:'D',l:'Australia',v:'Turkiye',f:'2026-06-14',h:'00:00',s:'BC Place, Vancouver'},
   {id:6,g:'B',l:'Qatar',v:'Suiza',f:'2026-06-13',h:'15:00',s:"Levi's, Santa Clara"},
   {id:7,g:'C',l:'Brasil',v:'Marruecos',f:'2026-06-13',h:'18:00',s:'MetLife, NJ'},
   {id:8,g:'C',l:'Haiti',v:'Escocia',f:'2026-06-13',h:'21:00',s:'Gillette, Foxborough'},
