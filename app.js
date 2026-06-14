@@ -635,7 +635,7 @@ async function cargarParticipantes(){
   actualizarContadores();
 }
 function actualizarContadores(){
-  const n=participantes.length;
+  const n=participantes.filter(p=>!p.oculto).length;
   document.querySelectorAll('#hero-part,#stat-total').forEach(el=>{if(el)el.textContent=n;});
 }
 
@@ -1664,7 +1664,7 @@ async function renderRanking(){
     const resultados=await cargarResultadosReales();
     const{data:qs}=await sbClient.from('quinielas').select('*');
     const qmap={};(qs||[]).forEach(q=>{qmap[String(q.participante_id)]=q;});
-    data=participantes.map(p=>{
+    data=participantes.filter(p=>!p.oculto).map(p=>{
       const q=qmap[String(p.id)];
       let pts=0, gol=p.favorito||null;
       if(q){
@@ -1680,6 +1680,7 @@ async function renderRanking(){
   if(participantes.length){
     const idsEnRanking=new Set(data.map(x=>String(x.id)));
     participantes.forEach(p=>{
+      if(p.oculto)return; // usuarios de prueba ocultos no entran al ranking
       if(!idsEnRanking.has(String(p.id))){
         data.push({id:p.id,alias:p.alias||p.nombre,nombre:p.nombre,pts:0,goleador:p.favorito||null});
       }
@@ -1691,7 +1692,7 @@ async function renderRanking(){
   if(!data.length){
     if(modoDemo){data=DEMO_RANK;}
     else{c.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:1.5rem">Aún no hay participantes en el ranking. ¡Sé el primero en registrarte y predecir!</p>';
-      const st=document.getElementById('stat-total');if(st)st.textContent=participantes.length||0;
+      const st=document.getElementById('stat-total');if(st)st.textContent=participantes.filter(p=>!p.oculto).length||0;
       return;}
   }
   c.innerHTML=data.map((p,i)=>{
@@ -1705,7 +1706,7 @@ async function renderRanking(){
       <div class="rankpts">${p.pts||0}<span class="ptslbl">pts</span></div>
     </div>`;
   }).join('');
-  document.getElementById('stat-total').textContent=participantes.length||data.length;
+  document.getElementById('stat-total').textContent=participantes.filter(p=>!p.oculto).length||data.length;
   const stat=document.getElementById('stat-mipos');
   if(stat&&usuarioActual){
     const idx=data.findIndex(x=>String(x.id)===String(usuarioActual.id)||(x.alias||x.nombre)===(usuarioActual.alias||usuarioActual.nombre));

@@ -40,19 +40,31 @@ function renderAdminParticipantes() {
       <th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">Acciones</th>
     </tr></thead>
     <tbody>${participantes.map((p, i) => `
-      <tr style="border-bottom:1px solid rgba(0,0,0,0.05)">
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.05);${p.oculto?'opacity:.55':''}">
         <td style="padding:7px;color:var(--muted)">${i + 1}</td>
-        <td style="padding:7px;font-weight:500">${p.nombre || '—'}</td>
+        <td style="padding:7px;font-weight:500">${p.nombre || '—'}${p.oculto?' <span style="font-size:9px;background:#eee;color:#777;padding:1px 6px;border-radius:8px;font-weight:700">PRUEBA</span>':''}</td>
         <td style="padding:7px;color:var(--verde);font-weight:700">${p.alias || '—'}</td>
         <td style="padding:7px;color:var(--muted)">${p.email || '—'}</td>
         <td style="padding:7px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.05em">${p.codigo || '—'}</td>
-        <td style="padding:7px;display:flex;gap:8px">
+        <td style="padding:7px;display:flex;gap:8px;flex-wrap:wrap">
           <span style="color:var(--verde);font-size:12px;font-weight:600;cursor:pointer" onclick="verPerfil('${p.id}')">Ver →</span>
+          <span style="color:${p.oculto?'#1a8c48':'#7a5500'};font-size:12px;font-weight:600;cursor:pointer" onclick="toggleOcultoParticipante('${p.id}',${p.oculto?true:false})">${p.oculto?'👁 Mostrar':'🚫 Ocultar'}</span>
           <span style="color:#c0392b;font-size:12px;font-weight:600;cursor:pointer" onclick="borrarParticipante('${p.id}')">✕ Borrar</span>
         </td>
       </tr>`).join('')}
     </tbody>
   </table>`;
+}
+
+// Oculta/muestra un participante del ranking público (para usuarios de prueba)
+async function toggleOcultoParticipante(id, actual) {
+  if (!sbClient) { alert('Conecta Supabase primero.'); return; }
+  const { data, error } = await sbClient.from('participantes').update({ oculto: !actual }).eq('id', id).select();
+  if (error) { alert('Error: ' + error.message); return; }
+  if (!data || !data.length) { alert('No se pudo actualizar. Falta el campo `oculto` o la política UPDATE en `participantes` (corre sql/ocultar_participante.sql).'); return; }
+  const p = participantes.find(x => String(x.id) === String(id));
+  if (p) p.oculto = !actual;
+  renderAdminParticipantes();
 }
 
 function activarDemoAdmin() {
