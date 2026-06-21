@@ -2262,12 +2262,14 @@ async function verPerfil(pid){
   const brac=q?parseMaybeJSON(q.bracket,{}):{};
   const done=PARTIDOS.filter(x=>{const pr=preds[x.id];return pr&&pr.l!==undefined&&pr.v!==undefined;}).length;
   const doneBrac=BRACKET_RONDAS.reduce((acc,r)=>acc+r.partidos.filter(m=>{const b=brac[m.bid];return b&&b.gl!==undefined;}).length,0);
+  // Resultados oficiales reales (si no se está usando el simulador)
+  const resOfi=(resultadosAdmin&&Object.keys(resultadosAdmin).length)?resultadosAdmin:(sbClient?await cargarResultadosReales():(window._resOficiales||{}));
 
   // 1era Ronda
   let predsHtml='';
   PARTIDOS.forEach(pa=>{
     const pr=preds[pa.id];
-    const r=resultadosAdmin[pa.id]||(window._resOficiales&&window._resOficiales[pa.id]);
+    const r=resultadosAdmin[pa.id]||resOfi[pa.id];
     let color='',badge='';
     if(pr&&r&&pr.l!==undefined&&r.l!==undefined){
       if(pr.l===r.l&&pr.v===r.v){color='background:#eaf5ee';badge='<span style="color:#0a5c2e;font-weight:700;font-size:10px">+5pts</span>';}
@@ -2290,7 +2292,7 @@ async function verPerfil(pid){
     bracketHtml+=`<div style="font-size:11px;font-weight:700;color:var(--oro);text-transform:uppercase;letter-spacing:.06em;margin:.75rem 0 .3rem;font-family:'Barlow Condensed',sans-serif">${ronda.nombre}</div>`;
     partidosConData.forEach(m=>{
       const b=brac[m.bid]||{};
-      const resOf=resultadosAdmin._bracketRes&&resultadosAdmin._bracketRes[m.bid];
+      const resOf=(resultadosAdmin._bracketRes&&resultadosAdmin._bracketRes[m.bid])||(resOfi._bracketRes&&resOfi._bracketRes[m.bid]);
       let badge='',bgColor='',txtColor='';
       if(resOf&&b.gl!==undefined){
         const ganPred=b.gl>b.gv?b.l:b.gv>b.gl?b.v:(b.penales||null);
@@ -2308,8 +2310,9 @@ async function verPerfil(pid){
   });
 
   // Goleador
-  const golAcerto=gol&&resultadosAdmin._goleador&&gol===resultadosAdmin._goleador;
-  const golBadge=resultadosAdmin._goleador?(golAcerto?'+30pts ✓':'0pts ✗'):'';
+  const golRealP=resultadosAdmin._goleador||resOfi._goleador;
+  const golAcerto=gol&&golRealP&&gol===golRealP;
+  const golBadge=golRealP?(golAcerto?'+30pts ✓':'0pts ✗'):'';
   const golBg=golAcerto?'#0a5c2e':'#c0392b';
 
   document.getElementById('perfil-body').innerHTML=`
