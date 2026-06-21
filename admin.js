@@ -18,6 +18,7 @@ function showTab(id, btn) {
   document.getElementById('tab-' + id).classList.add('active');
   if (btn) btn.classList.add('active');
   if (id === 'participantes') renderAdminParticipantes();
+  if (id === 'ranking') renderAdminRanking();
   if (id === 'codigos') cargarCodigos();
   if (id === 'resultados') initResultadosOficiales();
   if (id === 'simulador') initSimulador();
@@ -65,6 +66,56 @@ async function toggleOcultoParticipante(id, actual) {
   const p = participantes.find(x => String(x.id) === String(id));
   if (p) p.oculto = !actual;
   renderAdminParticipantes();
+}
+
+// ============================================================
+// RANKING (admin) — con nombre, alias y correo de cada jugador
+// ============================================================
+let _adminRanking = [];
+async function renderAdminRanking() {
+  const c = document.getElementById('admin-ranking-table'); if (!c) return;
+  if (!sbClient) { c.innerHTML = '<p style="color:var(--muted);font-size:13px">Conecta Supabase para ver el ranking.</p>'; return; }
+  c.innerHTML = '<p style="color:var(--muted);font-size:13px">Calculando puntos…</p>';
+  const resultados = await cargarResultadosReales();              // de app.js
+  const { data: qs } = await sbClient.from('quinielas').select('*');
+  const qmap = {}; (qs || []).forEach(q => { qmap[String(q.participante_id)] = q; });
+  _adminRanking = participantes.map(p => {
+    const q = qmap[String(p.id)];
+    let pts = 0, exactos = 0, correctos = 0, fallos = 0, gol = p.favorito || null, done = 0;
+    if (q) {
+      const preds = parseMaybeJSON(q.predicciones, {});
+      const brac = parseMaybeJSON(q.bracket, {});
+      gol = q.goleador || null;
+      const r = calcPuntosConDesglose(preds, brac, gol, resultados);
+      pts = r.total; exactos = r.exactos; correctos = r.correctos; fallos = r.fallos;
+      done = PARTIDOS.filter(x => { const pr = preds[x.id]; return pr && pr.l !== undefined && pr.v !== undefined; }).length;
+    }
+    return { id: p.id, nombre: p.nombre || '', alias: p.alias || '', email: p.email || '', codigo: p.codigo || '', oculto: !!p.oculto, gol, pts, done, exactos, correctos, fallos };
+  }).sort((a, b) => b.pts - a.pts);
+  if (!_adminRanking.length) { c.innerHTML = '<p style="color:var(--muted);font-size:13px">Sin participantes registrados.</p>'; return; }
+  c.innerHTML = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:640px">
+    <thead><tr style="border-bottom:2px solid var(--borde)">
+      ${['#', 'Nombre', 'Alias', 'Correo', 'País goleador', 'Pred.', 'Puntos'].map(h => `<th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">${h}</th>`).join('')}
+    </tr></thead><tbody>
+    ${_adminRanking.map((r, i) => `
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.05);${r.oculto ? 'opacity:.55' : ''}">
+        <td style="padding:7px;font-weight:700;color:${i < 3 ? 'var(--oro)' : 'var(--muted)'}">${i + 1}</td>
+        <td style="padding:7px;font-weight:500">${r.nombre || '—'}${r.oculto ? ' <span style="font-size:9px;background:#eee;color:#777;padding:1px 6px;border-radius:8px;font-weight:700">PRUEBA</span>' : ''}</td>
+        <td style="padding:7px;color:var(--verde);font-weight:700">${r.alias || '—'}</td>
+        <td style="padding:7px;color:var(--muted)">${r.email || '—'}</td>
+        <td style="padding:7px">${r.gol ? flagBadge(r.gol, 14) + ' ' + r.gol : '—'}</td>
+        <td style="padding:7px;color:var(--muted)">${r.done}/${PARTIDOS.length}</td>
+        <td style="padding:7px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:var(--verde)">${r.pts}</td>
+      </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+function exportarRankingCSV() {
+  if (!_adminRanking.length) { alert('Abre el ranking primero (botón Actualizar).'); return; }
+  const cols = ['Pos', 'Nombre', 'Alias', 'Correo', 'Codigo', 'Pais goleador', 'Predichos', 'Exactos', 'Correctos', 'Fallos', 'Puntos', 'Oculto'];
+  const rows = _adminRanking.map((r, i) => [i + 1, r.nombre, r.alias, r.email, r.codigo, r.gol || '', r.done, r.exactos, r.correctos, r.fallos, r.pts, r.oculto ? 'si' : 'no']);
+  const csv = [cols.join(','), ...rows.map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = 'ranking_quiniela2026.csv'; a.click();
 }
 
 function activarDemoAdmin() {

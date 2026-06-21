@@ -111,6 +111,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--verde);b
 <div class="admin-nav" id="admin-nav" style="display:none">
   <div class="admin-nav-inner">
     <button class="anav-btn active" onclick="showTab('participantes',this)">Participantes</button>
+    <button class="anav-btn" onclick="showTab('ranking',this)">Ranking</button>
     <button class="anav-btn" onclick="showTab('codigos',this)">Códigos</button>
     <button class="anav-btn" onclick="showTab('resultados',this)">Resultados</button>
     <button class="anav-btn" onclick="showTab('simulador',this)">Simulador</button>
@@ -148,6 +149,21 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--verde);b
       <button class="btn-oro" onclick="activarDemoAdmin()">Activar demo</button>
     </div>
     <div id="admin-table"><p style="color:var(--muted);font-size:13px">Cargando...</p></div>
+  </div>
+</div>
+
+<!-- TAB: RANKING -->
+<div id="tab-ranking" class="tab-section">
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-icon">🏆</div>
+      <div class="card-title">Ranking de jugadores</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
+      <button class="btn-save" onclick="renderAdminRanking()">↻ Actualizar</button>
+      <button class="btn-sec" onclick="exportarRankingCSV()">Exportar CSV</button>
+    </div>
+    <div id="admin-ranking-table"><p style="color:var(--muted);font-size:13px">Cargando...</p></div>
   </div>
 </div>
 
@@ -392,7 +408,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--verde);b
   </div>
 </div>
 
-<script src="app.js?v=20260601ag"></script>
-<script src="admin.js?v=20260601ag"></script>
+<script src="app.js?v=20260601ah"></script>
+<script src="admin.js?v=20260601ah"></script>
 </body>
 </html>
