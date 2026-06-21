@@ -1724,8 +1724,10 @@ async function verPerfilPublico(pid){
   const preds=q?parseMaybeJSON(q.predicciones,{}):{}; const gol=q?q.goleador:null;
   const done=PARTIDOS.filter(x=>{const pr=preds[x.id];return pr&&pr.l!==undefined&&pr.v!==undefined;}).length;
   let predsHtml='';
-  // Mostrar todos los partidos con colores si hay resultados del simulador
-  const resultados=rankingSimulado?._resultados||resultadosAdmin||{};
+  // Resultados oficiales (reales): grupos, bracket y goleador
+  const resultados=(rankingSimulado&&rankingSimulado._resultados)||window._resOficiales||resultadosAdmin||{};
+  const bracketRes=(resultados&&resultados._bracketRes)||resultadosAdmin._bracketRes||{};
+  const golOf=(resultados&&resultados._goleador)||resultadosAdmin._goleador||null;
   PARTIDOS.forEach(pa=>{
     const pr=preds[pa.id]; const r=resultados[pa.id];
     let color='',badge='';
@@ -1751,7 +1753,7 @@ async function verPerfilPublico(pid){
         ronda.partidos.forEach(m=>{
           const b=brac[m.bid]||{};
           if(!b.l&&!b.v)return;
-          const resOf=resultadosAdmin._bracketRes&&resultadosAdmin._bracketRes[m.bid];
+          const resOf=bracketRes[m.bid];
           let badge='',bgColor='',txtColor='';
           if(resOf&&b.gl!==undefined){
             const ganPred=b.gl>b.gv?b.l:b.gv>b.gl?b.v:(b.penales||null);
@@ -1770,8 +1772,8 @@ async function verPerfilPublico(pid){
     });
   }
   // Goleador
-  const golAcerto=gol&&resultadosAdmin._goleador&&gol===resultadosAdmin._goleador;
-  const golBadge=resultadosAdmin._goleador?(golAcerto?'+30pts ✓':'0pts ✗'):'';
+  const golAcerto=gol&&golOf&&gol===golOf;
+  const golBadge=golOf?(golAcerto?'+30pts ✓':'0pts ✗'):'';
   const golBg=golAcerto?'#0a5c2e':'#c0392b';
 
   document.getElementById('perfil-body').innerHTML=`
