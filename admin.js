@@ -93,18 +93,21 @@ async function renderAdminRanking() {
     return { id: p.id, nombre: p.nombre || '', alias: p.alias || '', email: p.email || '', codigo: p.codigo || '', oculto: !!p.oculto, gol, pts, done, exactos, correctos, fallos };
   }).sort((a, b) => b.pts - a.pts);
   if (!_adminRanking.length) { c.innerHTML = '<p style="color:var(--muted);font-size:13px">Sin participantes registrados.</p>'; return; }
-  c.innerHTML = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:640px">
+  c.innerHTML = `<p style="font-size:11px;color:var(--muted);margin-bottom:.5rem">Haz clic en un jugador para ver sus predicciones y puntos por partido. <b>Exactos</b> = marcador exacto · <b>Result.</b> = acertó ganador/empate.</p>
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:780px">
     <thead><tr style="border-bottom:2px solid var(--borde)">
-      ${['#', 'Nombre', 'Alias', 'Correo', 'País goleador', 'Pred.', 'Puntos'].map(h => `<th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">${h}</th>`).join('')}
+      ${['#', 'Nombre', 'Alias', 'Correo', 'Goleador', 'Pred.', 'Exactos', 'Result.', 'Puntos'].map(h => `<th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">${h}</th>`).join('')}
     </tr></thead><tbody>
     ${_adminRanking.map((r, i) => `
-      <tr style="border-bottom:1px solid rgba(0,0,0,0.05);${r.oculto ? 'opacity:.55' : ''}">
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.05);cursor:pointer;${r.oculto ? 'opacity:.55' : ''}" onclick="verPerfil('${r.id}')" title="Ver predicciones de ${(r.alias||r.nombre||'').replace(/'/g,'')}">
         <td style="padding:7px;font-weight:700;color:${i < 3 ? 'var(--oro)' : 'var(--muted)'}">${i + 1}</td>
         <td style="padding:7px;font-weight:500">${r.nombre || '—'}${r.oculto ? ' <span style="font-size:9px;background:#eee;color:#777;padding:1px 6px;border-radius:8px;font-weight:700">PRUEBA</span>' : ''}</td>
         <td style="padding:7px;color:var(--verde);font-weight:700">${r.alias || '—'}</td>
         <td style="padding:7px;color:var(--muted)">${r.email || '—'}</td>
         <td style="padding:7px">${r.gol ? flagBadge(r.gol, 14) + ' ' + r.gol : '—'}</td>
         <td style="padding:7px;color:var(--muted)">${r.done}/${PARTIDOS.length}</td>
+        <td style="padding:7px;font-weight:700;color:#0a5c2e">${r.exactos}</td>
+        <td style="padding:7px;font-weight:700;color:#7a5500">${r.correctos}</td>
         <td style="padding:7px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:var(--verde)">${r.pts}</td>
       </tr>`).join('')}
     </tbody></table></div>`;
