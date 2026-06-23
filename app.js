@@ -2315,7 +2315,11 @@ async function verPerfil(pid){
   const golBadge=golRealP?(golAcerto?'+30pts ✓':'0pts ✗'):'';
   const golBg=golAcerto?'#0a5c2e':'#c0392b';
 
+  // Timestamp de última actualización de las predicciones (solo admin)
+  const tsAct = (q && q.fecha) ? new Date(q.fecha).toLocaleString('es-PA',{weekday:'short',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'America/Panama'}) : null;
+
   document.getElementById('perfil-body').innerHTML=`
+    ${tsAct?`<div style="font-size:11px;color:#7a5500;background:#fffbf0;border:1px solid #f0cb6a;border-radius:6px;padding:6px 10px;margin-bottom:1rem">🕒 Última actualización: <b>${tsAct}</b> (hora Panamá)</div>`:''}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
       <div style="background:var(--bg);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Nombre</div><div style="font-weight:600;font-size:13px">${p.nombre||'—'}</div></div>
       <div style="background:var(--bg);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Alias</div><div style="font-weight:700;color:var(--verde);font-size:13px">${p.alias||'—'}</div></div>
