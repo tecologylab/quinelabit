@@ -1040,6 +1040,7 @@ function setPred(id,lado,val){
   if(!predicciones[id])predicciones[id]={};
   if(!isNaN(num)&&num>=0&&num<=20)predicciones[id][lado]=num;
   else delete predicciones[id][lado];
+  predicciones[id].t=new Date().toISOString(); // timestamp de actualización por partido
   actualizarProgreso();renderGrupoTabs();
   const te=document.getElementById('tabla-grupo');if(te)te.innerHTML=renderTablaGrupo(grupoActivo);
   // Auto-rellenar bracket en tiempo real
@@ -1567,6 +1568,7 @@ function confirmarModal(){
   document.getElementById('modal-pen-msg').style.display='none';
   if(gl===gv)bracket[bid].penales=selPen.dataset.eq;
   else delete bracket[bid].penales;
+  bracket[bid].t=new Date().toISOString(); // timestamp de actualización por partido (bracket)
   propagarGanador(bid);
   propagarPerdedor(bid);
   cerrarModal();renderBracket();
@@ -2276,11 +2278,12 @@ async function verPerfil(pid){
       else if(Math.sign(pr.l-pr.v)===Math.sign(r.l-r.v)){color='background:#fffbf0';badge='<span style="color:#7a5500;font-weight:700;font-size:10px">+2pts</span>';}
       else{color='background:#fef0f0';badge='<span style="color:#c0392b;font-weight:700;font-size:10px">0pts</span>';}
     }
+    const tPred=(pr&&pr.t)?new Date(pr.t).toLocaleString('es-PA',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'America/Panama'}):'';
     predsHtml+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid var(--borde);font-size:12px;${color};border-radius:3px;margin-bottom:1px">
       <span>${flagBadge(pa.l,14)} ${pa.l}</span>
       <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--verde);margin:0 4px">${pr?pr.l:'-'} – ${pr?pr.v:'-'}</span>
       <span>${pa.v} ${flagBadge(pa.v,14)}</span>
-      <span style="margin-left:auto">${badge}</span>
+      <span style="margin-left:auto;text-align:right">${badge}${tPred?`<div style="font-size:9px;color:var(--muted);font-weight:400">🕒 ${tPred}</div>`:''}</span>
     </div>`;
   });
 
@@ -2300,11 +2303,12 @@ async function verPerfil(pid){
         else if(ganPred===resOf.ganador){badge='+'+ronda.pts_res+'pts';bgColor='#f0cb6a';txtColor='#7a5500';}
         else{badge='0pts ✗';bgColor='#c0392b';txtColor='#fff';}
       }
+      const tB=(b&&b.t)?new Date(b.t).toLocaleString('es-PA',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'America/Panama'}):'';
       bracketHtml+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid var(--borde);font-size:12px">
         <span>${flagBadge(b.l||'?',14)} ${b.l||'?'}</span>
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--verde);margin:0 4px">${b.gl!==undefined?b.gl:'-'} – ${b.gv!==undefined?b.gv:'-'}</span>
         <span>${b.v||'?'} ${flagBadge(b.v||'?',14)}</span>
-        ${badge?`<span style="margin-left:auto;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;background:${bgColor};color:${txtColor}">${badge}</span>`:''}
+        <span style="margin-left:auto;text-align:right">${badge?`<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;background:${bgColor};color:${txtColor}">${badge}</span>`:''}${tB?`<div style="font-size:9px;color:var(--muted)">🕒 ${tB}</div>`:''}</span>
       </div>`;
     });
   });
