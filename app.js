@@ -6,6 +6,8 @@
 const SB_URL = "https://zriyqyeoiommrnyvwjto.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpyaXlxeWVvaW9tbXJueXZ3anRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NzQ1ODMsImV4cCI6MjA5MjE1MDU4M30.fylrPptB3VpnkXw2qMxh2PgLPBpt5OvIjoPgOzTTjog";
 const FECHA_INICIO = new Date('2026-06-11T00:00:00');
+// Cierre de la elección de País Goleador: 24 jun 2026, 2:00 PM hora Panamá (UTC-5)
+const FECHA_CIERRE_GOLEADOR = new Date('2026-06-24T14:00:00-05:00');
 
 // BANDERAS
 const ISO2 = {
@@ -317,6 +319,8 @@ function estaCerrada(ronda=null){
   if(configGlobal.permitir_edicion===false)return true;
   // Cierre global
   if(configGlobal.fecha_cierre&&new Date()>new Date(configGlobal.fecha_cierre))return true;
+  // Cierre propio del País Goleador
+  if(ronda==='goleador'&&FECHA_CIERRE_GOLEADOR&&new Date()>FECHA_CIERRE_GOLEADOR)return true;
   // Cierre por ronda
   if(ronda){
     const mapaCierre={
@@ -1606,16 +1610,21 @@ async function guardarBracket(){
 // ============================================================
 function renderGoleador(){
   const g=document.getElementById('goleador-grid');if(!g)return;
-  const cerrada=estaCerrada();
+  const cerrada=estaCerrada('goleador');
   g.innerHTML=TODOS_PAISES.map(eq=>`
     <button class="camp-btn${goleador===eq?' sel':''}" ${cerrada?'disabled':''} onclick="selGoleador('${eq}')">
       ${flagBadge(eq,28)}<span style="font-size:10px;margin-top:3px">${eq}</span>
     </button>`).join('');
-  const st=document.getElementById('g-status');if(st)st.textContent=goleador?'Seleccionado: '+goleador:'Selecciona el pais goleador';
+  const st=document.getElementById('g-status');
+  if(st){
+    const fmt=FECHA_CIERRE_GOLEADOR.toLocaleString('es-PA',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'America/Panama'});
+    if(cerrada)st.textContent='🔒 Cerrado — ya no se puede cambiar el país goleador';
+    else st.textContent=(goleador?'Seleccionado: '+goleador:'Selecciona el país goleador')+' · ⏰ Cierra: '+fmt+' (hora Panamá)';
+  }
 }
-function selGoleador(eq){if(estaCerrada())return;goleador=eq;renderGoleador();}
+function selGoleador(eq){if(estaCerrada('goleador'))return;goleador=eq;renderGoleador();}
 async function guardarGoleador(){
-  if(estaCerrada('grupos')){alerta('g-alert','error','La quiniela esta cerrada.');return;}
+  if(estaCerrada('goleador')){alerta('g-alert','error','La elección del país goleador ya está cerrada.');return;}
   if(!usuarioActual&&!modoDemo){alerta('g-alert','error','Primero registrate.');return;}
   if(!goleador){alerta('g-alert','error','Selecciona un pais.');return;}
   try{await guardarQuinielaCompleta();alerta('g-alert','success','Pais goleador guardado: '+goleador+'.');}
