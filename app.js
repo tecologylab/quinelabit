@@ -1713,7 +1713,6 @@ async function renderRanking(){
       <div class="rankpos${i<3?' med':''}">${pos}</div>
       <div class="rankavatar">${ini}</div>
       <div><div class="rankname">${p.alias||p.nombre}</div></div>
-      <div class="rankcamp">${p.goleador?flagBadge(p.goleador,16)+' ':''} ${p.goleador||'—'}</div>
       <div class="rankpts">${p.pts||0}<span class="ptslbl">pts</span></div>
     </div>`;
   }).join('');
