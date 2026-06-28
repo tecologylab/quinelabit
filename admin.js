@@ -160,27 +160,7 @@ function calcTablaGrupoOficial(g){
   return Object.values(stats).sort((a,b)=>b.pts-a.pts||b.dif-a.dif||b.gf-a.gf);
 }
 
-// Emparejamientos OFICIALES de la Ronda de 32 (bracket FIFA 2026 confirmado).
-// Fuente: bracket oficial FIFA. Tienen prioridad sobre el cálculo automático
-// (evita errores en la asignación de "mejores terceros").
-const R32_OFICIAL = {
-  73:{l:'Sudafrica',       v:'Canada'},
-  74:{l:'Alemania',        v:'Paraguay'},
-  75:{l:'Paises Bajos',    v:'Marruecos'},
-  76:{l:'Brasil',          v:'Japon'},
-  77:{l:'Francia',         v:'Suecia'},
-  78:{l:'Costa de Marfil', v:'Noruega'},
-  79:{l:'Mexico',          v:'Ecuador'},
-  80:{l:'Inglaterra',      v:'DR Congo'},
-  81:{l:'EEUU',            v:'Bosnia-Herzegovina'},
-  82:{l:'Belgica',         v:'Senegal'},
-  83:{l:'Portugal',        v:'Croacia'},
-  84:{l:'Espana',          v:'Austria'},
-  85:{l:'Suiza',           v:'Argelia'},
-  86:{l:'Argentina',       v:'Cabo Verde'},
-  87:{l:'Colombia',        v:'Ghana'},
-  88:{l:'Australia',       v:'Egipto'},
-};
+// (R32_OFICIAL está definido en app.js — emparejamientos oficiales de R32.)
 
 // Devuelve {bid:{l,v}} con los equipos reales de todo el bracket.
 // R32: emparejamientos oficiales (R32_OFICIAL). R16+: se propagan los

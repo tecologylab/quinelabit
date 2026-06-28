@@ -210,6 +210,27 @@ const R32_AUTO = {
   87:{l:{g:'K',p:0}, v:null},          // 1K vs 3DEIJL
 };
 
+// Emparejamientos OFICIALES de la Ronda de 32 (bracket FIFA 2026 confirmado).
+// Se usan para avisar al jugador si tiene un equipo equivocado en una llave.
+const R32_OFICIAL = {
+  73:{l:'Sudafrica',       v:'Canada'},
+  74:{l:'Alemania',        v:'Paraguay'},
+  75:{l:'Paises Bajos',    v:'Marruecos'},
+  76:{l:'Brasil',          v:'Japon'},
+  77:{l:'Francia',         v:'Suecia'},
+  78:{l:'Costa de Marfil', v:'Noruega'},
+  79:{l:'Mexico',          v:'Ecuador'},
+  80:{l:'Inglaterra',      v:'DR Congo'},
+  81:{l:'EEUU',            v:'Bosnia-Herzegovina'},
+  82:{l:'Belgica',         v:'Senegal'},
+  83:{l:'Portugal',        v:'Croacia'},
+  84:{l:'Espana',          v:'Austria'},
+  85:{l:'Suiza',           v:'Argelia'},
+  86:{l:'Argentina',       v:'Cabo Verde'},
+  87:{l:'Colombia',        v:'Ghana'},
+  88:{l:'Australia',       v:'Egipto'},
+};
+
 // ESTADO
 let sbClient=null, usuarioActual=null, modoDemo=false;
 let predicciones={}, bracket={}, goleador=null;
@@ -1225,20 +1246,28 @@ function matchCard(m,ronda){
     else if(ganador===ganadorReal)simClass=' sim-correcto';
     else simClass=' sim-fallo';
   }
+  // Validación R32: avisar si el jugador tiene un equipo que NO está en la
+  // llave real (según el bracket oficial) y recomendar el correcto.
+  const realR32=(ronda.id==='r32'&&R32_OFICIAL[m.bid])?R32_OFICIAL[m.bid]:null;
+  const wrongL=!!(realR32&&lN&&lN!==realR32.l);
+  const wrongV=!!(realR32&&vN&&vN!==realR32.v);
+  const recHtml=(real)=>`<div class="brec">⚠️ Debería ser ${flagBadge(real,14)} <b>${real}</b></div>`;
   return `<div class="bmatch${ok?' ok':''}${cerrada?' locked':''}${simClass}" style="${cardBg};${cardBorder}" onclick="abrirModal(${m.bid})" title="${cerrada?'Quiniela cerrada':'Clic para editar'}">
     <div class="bmlbl">${m.desc} <span class="pts-pill">${ronda.pts_ex}pts MAX</span></div>
     ${m.h?`<div style="font-size:10px;color:var(--muted);margin-bottom:3px">${cerrada?'🔒 Cerrado':'⏰ Cierra '+textoCierreBracket(m)}</div>`:''}
-    <div class="bteam${!lN?' empty':''}${ganador===lN?' winner':''}">
+    <div class="bteam${!lN?' empty':''}${ganador===lN?' winner':''}${wrongL?' wrong':''}">
       ${lN?flagBadge(lN,18):'<span class="bq">?</span>'}
       <span class="btn">${lN||'Seleccionar'}</span>
       <span class="bsc">${gl!==null?gl:''}</span>
     </div>
+    ${wrongL?recHtml(realR32.l):''}
     <div class="bdiv"></div>
-    <div class="bteam${!vN?' empty':''}${ganador===vN?' winner':''}">
+    <div class="bteam${!vN?' empty':''}${ganador===vN?' winner':''}${wrongV?' wrong':''}">
       ${vN?flagBadge(vN,18):'<span class="bq">?</span>'}
       <span class="btn">${vN||'Seleccionar'}</span>
       <span class="bsc">${gv!==null?gv:''}</span>
     </div>
+    ${wrongV?recHtml(realR32.v):''}
     ${resB?`<div style='text-align:center;margin-top:4px;font-size:11px;color:var(--muted)'>Resultado oficial: <b>${resB.gl}-${resB.gv}</b> ${bracketPtsBadge}</div>`:''}
     ${penBadge}
   </div>`;
