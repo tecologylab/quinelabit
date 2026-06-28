@@ -1219,6 +1219,25 @@ function equipoRealSlot(bid,ronda,lado){
   const f=feederDe(bid,lado);
   return f?ganadorOficialBid(f):null;
 }
+// Chequea si el equipo puesto en un slot está bien. Devuelve {wrong, reco}:
+// reco = equipo recomendado (o null si solo se sabe que es inválido).
+function chequeoSlot(bid,ronda,lado,team){
+  if(!team)return {wrong:false,reco:null};
+  // 1) Correcto definitivo: R32 fijo, o ganador oficial real en R16+
+  const real=equipoRealSlot(bid,ronda,lado);
+  if(real)return {wrong:team!==real, reco:team!==real?real:null};
+  // 2) R16+ sin resultado oficial: el equipo debe ser uno de los 2 del partido
+  //    que alimenta esta llave (validación estructural)
+  if(ronda!=='r32'){
+    const f=feederDe(bid,lado);
+    if(f){
+      const fb=bracket[f]||{};
+      const valid=[fb.l,fb.v].filter(Boolean);
+      if(valid.length&&!valid.includes(team))return {wrong:true, reco:getGanador(f)||null};
+    }
+  }
+  return {wrong:false,reco:null};
+}
 
 // Obtener todos los equipos ya usados en R32 (para validar duplicados)
 function getEquiposEnR32(){
@@ -1274,11 +1293,12 @@ function matchCard(m,ronda){
   //  - R32: contra el emparejamiento oficial fijo
   //  - R16+: contra el ganador oficial real de la llave anterior (para que
   //    pueda corregir su Octavos/Cuartos si avanzó al equipo equivocado)
-  const realL=equipoRealSlot(m.bid,ronda.id,'l');
-  const realV=equipoRealSlot(m.bid,ronda.id,'v');
-  const wrongL=!!(realL&&lN&&lN!==realL);
-  const wrongV=!!(realV&&vN&&vN!==realV);
-  const recHtml=(real)=>`<div class="brec">⚠️ Debería ser ${flagBadge(real,14)} <b>${real}</b></div>`;
+  const chkL=chequeoSlot(m.bid,ronda.id,'l',lN);
+  const chkV=chequeoSlot(m.bid,ronda.id,'v',vN);
+  const wrongL=chkL.wrong, wrongV=chkV.wrong;
+  const recHtml=(reco)=>reco
+    ?`<div class="brec">⚠️ Debería ser ${flagBadge(reco,14)} <b>${reco}</b></div>`
+    :`<div class="brec">⚠️ Este equipo no juega en esta llave</div>`;
   return `<div class="bmatch${ok?' ok':''}${cerrada?' locked':''}${simClass}" style="${cardBg};${cardBorder}" onclick="abrirModal(${m.bid})" title="${cerrada?'Quiniela cerrada':'Clic para editar'}">
     <div class="bmlbl">${m.desc} <span class="pts-pill">${ronda.pts_ex}pts MAX</span></div>
     ${m.h?`<div style="font-size:10px;color:var(--muted);margin-bottom:3px">${cerrada?'🔒 Cerrado':'⏰ Cierra '+textoCierreBracket(m)}</div>`:''}
@@ -1287,14 +1307,14 @@ function matchCard(m,ronda){
       <span class="btn">${lN||'Seleccionar'}</span>
       <span class="bsc">${gl!==null?gl:''}</span>
     </div>
-    ${wrongL?recHtml(realL):''}
+    ${wrongL?recHtml(chkL.reco):''}
     <div class="bdiv"></div>
     <div class="bteam${!vN?' empty':''}${ganador===vN?' winner':''}${wrongV?' wrong':''}">
       ${vN?flagBadge(vN,18):'<span class="bq">?</span>'}
       <span class="btn">${vN||'Seleccionar'}</span>
       <span class="bsc">${gv!==null?gv:''}</span>
     </div>
-    ${wrongV?recHtml(realV):''}
+    ${wrongV?recHtml(chkV.reco):''}
     ${resB?`<div style='text-align:center;margin-top:4px;font-size:11px;color:var(--muted)'>Resultado oficial: <b>${resB.gl}-${resB.gv}</b> ${bracketPtsBadge}</div>`:''}
     ${penBadge}
   </div>`;
@@ -1603,10 +1623,10 @@ function selOpt(el){
     const t=o.querySelector('.opt-malsel-tag');if(t)t.remove();
   });
   el.classList.add('sel');
-  // Si el equipo elegido NO es el correcto de la llave (R32 fijo, o ganador
-  // oficial real en R16+), marcarlo incorrecto.
-  const real=modalActivo?equipoRealSlot(modalActivo.bid,modalActivo.ronda,lado):null;
-  if(real&&el.dataset.eq!==real){
+  // Marcar incorrecto si el equipo no corresponde a la llave (R32 fijo, ganador
+  // oficial real en R16+, o equipo que ni juega en la llave que la alimenta).
+  const chk=modalActivo?chequeoSlot(modalActivo.bid,modalActivo.ronda,lado,el.dataset.eq):{wrong:false};
+  if(chk.wrong){
     el.classList.add('opt-malsel');
     if(!el.querySelector('.opt-malsel-tag')){
       const span=document.createElement('span');
@@ -1630,7 +1650,7 @@ function mostrarSelectorManual(lado){
     h+=`<div class="modal-grupo-lbl">Grupo ${g}</div>`;
     GRUPOS[g].forEach(eq=>{
       const esCorrecto=real&&eq===real;
-      const esMalSel=guardado===eq&&real&&eq!==real;
+      const esMalSel=guardado===eq&&chequeoSlot(modalActivo.bid,modalActivo.ronda,lado,eq).wrong;
       const corrTag=esCorrecto?`<span class="opt-correcto-tag">✓ Debes seleccionar este</span>`:'';
       const malTag=esMalSel?`<span class="opt-malsel-tag">✗ Equipo incorrecto</span>`:'';
       h+=`<div class="modal-opt${guardado===eq?' sel':''}${esCorrecto?' opt-correcto':''}${esMalSel?' opt-malsel':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">${flagBadge(eq,20)} <span>${g} — ${eq}</span>${corrTag}${malTag}</div>`;
