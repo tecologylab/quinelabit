@@ -1420,7 +1420,7 @@ function abrirModal(bid){
           const esMalSel=esSel&&real&&eq!==real; // seleccionado pero NO es el correcto
           const usadoLabel=yaUsado?`<span class="opt-usado-tag">Ya en partido ${yaUsado}</span>`:'';
           const correctoLabel=esCorrecto?`<span class="opt-correcto-tag">✓ Debes seleccionar este</span>`:'';
-          const malselLabel=esMalSel?`<span class="opt-malsel-tag">✗ Está mal seleccionado</span>`:'';
+          const malselLabel=esMalSel?`<span class="opt-malsel-tag">✗ Equipo incorrecto</span>`:'';
           html+=`<div class="modal-opt${esSel?' sel':''}${yaUsado?' opt-usado':''}${esCorrecto?' opt-correcto':''}${esMalSel?' opt-malsel':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
             ${flagBadge(eq,20)} <span>${g} — ${eq}</span>${correctoLabel}${malselLabel}${usadoLabel}
           </div>`;
@@ -1564,8 +1564,24 @@ function actualizarPenalesModal(){
 
 function selOpt(el){
   const lado=el.dataset.lado;
-  document.querySelectorAll(`.modal-opt[data-lado="${lado}"]`).forEach(o=>o.classList.remove('sel'));
+  // Limpiar selección y marca de "incorrecto" de todas las opciones de este lado
+  document.querySelectorAll(`.modal-opt[data-lado="${lado}"]`).forEach(o=>{
+    o.classList.remove('sel');
+    o.classList.remove('opt-malsel');
+    const t=o.querySelector('.opt-malsel-tag');if(t)t.remove();
+  });
   el.classList.add('sel');
+  // R32: si el equipo elegido NO es el correcto de la llave, marcarlo incorrecto
+  const real=(modalActivo&&R32_OFICIAL[modalActivo.bid])?R32_OFICIAL[modalActivo.bid][lado]:null;
+  if(real&&el.dataset.eq!==real){
+    el.classList.add('opt-malsel');
+    if(!el.querySelector('.opt-malsel-tag')){
+      const span=document.createElement('span');
+      span.className='opt-malsel-tag';
+      span.textContent='✗ Equipo incorrecto';
+      el.appendChild(span);
+    }
+  }
   actualizarModalSelbar();
 }
 
