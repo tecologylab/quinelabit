@@ -127,24 +127,24 @@ const PARTIDOS = [
 
 const BRACKET_RONDAS = [
   { id:'r32', nombre:'Ronda de 32', pts_ex:6, pts_res:3, partidos:[
-    // LADO IZQUIERDO (-> Semi 101)
-    {bid:74,desc:'1E vs 3ABCDF', grupos_l:['E'],tipo_l:'1',grupos_v:['A','B','C','D','F'],tipo_v:'3'},
-    {bid:77,desc:'1I vs 3CDFGH', grupos_l:['I'],tipo_l:'1',grupos_v:['C','D','F','G','H'],tipo_v:'3'},
-    {bid:73,desc:'2A vs 2B',     grupos_l:['A'],tipo_l:'2',grupos_v:['B'],tipo_v:'2'},
-    {bid:75,desc:'1F vs 2C',     grupos_l:['F'],tipo_l:'1',grupos_v:['C'],tipo_v:'2'},
-    {bid:83,desc:'2K vs 2L',     grupos_l:['K'],tipo_l:'2',grupos_v:['L'],tipo_v:'2'},
-    {bid:84,desc:'1H vs 2J',     grupos_l:['H'],tipo_l:'1',grupos_v:['J'],tipo_v:'2'},
-    {bid:81,desc:'1D vs 3BEFIJ', grupos_l:['D'],tipo_l:'1',grupos_v:['B','E','F','I','J'],tipo_v:'3'},
-    {bid:82,desc:'1G vs 3AEHIJ', grupos_l:['G'],tipo_l:'1',grupos_v:['A','E','H','I','J'],tipo_v:'3'},
+    // LADO IZQUIERDO (-> Semi 101) — f/h en hora ET (UTC-4)
+    {bid:74,desc:'1E vs 3ABCDF', f:'2026-06-29',h:'16:30', grupos_l:['E'],tipo_l:'1',grupos_v:['A','B','C','D','F'],tipo_v:'3'},
+    {bid:77,desc:'1I vs 3CDFGH', f:'2026-06-30',h:'17:00', grupos_l:['I'],tipo_l:'1',grupos_v:['C','D','F','G','H'],tipo_v:'3'},
+    {bid:73,desc:'2A vs 2B',     f:'2026-06-28',h:'15:00', grupos_l:['A'],tipo_l:'2',grupos_v:['B'],tipo_v:'2'},
+    {bid:75,desc:'1F vs 2C',     f:'2026-06-29',h:'21:00', grupos_l:['F'],tipo_l:'1',grupos_v:['C'],tipo_v:'2'},
+    {bid:83,desc:'2K vs 2L',     f:'2026-07-02',h:'19:00', grupos_l:['K'],tipo_l:'2',grupos_v:['L'],tipo_v:'2'},
+    {bid:84,desc:'1H vs 2J',     f:'2026-07-02',h:'15:00', grupos_l:['H'],tipo_l:'1',grupos_v:['J'],tipo_v:'2'},
+    {bid:81,desc:'1D vs 3BEFIJ', f:'2026-07-01',h:'20:00', grupos_l:['D'],tipo_l:'1',grupos_v:['B','E','F','I','J'],tipo_v:'3'},
+    {bid:82,desc:'1G vs 3AEHIJ', f:'2026-07-01',h:'16:00', grupos_l:['G'],tipo_l:'1',grupos_v:['A','E','H','I','J'],tipo_v:'3'},
     // LADO DERECHO (-> Semi 102)
-    {bid:76,desc:'1C vs 2F',     grupos_l:['C'],tipo_l:'1',grupos_v:['F'],tipo_v:'2'},
-    {bid:78,desc:'2E vs 2I',     grupos_l:['E'],tipo_l:'2',grupos_v:['I'],tipo_v:'2'},
-    {bid:79,desc:'1A vs 3CEFHI', grupos_l:['A'],tipo_l:'1',grupos_v:['C','E','F','H','I'],tipo_v:'3'},
-    {bid:80,desc:'1L vs 3EHIJK', grupos_l:['L'],tipo_l:'1',grupos_v:['E','H','I','J','K'],tipo_v:'3'},
-    {bid:86,desc:'1J vs 2H',     grupos_l:['J'],tipo_l:'1',grupos_v:['H'],tipo_v:'2'},
-    {bid:88,desc:'2D vs 2G',     grupos_l:['D'],tipo_l:'2',grupos_v:['G'],tipo_v:'2'},
-    {bid:85,desc:'1B vs 3EFGIJ', grupos_l:['B'],tipo_l:'1',grupos_v:['E','F','G','I','J'],tipo_v:'3'},
-    {bid:87,desc:'1K vs 3DEIJL', grupos_l:['K'],tipo_l:'1',grupos_v:['D','E','I','J','L'],tipo_v:'3'},
+    {bid:76,desc:'1C vs 2F',     f:'2026-06-29',h:'13:00', grupos_l:['C'],tipo_l:'1',grupos_v:['F'],tipo_v:'2'},
+    {bid:78,desc:'2E vs 2I',     f:'2026-06-30',h:'13:00', grupos_l:['E'],tipo_l:'2',grupos_v:['I'],tipo_v:'2'},
+    {bid:79,desc:'1A vs 3CEFHI', f:'2026-06-30',h:'21:00', grupos_l:['A'],tipo_l:'1',grupos_v:['C','E','F','H','I'],tipo_v:'3'},
+    {bid:80,desc:'1L vs 3EHIJK', f:'2026-07-01',h:'12:00', grupos_l:['L'],tipo_l:'1',grupos_v:['E','H','I','J','K'],tipo_v:'3'},
+    {bid:86,desc:'1J vs 2H',     f:'2026-07-03',h:'18:00', grupos_l:['J'],tipo_l:'1',grupos_v:['H'],tipo_v:'2'},
+    {bid:88,desc:'2D vs 2G',     f:'2026-07-03',h:'14:00', grupos_l:['D'],tipo_l:'2',grupos_v:['G'],tipo_v:'2'},
+    {bid:85,desc:'1B vs 3EFGIJ', f:'2026-07-02',h:'23:00', grupos_l:['B'],tipo_l:'1',grupos_v:['E','F','G','I','J'],tipo_v:'3'},
+    {bid:87,desc:'1K vs 3DEIJL', f:'2026-07-03',h:'21:30', grupos_l:['K'],tipo_l:'1',grupos_v:['D','E','I','J','L'],tipo_v:'3'},
   ]},
   { id:'r16', nombre:'Ronda de 16', pts_ex:8, pts_res:4, partidos:[
     {bid:89,desc:'Gan.74 vs Gan.77'},{bid:90,desc:'Gan.73 vs Gan.75'},
@@ -921,6 +921,26 @@ function partidoCerrado(p){
   const ko=kickoffPartido(p);
   return !!(ko && Date.now() > ko.getTime()-60*60*1000);
 }
+// Cierre por partido del bracket (igual que grupos: 1h antes del kickoff).
+// Si la llave no tiene hora (f/h), cae al cierre por ronda.
+function kickoffBracket(m){
+  if(!m||!m.f||!m.h)return null;
+  const d=new Date(`${m.f}T${m.h}:00-04:00`);
+  return isNaN(d.getTime())?null:d;
+}
+function bracketCerrado(m,rondaId){
+  if(modoDemo)return false;
+  if(estaCerrada(rondaId))return true; // cierre global / por ronda / admin
+  const ko=kickoffBracket(m);
+  return !!(ko && Date.now() > ko.getTime()-60*60*1000);
+}
+// Texto de cierre (1h antes del kickoff) en hora Panamá para mostrar en la llave
+function textoCierreBracket(m){
+  const ko=kickoffBracket(m);
+  if(!ko)return '';
+  const cierre=new Date(ko.getTime()-60*60*1000);
+  return cierre.toLocaleString('es-PA',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'America/Panama'});
+}
 
 function renderPartidosGrupo(){
   const c=document.getElementById('partidos-container');if(!c)return;
@@ -1175,7 +1195,7 @@ function matchCard(m,ronda){
   const ganador=getGanador(m.bid);
   const esEmpate=ok&&gl===gv;
   const penales=b.penales||null;
-  const cerrada=estaCerrada(ronda.id);
+  const cerrada=bracketCerrado(m,ronda.id);
   const resB=(resultadosAdmin._bracketRes&&resultadosAdmin._bracketRes[m.bid])
     ||(rankingSimulado&&rankingSimulado._resultados&&rankingSimulado._resultados._bracketRes&&rankingSimulado._resultados._bracketRes[m.bid])
     ||(window._resOficiales&&window._resOficiales._bracketRes&&window._resOficiales._bracketRes[m.bid])
@@ -1207,6 +1227,7 @@ function matchCard(m,ronda){
   }
   return `<div class="bmatch${ok?' ok':''}${cerrada?' locked':''}${simClass}" style="${cardBg};${cardBorder}" onclick="abrirModal(${m.bid})" title="${cerrada?'Quiniela cerrada':'Clic para editar'}">
     <div class="bmlbl">${m.desc} <span class="pts-pill">${ronda.pts_ex}pts MAX</span></div>
+    ${m.h?`<div style="font-size:10px;color:var(--muted);margin-bottom:3px">${cerrada?'🔒 Cerrado':'⏰ Cierra '+textoCierreBracket(m)}</div>`:''}
     <div class="bteam${!lN?' empty':''}${ganador===lN?' winner':''}">
       ${lN?flagBadge(lN,18):'<span class="bq">?</span>'}
       <span class="btn">${lN||'Seleccionar'}</span>
@@ -1332,7 +1353,7 @@ function abrirModal(bid){
   let m=null,ronda=null;
   for(const r of BRACKET_RONDAS){const f=r.partidos.find(x=>x.bid===bid);if(f){m={...f,pts_ex:r.pts_ex};ronda=r;break;}}
   if(!m)return;
-  if(estaCerrada(ronda.id)){alert('Esta ronda ya está cerrada.');return;}
+  if(bracketCerrado(m,ronda.id)){alert('Este partido ya está cerrado.');return;}
   modalActivo={bid,match:m,ronda:ronda.id};
   const b=bracket[bid]||{};
   document.getElementById('modal-title').textContent='Partido '+bid+' — '+m.desc;
@@ -1540,7 +1561,7 @@ function actualizarModalSelbar(){
 
 function confirmarModal(){
   if(!modalActivo)return;
-  if(estaCerrada(modalActivo.ronda))return;
+  if(bracketCerrado(modalActivo.match,modalActivo.ronda))return;
   const bid=modalActivo.bid;
   if(!bracket[bid])bracket[bid]={};
   const selL=document.querySelector('.modal-opt[data-lado="l"].sel');
