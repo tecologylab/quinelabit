@@ -1471,6 +1471,7 @@ function abrirModal(bid){
       const feederBid=feeders[lado];
       const guardado=b[lado]||null;
       const esTercerLugar=bid===103;
+      const real=equipoRealSlot(bid,ronda.id,lado); // ganador oficial real (si ya hay resultado)
       let sugerido=null, posibles=[], etiquetaActual='Equipo', etiquetaPend='Partido anterior';
 
       if(esTercerLugar){
@@ -1493,17 +1494,21 @@ function abrirModal(bid){
         // Feeder decidido: equipo propagado (o el guardado si hubo override manual)
         const eq=guardado||sugerido;
         const manual=eq!==sugerido;
+        const malAvanzado=real&&eq!==real; // avanzó un equipo que no ganó oficialmente
         html+=`<div class="equipo-fijo">
           ${flagBadge(eq,24)}
           <div><div class="ef-nombre">${eq}</div><div class="ef-label">${manual?'Selección manual':etiquetaActual}</div></div>
         </div>`;
+        if(malAvanzado)html+=`<div class="brec" style="margin:4px 0 0 2px">⚠️ Avanzaste mal — debería ser ${flagBadge(real,14)} <b>${real}</b>. Usa "Elegir otro equipo" abajo.</div>`;
         html+=`<div class="modal-opt sel" data-lado="${lado}" data-eq="${eq}" style="display:none"></div>`;
       } else if(posibles.length===2){
         // Feeder con equipos pero sin ganador: elegir entre los 2
         html+=`<div style="font-size:11px;color:var(--muted);margin-bottom:6px">${esTercerLugar?'Perdedor de Semifinal':('¿Quién ganará el partido '+feederBid+'?')}</div>`;
         posibles.forEach(eq=>{
-          html+=`<div class="modal-opt${guardado===eq?' sel':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
-            ${flagBadge(eq,20)} <span>${eq}</span>
+          const esCorrecto=real&&eq===real;
+          const corrTag=esCorrecto?`<span class="opt-correcto-tag">✓ Debes seleccionar este</span>`:'';
+          html+=`<div class="modal-opt${guardado===eq?' sel':''}${esCorrecto?' opt-correcto':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
+            ${flagBadge(eq,20)} <span>${eq}</span>${corrTag}
           </div>`;
         });
       } else if(guardado){
@@ -1598,8 +1603,9 @@ function selOpt(el){
     const t=o.querySelector('.opt-malsel-tag');if(t)t.remove();
   });
   el.classList.add('sel');
-  // R32: si el equipo elegido NO es el correcto de la llave, marcarlo incorrecto
-  const real=(modalActivo&&R32_OFICIAL[modalActivo.bid])?R32_OFICIAL[modalActivo.bid][lado]:null;
+  // Si el equipo elegido NO es el correcto de la llave (R32 fijo, o ganador
+  // oficial real en R16+), marcarlo incorrecto.
+  const real=modalActivo?equipoRealSlot(modalActivo.bid,modalActivo.ronda,lado):null;
   if(real&&el.dataset.eq!==real){
     el.classList.add('opt-malsel');
     if(!el.querySelector('.opt-malsel-tag')){
@@ -1617,11 +1623,17 @@ function mostrarSelectorManual(lado){
   const cont=document.getElementById('manual-sel-'+lado);
   if(!cont)return;
   if(cont.dataset.open==='1'){cont.innerHTML='';cont.dataset.open='';return;}
+  const real=modalActivo?equipoRealSlot(modalActivo.bid,modalActivo.ronda,lado):null;
+  const guardado=(bracket[modalActivo?.bid]||{})[lado]||null;
   let h='<div style="font-size:11px;color:var(--oro);font-weight:700;margin:8px 0 4px">Selección manual — elige cualquier equipo:</div>';
   Object.keys(GRUPOS).forEach(g=>{
     h+=`<div class="modal-grupo-lbl">Grupo ${g}</div>`;
     GRUPOS[g].forEach(eq=>{
-      h+=`<div class="modal-opt" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">${flagBadge(eq,20)} <span>${g} — ${eq}</span></div>`;
+      const esCorrecto=real&&eq===real;
+      const esMalSel=guardado===eq&&real&&eq!==real;
+      const corrTag=esCorrecto?`<span class="opt-correcto-tag">✓ Debes seleccionar este</span>`:'';
+      const malTag=esMalSel?`<span class="opt-malsel-tag">✗ Equipo incorrecto</span>`:'';
+      h+=`<div class="modal-opt${guardado===eq?' sel':''}${esCorrecto?' opt-correcto':''}${esMalSel?' opt-malsel':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">${flagBadge(eq,20)} <span>${g} — ${eq}</span>${corrTag}${malTag}</div>`;
     });
   });
   cont.innerHTML=h;cont.dataset.open='1';
