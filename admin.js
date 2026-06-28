@@ -160,9 +160,31 @@ function calcTablaGrupoOficial(g){
   return Object.values(stats).sort((a,b)=>b.pts-a.pts||b.dif-a.dif||b.gf-a.gf);
 }
 
+// Emparejamientos OFICIALES de la Ronda de 32 (bracket FIFA 2026 confirmado).
+// Fuente: bracket oficial FIFA. Tienen prioridad sobre el cálculo automático
+// (evita errores en la asignación de "mejores terceros").
+const R32_OFICIAL = {
+  73:{l:'Sudafrica',       v:'Canada'},
+  74:{l:'Alemania',        v:'Paraguay'},
+  75:{l:'Paises Bajos',    v:'Marruecos'},
+  76:{l:'Brasil',          v:'Japon'},
+  77:{l:'Francia',         v:'Suecia'},
+  78:{l:'Costa de Marfil', v:'Noruega'},
+  79:{l:'Mexico',          v:'Ecuador'},
+  80:{l:'Inglaterra',      v:'DR Congo'},
+  81:{l:'EEUU',            v:'Bosnia-Herzegovina'},
+  82:{l:'Belgica',         v:'Senegal'},
+  83:{l:'Portugal',        v:'Croacia'},
+  84:{l:'Espana',          v:'Austria'},
+  85:{l:'Suiza',           v:'Argelia'},
+  86:{l:'Argentina',       v:'Cabo Verde'},
+  87:{l:'Colombia',        v:'Ghana'},
+  88:{l:'Australia',       v:'Egipto'},
+};
+
 // Devuelve {bid:{l,v}} con los equipos reales de todo el bracket.
-// R32: 1ro/2do de cada grupo (fijo) + mejores 3ros (misma lógica que el
-// bracket de los jugadores). R16+: se propagan los ganadores oficiales.
+// R32: emparejamientos oficiales (R32_OFICIAL). R16+: se propagan los
+// ganadores oficiales que el admin va cargando.
 function equiposBracketOficial(){
   const eq={};
   // 1) R32 — slots fijos (1ro / 2do) según R32_AUTO
@@ -189,6 +211,8 @@ function equiposBracketOficial(){
     const cand=terceros.find(t=>permit.has(t.grupo)&&!usados.has(t.eq));
     if(cand){eq[bid]=eq[bid]||{}; eq[bid].v=cand.eq; usados.add(cand.eq);}
   });
+  // 2b) Sobrescribir R32 con los emparejamientos oficiales confirmados.
+  Object.entries(R32_OFICIAL).forEach(([bid,t])=>{ eq[parseInt(bid)]={...t}; });
   // 3) Propagar ganadores oficiales hacia adelante (padres antes que hijos)
   const orden=[74,77,73,75,83,84,81,82,76,78,79,80,86,88,85,87,
                89,90,91,92,93,94,95,96, 97,98,99,100, 101,102];
