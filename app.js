@@ -1196,6 +1196,30 @@ function getPaisesSlot(m,lado){
   return{grupos,paises:[...new Set(paises)]};
 }
 
+// Ganador OFICIAL de una llave del bracket (resultados reales del admin)
+function ganadorOficialBid(bid){
+  const src=(resultadosAdmin&&resultadosAdmin._bracketRes&&resultadosAdmin._bracketRes[bid])
+    ||(window._resOficiales&&window._resOficiales._bracketRes&&window._resOficiales._bracketRes[bid])
+    ||null;
+  return src&&src.ganador?src.ganador:null;
+}
+// Qué partido (bid) alimenta el slot l/v de una llave posterior
+function feederDe(bid,lado){
+  for(const fbid in PROGRESION){
+    const prog=PROGRESION[fbid];
+    if(prog.sig===bid&&prog.slot===lado)return parseInt(fbid);
+  }
+  return null;
+}
+// Equipo que REALMENTE debería estar en un slot:
+//  - R32: emparejamiento oficial fijo
+//  - R16+: ganador oficial del partido que alimenta ese slot (si ya hay resultado)
+function equipoRealSlot(bid,ronda,lado){
+  if(ronda==='r32')return R32_OFICIAL[bid]?R32_OFICIAL[bid][lado]:null;
+  const f=feederDe(bid,lado);
+  return f?ganadorOficialBid(f):null;
+}
+
 // Obtener todos los equipos ya usados en R32 (para validar duplicados)
 function getEquiposEnR32(){
   const r32bids=[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88];
@@ -1246,11 +1270,14 @@ function matchCard(m,ronda){
     else if(ganador===ganadorReal)simClass=' sim-correcto';
     else simClass=' sim-fallo';
   }
-  // Validación R32: avisar si el jugador tiene un equipo que NO está en la
-  // llave real (según el bracket oficial) y recomendar el correcto.
-  const realR32=(ronda.id==='r32'&&R32_OFICIAL[m.bid])?R32_OFICIAL[m.bid]:null;
-  const wrongL=!!(realR32&&lN&&lN!==realR32.l);
-  const wrongV=!!(realR32&&vN&&vN!==realR32.v);
+  // Avisar si el jugador hizo avanzar / puso un equipo que NO corresponde:
+  //  - R32: contra el emparejamiento oficial fijo
+  //  - R16+: contra el ganador oficial real de la llave anterior (para que
+  //    pueda corregir su Octavos/Cuartos si avanzó al equipo equivocado)
+  const realL=equipoRealSlot(m.bid,ronda.id,'l');
+  const realV=equipoRealSlot(m.bid,ronda.id,'v');
+  const wrongL=!!(realL&&lN&&lN!==realL);
+  const wrongV=!!(realV&&vN&&vN!==realV);
   const recHtml=(real)=>`<div class="brec">⚠️ Debería ser ${flagBadge(real,14)} <b>${real}</b></div>`;
   return `<div class="bmatch${ok?' ok':''}${cerrada?' locked':''}${simClass}" style="${cardBg};${cardBorder}" onclick="abrirModal(${m.bid})" title="${cerrada?'Quiniela cerrada':'Clic para editar'}">
     <div class="bmlbl">${m.desc} <span class="pts-pill">${ronda.pts_ex}pts MAX</span></div>
@@ -1260,14 +1287,14 @@ function matchCard(m,ronda){
       <span class="btn">${lN||'Seleccionar'}</span>
       <span class="bsc">${gl!==null?gl:''}</span>
     </div>
-    ${wrongL?recHtml(realR32.l):''}
+    ${wrongL?recHtml(realL):''}
     <div class="bdiv"></div>
     <div class="bteam${!vN?' empty':''}${ganador===vN?' winner':''}${wrongV?' wrong':''}">
       ${vN?flagBadge(vN,18):'<span class="bq">?</span>'}
       <span class="btn">${vN||'Seleccionar'}</span>
       <span class="bsc">${gv!==null?gv:''}</span>
     </div>
-    ${wrongV?recHtml(realR32.v):''}
+    ${wrongV?recHtml(realV):''}
     ${resB?`<div style='text-align:center;margin-top:4px;font-size:11px;color:var(--muted)'>Resultado oficial: <b>${resB.gl}-${resB.gv}</b> ${bracketPtsBadge}</div>`:''}
     ${penBadge}
   </div>`;
