@@ -1418,7 +1418,7 @@ function abrirModal(bid){
           const esSel=b[lado]===eq;
           const esCorrecto=real&&eq===real;
           const usadoLabel=yaUsado?`<span class="opt-usado-tag">Ya en partido ${yaUsado}</span>`:'';
-          const correctoLabel=esCorrecto?`<span class="opt-correcto-tag">✓ En el bracket</span>`:'';
+          const correctoLabel=esCorrecto?`<span class="opt-correcto-tag">✓ Debes seleccionar este</span>`:'';
           html+=`<div class="modal-opt${esSel?' sel':''}${yaUsado?' opt-usado':''}${esCorrecto?' opt-correcto':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
             ${flagBadge(eq,20)} <span>${g} — ${eq}</span>${correctoLabel}${usadoLabel}
           </div>`;
