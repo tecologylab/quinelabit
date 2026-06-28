@@ -1602,14 +1602,23 @@ function confirmarModal(){
   const nuevoL=selL.dataset.eq;const nuevoV=selV.dataset.eq;
   // Validar que no sean el mismo
   if(nuevoL===nuevoV){alert('No puedes seleccionar el mismo equipo en ambos lados.');return;}
-  // Validar duplicados en R32
+  // R32: un equipo solo puede estar en una llave. En vez de bloquear, se quita
+  // automáticamente de cualquier otra llave donde estuviera mal puesto.
   const r32bids=[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88];
   if(r32bids.includes(bid)){
+    const nuevos=[nuevoL,nuevoV];
     for(const otherBid of r32bids){
       if(otherBid===bid)continue;
-      const ob=bracket[otherBid]||{};
-      if(ob.l===nuevoL||ob.v===nuevoL){alert(`${nuevoL} ya aparece en el partido ${otherBid}. Cada equipo solo puede aparecer una vez en la Ronda de 32.`);return;}
-      if(ob.l===nuevoV||ob.v===nuevoV){alert(`${nuevoV} ya aparece en el partido ${otherBid}. Cada equipo solo puede aparecer una vez en la Ronda de 32.`);return;}
+      const ob=bracket[otherBid];
+      if(!ob)continue;
+      let cambio=false;
+      if(nuevos.includes(ob.l)){delete ob.l;cambio=true;}
+      if(nuevos.includes(ob.v)){delete ob.v;cambio=true;}
+      if(cambio){
+        // El marcador de esa llave ya no es válido; se limpia y se re-propaga
+        delete ob.gl;delete ob.gv;delete ob.penales;
+        propagarGanador(otherBid);
+      }
     }
   }
   bracket[bid].l=nuevoL;bracket[bid].v=nuevoV;
