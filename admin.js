@@ -136,8 +136,80 @@ function initResultadosOficiales() {
   renderResBracket();
 }
 
+// ============================================================
+// EQUIPOS REALES DEL BRACKET (desde resultados oficiales de grupos)
+// ============================================================
+// Tabla de posiciones de un grupo usando los resultados oficiales que
+// el admin tiene cargados en `resultadosOficiales`.
+function calcTablaGrupoOficial(g){
+  const equipos=GRUPOS[g]; if(!equipos)return null;
+  const stats={}; equipos.forEach(e=>{stats[e]={eq:e,pts:0,gf:0,dif:0};});
+  let hay=false;
+  PARTIDOS.filter(p=>p.g===g).forEach(p=>{
+    const r=resultadosOficiales[p.id];
+    if(!r||r.l===undefined||r.v===undefined)return;
+    hay=true;
+    const gl=Number(r.l),gv=Number(r.v);
+    stats[p.l].gf+=gl; stats[p.l].dif+=gl-gv;
+    stats[p.v].gf+=gv; stats[p.v].dif+=gv-gl;
+    if(gl>gv)stats[p.l].pts+=3;
+    else if(gv>gl)stats[p.v].pts+=3;
+    else{stats[p.l].pts++;stats[p.v].pts++;}
+  });
+  if(!hay)return null;
+  return Object.values(stats).sort((a,b)=>b.pts-a.pts||b.dif-a.dif||b.gf-a.gf);
+}
+
+// Devuelve {bid:{l,v}} con los equipos reales de todo el bracket.
+// R32: 1ro/2do de cada grupo (fijo) + mejores 3ros (misma lógica que el
+// bracket de los jugadores). R16+: se propagan los ganadores oficiales.
+function equiposBracketOficial(){
+  const eq={};
+  // 1) R32 — slots fijos (1ro / 2do) según R32_AUTO
+  Object.entries(R32_AUTO).forEach(([bid,slots])=>{
+    const bidN=parseInt(bid); eq[bidN]=eq[bidN]||{};
+    ['l','v'].forEach(lado=>{
+      const s=slots[lado]; if(!s)return;
+      const t=calcTablaGrupoOficial(s.g);
+      if(t&&t.length>s.p)eq[bidN][lado]=t[s.p].eq;
+    });
+  });
+  // 2) R32 — mejores 3ros (slots v=null), greedy por grupos permitidos
+  const terceros=Object.keys(GRUPOS).map(g=>{
+    const t=calcTablaGrupoOficial(g);
+    if(!t||t.length<3)return null;
+    return{eq:t[2].eq,pts:t[2].pts,dif:t[2].dif,gf:t[2].gf,grupo:g};
+  }).filter(Boolean).sort((a,b)=>b.pts-a.pts||b.dif-a.dif||b.gf-a.gf);
+  const slotsTercero=[74,77,79,80,81,82,85,87];
+  const usados=new Set();
+  slotsTercero.forEach(bid=>{
+    const mp=BRACKET_RONDAS[0].partidos.find(p=>p.bid===bid);
+    if(!mp)return;
+    const permit=new Set(mp.grupos_v||[]);
+    const cand=terceros.find(t=>permit.has(t.grupo)&&!usados.has(t.eq));
+    if(cand){eq[bid]=eq[bid]||{}; eq[bid].v=cand.eq; usados.add(cand.eq);}
+  });
+  // 3) Propagar ganadores oficiales hacia adelante (padres antes que hijos)
+  const orden=[74,77,73,75,83,84,81,82,76,78,79,80,86,88,85,87,
+               89,90,91,92,93,94,95,96, 97,98,99,100, 101,102];
+  orden.forEach(bid=>{
+    const r=resultadosOficiales['b'+bid];
+    if(!r||!r.ganador)return;
+    const prog=PROGRESION[bid];
+    if(prog){ eq[prog.sig]=eq[prog.sig]||{}; eq[prog.sig][prog.slot]=r.ganador; }
+    const progP=PROGRESION_PERDEDOR[bid]; // perdedor de semis -> 3er lugar
+    if(progP){
+      const teams=eq[bid]||{};
+      const perdedor=teams.l===r.ganador?teams.v:teams.l;
+      if(perdedor){ eq[progP.sig]=eq[progP.sig]||{}; eq[progP.sig][progP.slot]=perdedor; }
+    }
+  });
+  return eq;
+}
+
 function renderResBracket(){
   const c=document.getElementById('res-bracket-container');if(!c)return;
+  const eqOf=equiposBracketOficial();
   let html='';
   BRACKET_RONDAS.forEach(ronda=>{
     html+=`<div style="margin-bottom:1rem">
@@ -148,9 +220,10 @@ function renderResBracket(){
       const gl=r.gl!==undefined?r.gl:'';
       const gv=r.gv!==undefined?r.gv:'';
       const ganador=r.ganador||'';
-      // Equipos del bracket actual
-      const lTeam=r.lTeam||'Local';
-      const vTeam=r.vTeam||'Visitante';
+      // Equipos reales calculados desde los resultados oficiales
+      const teams=eqOf[m.bid]||{};
+      const lTeam=teams.l||r.lTeam||'Local';
+      const vTeam=teams.v||r.vTeam||'Visitante';
       html+=`<div style="background:#fafafa;border:1.5px solid var(--borde);border-radius:8px;padding:8px 10px">
         <div style="font-size:9px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px">Partido ${m.bid} — ${m.desc}</div>
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
@@ -188,6 +261,7 @@ function setResOficialBracket(bid,lado,val,lTeam,vTeam){
 function setResOficialBracketGanador(bid,ganador){
   if(!resultadosOficiales['b'+bid])resultadosOficiales['b'+bid]={};
   resultadosOficiales['b'+bid].ganador=ganador;
+  renderResBracket(); // propagar el ganador a la siguiente ronda en vivo
 }
 
 async function cargarResultadosOficialesSupabase() {
@@ -255,6 +329,7 @@ function setResOficial(id, lado, val) {
   if (!isNaN(num) && num >= 0 && num <= 20) resultadosOficiales[id][lado] = num;
   else delete resultadosOficiales[id][lado];
   renderResGrupoTabs();
+  renderResBracket(); // refrescar equipos reales de R32 en vivo
 }
 
 async function guardarResultadosOficiales() {
