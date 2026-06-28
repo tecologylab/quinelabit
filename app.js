@@ -1302,14 +1302,14 @@ function matchCard(m,ronda){
   return `<div class="bmatch${ok?' ok':''}${cerrada?' locked':''}${simClass}" style="${cardBg};${cardBorder}" onclick="abrirModal(${m.bid})" title="${cerrada?'Quiniela cerrada':'Clic para editar'}">
     <div class="bmlbl">${m.desc} <span class="pts-pill">${ronda.pts_ex}pts MAX</span></div>
     ${m.h?`<div style="font-size:10px;color:var(--muted);margin-bottom:3px">${cerrada?'🔒 Cerrado':'⏰ Cierra '+textoCierreBracket(m)}</div>`:''}
-    <div class="bteam${!lN?' empty':''}${ganador===lN?' winner':''}${wrongL?' wrong':''}">
+    <div class="bteam${!lN?' empty':''}${(ganador===lN&&!wrongL)?' winner':''}${wrongL?' wrong':''}">
       ${lN?flagBadge(lN,18):'<span class="bq">?</span>'}
       <span class="btn">${lN||'Seleccionar'}</span>
       <span class="bsc">${gl!==null?gl:''}</span>
     </div>
     ${wrongL?recHtml(chkL.reco):''}
     <div class="bdiv"></div>
-    <div class="bteam${!vN?' empty':''}${ganador===vN?' winner':''}${wrongV?' wrong':''}">
+    <div class="bteam${!vN?' empty':''}${(ganador===vN&&!wrongV)?' winner':''}${wrongV?' wrong':''}">
       ${vN?flagBadge(vN,18):'<span class="bq">?</span>'}
       <span class="btn">${vN||'Seleccionar'}</span>
       <span class="bsc">${gv!==null?gv:''}</span>
