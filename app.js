@@ -1417,10 +1417,12 @@ function abrirModal(bid){
           const yaUsado=usadosR32[eq];
           const esSel=b[lado]===eq;
           const esCorrecto=real&&eq===real;
+          const esMalSel=esSel&&real&&eq!==real; // seleccionado pero NO es el correcto
           const usadoLabel=yaUsado?`<span class="opt-usado-tag">Ya en partido ${yaUsado}</span>`:'';
           const correctoLabel=esCorrecto?`<span class="opt-correcto-tag">✓ Debes seleccionar este</span>`:'';
-          html+=`<div class="modal-opt${esSel?' sel':''}${yaUsado?' opt-usado':''}${esCorrecto?' opt-correcto':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
-            ${flagBadge(eq,20)} <span>${g} — ${eq}</span>${correctoLabel}${usadoLabel}
+          const malselLabel=esMalSel?`<span class="opt-malsel-tag">✗ Está mal seleccionado</span>`:'';
+          html+=`<div class="modal-opt${esSel?' sel':''}${yaUsado?' opt-usado':''}${esCorrecto?' opt-correcto':''}${esMalSel?' opt-malsel':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
+            ${flagBadge(eq,20)} <span>${g} — ${eq}</span>${correctoLabel}${malselLabel}${usadoLabel}
           </div>`;
         });
       });
