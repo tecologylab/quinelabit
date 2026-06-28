@@ -1410,14 +1410,17 @@ function abrirModal(bid){
     });
     const renderOpts=(grupos,lado)=>{
       const listaGrupos=grupos||Object.keys(GRUPOS);
+      const real=R32_OFICIAL[bid]?R32_OFICIAL[bid][lado]:null; // equipo correcto de esta llave
       listaGrupos.forEach(g=>{
         html+=`<div class="modal-grupo-lbl">Grupo ${g}</div>`;
         GRUPOS[g].forEach(eq=>{
           const yaUsado=usadosR32[eq];
           const esSel=b[lado]===eq;
+          const esCorrecto=real&&eq===real;
           const usadoLabel=yaUsado?`<span class="opt-usado-tag">Ya en partido ${yaUsado}</span>`:'';
-          html+=`<div class="modal-opt${esSel?' sel':''}${yaUsado?' opt-usado':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
-            ${flagBadge(eq,20)} <span>${g} — ${eq}</span>${usadoLabel}
+          const correctoLabel=esCorrecto?`<span class="opt-correcto-tag">✓ En el bracket</span>`:'';
+          html+=`<div class="modal-opt${esSel?' sel':''}${yaUsado?' opt-usado':''}${esCorrecto?' opt-correcto':''}" data-lado="${lado}" data-eq="${eq}" onclick="selOpt(this)">
+            ${flagBadge(eq,20)} <span>${g} — ${eq}</span>${correctoLabel}${usadoLabel}
           </div>`;
         });
       });
