@@ -147,10 +147,10 @@ const BRACKET_RONDAS = [
     {bid:87,desc:'1K vs 3DEIJL', f:'2026-07-03',h:'21:30', grupos_l:['K'],tipo_l:'1',grupos_v:['D','E','I','J','L'],tipo_v:'3'},
   ]},
   { id:'r16', nombre:'Ronda de 16', pts_ex:8, pts_res:4, partidos:[
-    {bid:89,desc:'Gan.74 vs Gan.77'},{bid:90,desc:'Gan.73 vs Gan.75'},
-    {bid:91,desc:'Gan.83 vs Gan.84'},{bid:92,desc:'Gan.81 vs Gan.82'},
-    {bid:93,desc:'Gan.76 vs Gan.78'},{bid:94,desc:'Gan.79 vs Gan.80'},
-    {bid:95,desc:'Gan.86 vs Gan.88'},{bid:96,desc:'Gan.85 vs Gan.87'},
+    {bid:89,desc:'Gan.74 vs Gan.77',f:'2026-07-04',h:'17:00'},{bid:90,desc:'Gan.73 vs Gan.75',f:'2026-07-04',h:'13:00'},
+    {bid:91,desc:'Gan.83 vs Gan.84',f:'2026-07-06',h:'15:00'},{bid:92,desc:'Gan.81 vs Gan.82',f:'2026-07-06',h:'20:00'},
+    {bid:93,desc:'Gan.76 vs Gan.78',f:'2026-07-05',h:'16:00'},{bid:94,desc:'Gan.79 vs Gan.80',f:'2026-07-05',h:'20:00'},
+    {bid:95,desc:'Gan.86 vs Gan.88',f:'2026-07-07',h:'12:00'},{bid:96,desc:'Gan.85 vs Gan.87',f:'2026-07-07',h:'16:00'},
   ]},
   { id:'qf', nombre:'Cuartos de Final', pts_ex:10, pts_res:5, partidos:[
     {bid:97,desc:'Gan.89 vs Gan.90'},{bid:98,desc:'Gan.91 vs Gan.92'},
