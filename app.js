@@ -1268,7 +1268,7 @@ function matchCard(m,ronda){
   let bracketPtsBadge=''; let cardBg=''; let cardBorder='';
   if(resB&&b.gl!==undefined&&b.gv!==undefined){
     const ganPred=b.gl>b.gv?lN:b.gv>b.gl?vN:(b.penales||null);
-    if(b.gl===resB.gl&&b.gv===resB.gv&&ganPred===resB.ganador){
+    if(b.gl===resB.gl&&b.gv===resB.gv&&(resB.gl!==resB.gv||ganPred===resB.ganador)){
       bracketPtsBadge=`<span class='res-badge' style='background:#0a5c2e;color:#fff'>+${ronda.pts_ex}pts ✓</span>`;
       cardBg='background:#eaf5ee';cardBorder='border-color:#9fd4b0';
     } else if(ganPred===resB.ganador){
@@ -1909,7 +1909,7 @@ async function verPerfilPublico(pid){
           let badge='',bgColor='',txtColor='';
           if(resOf&&b.gl!==undefined){
             const ganPred=b.gl>b.gv?b.l:b.gv>b.gl?b.v:(b.penales||null);
-            if(b.gl===resOf.gl&&b.gv===resOf.gv&&ganPred===resOf.ganador){badge='+'+ronda.pts_ex+'pts ✓';bgColor='#0a5c2e';txtColor='#fff';}
+            if(b.gl===resOf.gl&&b.gv===resOf.gv&&(resOf.gl!==resOf.gv||ganPred===resOf.ganador)){badge='+'+ronda.pts_ex+'pts ✓';bgColor='#0a5c2e';txtColor='#fff';}
             else if(ganPred===resOf.ganador){badge='+'+ronda.pts_res+'pts';bgColor='#f0cb6a';txtColor='#7a5500';}
             else{badge='0pts ✗';bgColor='#c0392b';txtColor='#fff';}
           }
@@ -2091,7 +2091,8 @@ function calcPuntosConDesglose(preds,brac,gol,resultados){
         const pb=brac[m.bid]; const rb=resultados._bracketRes[m.bid];
         if(!pb||!rb)return;
         const ganadorPred=pb.gl>pb.gv?pb.l:pb.gv>pb.gl?pb.v:(pb.penales||null);
-        if(pb.gl===rb.gl&&pb.gv===rb.gv&&ganadorPred===rb.ganador){total+=ronda.pts_ex;exactos++;}
+        const empateReal=rb.gl===rb.gv; // el partido real se definió por penales
+        if(pb.gl===rb.gl&&pb.gv===rb.gv&&(!empateReal||ganadorPred===rb.ganador)){total+=ronda.pts_ex;exactos++;}
         else if(ganadorPred===rb.ganador){total+=ronda.pts_res;correctos++;}
         else fallos++;
       });
@@ -2449,7 +2450,7 @@ async function verPerfil(pid){
       let badge='',bgColor='',txtColor='';
       if(resOf&&b.gl!==undefined){
         const ganPred=b.gl>b.gv?b.l:b.gv>b.gl?b.v:(b.penales||null);
-        if(b.gl===resOf.gl&&b.gv===resOf.gv&&ganPred===resOf.ganador){badge='+'+ronda.pts_ex+'pts ✓';bgColor='#0a5c2e';txtColor='#fff';}
+        if(b.gl===resOf.gl&&b.gv===resOf.gv&&(resOf.gl!==resOf.gv||ganPred===resOf.ganador)){badge='+'+ronda.pts_ex+'pts ✓';bgColor='#0a5c2e';txtColor='#fff';}
         else if(ganPred===resOf.ganador){badge='+'+ronda.pts_res+'pts';bgColor='#f0cb6a';txtColor='#7a5500';}
         else{badge='0pts ✗';bgColor='#c0392b';txtColor='#fff';}
       }
