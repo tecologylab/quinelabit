@@ -2466,12 +2466,22 @@ async function verPerfil(pid){
         else{badge='0pts ✗';bgColor='#c0392b';txtColor='#fff';}
       }
       const tB=(b&&b.t)?new Date(b.t).toLocaleString('es-PA',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'America/Panama'}):'';
-      bracketHtml+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid var(--borde);font-size:12px">
+      // Aviso de equipo incorrecto en la Ronda de 32 (no corresponde a la llave real)
+      let wrongMsg='';
+      if(ronda.id==='r32'){
+        const cl=chequeoSlot(m.bid,'r32','l',b.l);
+        const cv=chequeoSlot(m.bid,'r32','v',b.v);
+        const partes=[];
+        if(cl.wrong)partes.push(cl.reco?`${b.l} → ${cl.reco}`:b.l);
+        if(cv.wrong)partes.push(cv.reco?`${b.v} → ${cv.reco}`:b.v);
+        if(partes.length)wrongMsg=`<div style="font-size:10px;color:#c0392b;font-weight:700;padding:0 8px 4px">⚠️ Equipo incorrecto (${partes.join(', ')})</div>`;
+      }
+      bracketHtml+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;${wrongMsg?'':'border-bottom:1px solid var(--borde);'}font-size:12px">
         <span>${flagBadge(b.l||'?',14)} ${b.l||'?'}</span>
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--verde);margin:0 4px">${b.gl!==undefined?b.gl:'-'} – ${b.gv!==undefined?b.gv:'-'}</span>
         <span>${b.v||'?'} ${flagBadge(b.v||'?',14)}</span>
         <span style="margin-left:auto;text-align:right">${badge?`<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;background:${bgColor};color:${txtColor}">${badge}</span>`:''}${tB?`<div style="font-size:9px;color:var(--muted)">🕒 ${tB}</div>`:''}</span>
-      </div>`;
+      </div>${wrongMsg?wrongMsg+'<div style="border-bottom:1px solid var(--borde)"></div>':''}`;
     });
   });
 
