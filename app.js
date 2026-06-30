@@ -2450,7 +2450,21 @@ async function verPerfil(pid){
   });
 
   // 2da Ronda — Bracket
+  // Resumen/alerta de la Ronda de 32: cuánto llenó y cuántas llaves tienen equipo incorrecto
+  const r32bidsP=[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88];
+  let r32Llenas=0, r32Malos=0;
+  r32bidsP.forEach(bid=>{
+    const b=brac[bid]||{};
+    if(b.gl!==undefined&&b.gv!==undefined)r32Llenas++;
+    if(chequeoSlot(bid,'r32','l',b.l).wrong||chequeoSlot(bid,'r32','v',b.v).wrong)r32Malos++;
+  });
   let bracketHtml='';
+  if(r32Llenas===0)
+    bracketHtml+=`<div style="font-size:12px;font-weight:700;color:#c0392b;background:#fef0f0;border:1px solid #f5b7b1;border-radius:6px;padding:6px 10px;margin:.5rem 0">⚠️ No ha llenado la Ronda de 32 (0/16 marcadores)</div>`;
+  else if(r32Llenas<16)
+    bracketHtml+=`<div style="font-size:12px;font-weight:700;color:#7a5500;background:#fffbf0;border:1px solid #f0cb6a;border-radius:6px;padding:6px 10px;margin:.5rem 0">⚠️ Ronda de 32 incompleta — ${r32Llenas}/16 marcadores</div>`;
+  if(r32Malos>0)
+    bracketHtml+=`<div style="font-size:12px;font-weight:700;color:#c0392b;background:#fef0f0;border:1px solid #f5b7b1;border-radius:6px;padding:6px 10px;margin:.5rem 0">⚠️ ${r32Malos} llave(s) de la Ronda de 32 con equipo incorrecto</div>`;
   BRACKET_RONDAS.forEach(ronda=>{
     const partidosConData=ronda.partidos.filter(m=>{const b=brac[m.bid];return b&&(b.l||b.v);});
     if(!partidosConData.length)return;
