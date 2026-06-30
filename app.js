@@ -368,6 +368,12 @@ function fechaCierreRonda(ronda){
 // Texto para mostrar bajo el título de cada ronda
 function textoCierreRonda(ronda){
   if(configGlobal.permitir_edicion===false)return '🔒 Edición cerrada por el administrador';
+  // Rondas con hora por partido (R32/R16): el cierre es por partido, no por ronda
+  const rondaObj=BRACKET_RONDAS.find(r=>r.id===ronda);
+  if(rondaObj&&rondaObj.partidos.some(p=>p.h)){
+    if(configGlobal.fecha_cierre&&new Date()>new Date(configGlobal.fecha_cierre))return '🔒 Edición cerrada';
+    return '⏰ Cada partido cierra 1 h antes de su hora (hora Panamá)';
+  }
   const f=fechaCierreRonda(ronda);
   if(!f)return '';
   const fecha=new Date(f);
@@ -951,9 +957,15 @@ function kickoffBracket(m){
 }
 function bracketCerrado(m,rondaId){
   if(modoDemo)return false;
-  if(estaCerrada(rondaId))return true; // cierre global / por ronda / admin
+  // Cierres globales (candado del admin o fecha de cierre global) aplican a todo
+  if(configGlobal.permitir_edicion===false)return true;
+  if(configGlobal.fecha_cierre&&new Date()>new Date(configGlobal.fecha_cierre))return true;
   const ko=kickoffBracket(m);
-  return !!(ko && Date.now() > ko.getTime()-60*60*1000);
+  // Si la llave tiene hora propia (R32/R16): cierra 1h antes de SU partido,
+  // ignorando el cierre por ronda (fecha_cierre_r32/r16).
+  if(ko)return Date.now() > ko.getTime()-60*60*1000;
+  // Sin hora propia (Cuartos, Semis, Final): usar el cierre por ronda.
+  return estaCerrada(rondaId);
 }
 // Texto de cierre (1h antes del kickoff) en hora Panamá para mostrar en la llave
 function textoCierreBracket(m){
