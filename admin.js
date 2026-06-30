@@ -367,6 +367,14 @@ async function guardarResultadosOficiales() {
   const { data, error } = await sbClient.from('resultados_reales').insert(rows).select();
   if (error) { alertaAdmin('res-alert', 'error', 'Error: ' + error.message); return; }
   if (!data || !data.length) { alertaAdmin('res-alert', 'error', 'No se guardó nada: revisa las políticas INSERT/DELETE de `resultados_reales` (RLS) en Supabase.'); return; }
+  // Aviso: llaves del bracket empatadas sin "Ganador" (quién pasó por penales).
+  // El marcador se guarda, pero esos partidos no dan puntos hasta elegir el ganador.
+  const empatesSinGanador = rows.filter(r => r.partido_idx >= 1000 && r.goles_local === r.goles_visita && !r.ganador)
+    .map(r => r.partido_idx - 1000);
+  if (empatesSinGanador.length) {
+    alertaAdmin('res-alert', 'error', `${data.length} resultados guardados, PERO la(s) llave(s) ${empatesSinGanador.join(', ')} quedaron empatadas SIN elegir quién pasó (penales). Selecciona el "Ganador" de esa llave y vuelve a guardar para que cuente y dé puntos.`);
+    return;
+  }
   alertaAdmin('res-alert', 'success', `${data.length} resultados guardados. El ranking ya los está usando.`);
 }
 
