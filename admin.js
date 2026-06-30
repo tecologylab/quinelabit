@@ -353,9 +353,12 @@ async function guardarResultadosOficiales() {
   Object.entries(resultadosOficiales).forEach(([id, r]) => {
     if (!id.startsWith('b')) return;
     const bid = parseInt(id.slice(1));
-    if (r.gl !== undefined && r.gv !== undefined) {
-      rows.push({ partido_idx: 1000+bid, goles_local: r.gl, goles_visita: r.gv, ganador: r.ganador||null });
-    }
+    if (r.gl === undefined && r.gv === undefined) return; // nada ingresado en esta llave
+    const gl = r.gl !== undefined ? r.gl : 0; // casilla vacía cuenta como 0
+    const gv = r.gv !== undefined ? r.gv : 0;
+    let ganador = r.ganador || null;
+    if (!ganador && gl !== gv) ganador = gl > gv ? r.lTeam : r.vTeam; // decidido: deducir ganador
+    rows.push({ partido_idx: 1000+bid, goles_local: gl, goles_visita: gv, ganador });
   });
   if (!rows.length) { alertaAdmin('res-alert', 'error', 'No hay resultados para guardar.'); return; }
   // En vez de upsert (INSERT ... ON CONFLICT DO UPDATE, que choca con sql_safe_updates),
