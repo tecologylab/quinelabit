@@ -1860,10 +1860,11 @@ async function renderRanking(){
   c.innerHTML=data.map((p,i)=>{
     const ini=(p.alias||p.nombre).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const pos=i===0?'&#127951;':i===1?'&#127952;':i===2?'&#127953;':(i+1);
-    return `<div class="rankrow">
+    return `<div class="rankrow" onclick="verPerfilPublico('${p.id}')" style="cursor:pointer" title="Ver predicciones y puntos">
       <div class="rankpos${i<3?' med':''}">${pos}</div>
       <div class="rankavatar">${ini}</div>
       <div><div class="rankname">${p.alias||p.nombre}</div></div>
+      <div class="rankcamp">${p.goleador?flagBadge(p.goleador,16)+' ':''} ${p.goleador||'—'}</div>
       <div class="rankpts">${p.pts||0}<span class="ptslbl">pts</span></div>
     </div>`;
   }).join('');
@@ -1876,9 +1877,8 @@ async function renderRanking(){
 }
 
 async function verPerfilPublico(pid){
-  // Deshabilitado: los jugadores solo pueden ver el total de puntos en el ranking,
-  // no las predicciones/resultados de los demás.
-  return;
+  // Perfil público: muestra predicciones, puntos y país goleador de cualquier
+  // jugador. NO muestra fechas de modificación (eso es solo del admin).
   // Buscar en participantes o en ranking
   let p=participantes.find(x=>String(x.id)===String(pid));
   if(!p){alert('Participante no encontrado.');return;}
