@@ -1862,14 +1862,16 @@ async function renderRanking(){
     const qmap={};(qs||[]).forEach(q=>{qmap[String(q.participante_id)]=q;});
     data=participantes.filter(p=>!p.oculto).map(p=>{
       const q=qmap[String(p.id)];
-      let pts=0, gol=p.favorito||null;
+      let pts=0, gol=p.favorito||null, campeon=null;
       if(q){
         const preds=parseMaybeJSON(q.predicciones,{});
         const brac=parseMaybeJSON(q.bracket,{});
         gol=q.goleador||null;
         pts=calcPuntosConDesglose(preds,brac,gol,resultados).total;
+        const fin=brac[104]; // campeón = ganador de la Final del jugador
+        if(fin&&fin.gl!==undefined&&fin.gv!==undefined)campeon=fin.gl>fin.gv?fin.l:fin.gv>fin.gl?fin.v:(fin.penales||null);
       }
-      return{id:p.id,alias:p.alias||p.nombre,nombre:p.nombre,pts,goleador:gol};
+      return{id:p.id,alias:p.alias||p.nombre,nombre:p.nombre,pts,goleador:gol,campeon};
     });
   }
   // Asegurar que todos los participantes esten en el ranking aunque tengan 0 pts
@@ -1891,14 +1893,23 @@ async function renderRanking(){
       const st=document.getElementById('stat-total');if(st)st.textContent=participantes.filter(p=>!p.oculto).length||0;
       return;}
   }
-  c.innerHTML=data.map((p,i)=>{
+  const rankHeader=`<div class="rankrow rankhead">
+      <div></div>
+      <div></div>
+      <div class="rankhlbl">Jugador</div>
+      <div class="rankhlbl" style="text-align:center">Campeón</div>
+      <div class="rankhlbl" style="text-align:center">Goleador</div>
+      <div class="rankhlbl" style="text-align:right">Pts</div>
+    </div>`;
+  c.innerHTML=rankHeader+data.map((p,i)=>{
     const ini=(p.alias||p.nombre).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const pos=i===0?'&#127951;':i===1?'&#127952;':i===2?'&#127953;':(i+1);
     return `<div class="rankrow" onclick="verPerfilPublico('${p.id}')" style="cursor:pointer" title="Ver predicciones y puntos">
       <div class="rankpos${i<3?' med':''}">${pos}</div>
       <div class="rankavatar">${ini}</div>
       <div><div class="rankname">${p.alias||p.nombre}</div></div>
-      <div class="rankcamp">${p.goleador?flagBadge(p.goleador,16)+' ':''} ${p.goleador||'—'}</div>
+      <div class="rankcamp">${p.campeon?flagBadge(p.campeon,16):''}<span class="rankcamp-nm">${p.campeon||'—'}</span></div>
+      <div class="rankcamp">${p.goleador?flagBadge(p.goleador,16):''}<span class="rankcamp-nm">${p.goleador||'—'}</span></div>
       <div class="rankpts">${p.pts||0}<span class="ptslbl">pts</span></div>
     </div>`;
   }).join('');
