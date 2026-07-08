@@ -81,7 +81,7 @@ async function renderAdminRanking() {
   const qmap = {}; (qs || []).forEach(q => { qmap[String(q.participante_id)] = q; });
   _adminRanking = participantes.map(p => {
     const q = qmap[String(p.id)];
-    let pts = 0, exactos = 0, correctos = 0, fallos = 0, gol = p.favorito || null, done = 0, r32 = 0;
+    let pts = 0, exactos = 0, correctos = 0, fallos = 0, gol = p.favorito || null, done = 0, r32 = 0, finales = 0;
     if (q) {
       const preds = parseMaybeJSON(q.predicciones, {});
       const brac = parseMaybeJSON(q.bracket, {});
@@ -90,14 +90,16 @@ async function renderAdminRanking() {
       pts = r.total; exactos = r.exactos; correctos = r.correctos; fallos = r.fallos;
       done = PARTIDOS.filter(x => { const pr = preds[x.id]; return pr && pr.l !== undefined && pr.v !== undefined; }).length;
       for (let bid = 73; bid <= 88; bid++) { const b = brac[bid]; if (b && b.gl !== undefined && b.gv !== undefined) r32++; } // llaves R32 con marcador
+      // Cuartos (97-100) + Semis (101,102) + Final (104) = 7 llaves (sin 3er lugar)
+      [97,98,99,100,101,102,104].forEach(bid => { const b = brac[bid]; if (b && b.gl !== undefined && b.gv !== undefined) finales++; });
     }
-    return { id: p.id, nombre: p.nombre || '', alias: p.alias || '', email: p.email || '', codigo: p.codigo || '', oculto: !!p.oculto, gol, pts, done, r32, exactos, correctos, fallos };
+    return { id: p.id, nombre: p.nombre || '', alias: p.alias || '', email: p.email || '', codigo: p.codigo || '', oculto: !!p.oculto, gol, pts, done, r32, finales, exactos, correctos, fallos };
   }).sort((a, b) => b.pts - a.pts);
   if (!_adminRanking.length) { c.innerHTML = '<p style="color:var(--muted);font-size:13px">Sin participantes registrados.</p>'; return; }
   c.innerHTML = `<p style="font-size:11px;color:var(--muted);margin-bottom:.5rem">Haz clic en un jugador para ver sus predicciones y puntos por partido. <b>Exactos</b> = marcador exacto · <b>Result.</b> = acertó ganador/empate.</p>
     <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:780px">
     <thead><tr style="border-bottom:2px solid var(--borde)">
-      ${['#', 'Nombre', 'Alias', 'Correo', 'Goleador', 'Pred.', 'R32', 'Exactos', 'Result.', 'Puntos'].map(h => `<th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">${h}</th>`).join('')}
+      ${['#', 'Nombre', 'Alias', 'Correo', 'Goleador', 'Pred.', 'R32', 'QF-F', 'Exactos', 'Result.', 'Puntos'].map(h => `<th style="text-align:left;padding:7px;color:var(--muted);font-size:10px;text-transform:uppercase">${h}</th>`).join('')}
     </tr></thead><tbody>
     ${_adminRanking.map((r, i) => `
       <tr style="border-bottom:1px solid rgba(0,0,0,0.05);cursor:pointer;${r.oculto ? 'opacity:.55' : ''}" onclick="verPerfil('${r.id}')" title="Ver predicciones de ${(r.alias||r.nombre||'').replace(/'/g,'')}">
@@ -108,6 +110,7 @@ async function renderAdminRanking() {
         <td style="padding:7px">${r.gol ? flagBadge(r.gol, 14) + ' ' + r.gol : '—'}</td>
         <td style="padding:7px;color:var(--muted)">${r.done}/${PARTIDOS.length}</td>
         <td style="padding:7px;font-weight:700;color:${r.r32 === 0 ? '#c0392b' : r.r32 < 16 ? '#7a5500' : '#0a5c2e'}">${r.r32}/16</td>
+        <td style="padding:7px;font-weight:700;color:${r.finales === 0 ? '#c0392b' : r.finales < 7 ? '#7a5500' : '#0a5c2e'}">${r.finales}/7</td>
         <td style="padding:7px;font-weight:700;color:#0a5c2e">${r.exactos}</td>
         <td style="padding:7px;font-weight:700;color:#7a5500">${r.correctos}</td>
         <td style="padding:7px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:var(--verde)">${r.pts}</td>
@@ -117,8 +120,8 @@ async function renderAdminRanking() {
 
 function exportarRankingCSV() {
   if (!_adminRanking.length) { alert('Abre el ranking primero (botón Actualizar).'); return; }
-  const cols = ['Pos', 'Nombre', 'Alias', 'Correo', 'Codigo', 'Pais goleador', 'Predichos', 'R32 (de 16)', 'Exactos', 'Correctos', 'Fallos', 'Puntos', 'Oculto'];
-  const rows = _adminRanking.map((r, i) => [i + 1, r.nombre, r.alias, r.email, r.codigo, r.gol || '', r.done, r.r32, r.exactos, r.correctos, r.fallos, r.pts, r.oculto ? 'si' : 'no']);
+  const cols = ['Pos', 'Nombre', 'Alias', 'Correo', 'Codigo', 'Pais goleador', 'Predichos', 'R32 (de 16)', 'Cuartos-Final (de 7)', 'Exactos', 'Correctos', 'Fallos', 'Puntos', 'Oculto'];
+  const rows = _adminRanking.map((r, i) => [i + 1, r.nombre, r.alias, r.email, r.codigo, r.gol || '', r.done, r.r32, r.finales, r.exactos, r.correctos, r.fallos, r.pts, r.oculto ? 'si' : 'no']);
   const csv = [cols.join(','), ...rows.map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = 'ranking_quiniela2026.csv'; a.click();
 }
