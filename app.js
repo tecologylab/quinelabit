@@ -1275,8 +1275,9 @@ function puntosBracket(bid, pb, rb, ronda, bracketRes){
     if(realV&&pb.v===realV)aciertos++;
     if(aciertos===0) return {pts:0,tier:'fallo'}; // no acertó ningún finalista → 0
   }
-  const empateReal=(rb.gl===rb.gv);
-  if(pb.gl===rb.gl && pb.gv===rb.gv && (!reglaNueva || !empateReal || ganadorPred===rb.ganador))
+  // QF/SF/Final: para puntos completos el ganador predicho debe ser el equipo
+  // correcto (además del marcador exacto). R32/Octavos: el marcador exacto basta.
+  if(pb.gl===rb.gl && pb.gv===rb.gv && (!reglaNueva || ganadorPred===rb.ganador))
     return {pts:ronda.pts_ex, tier:'exacto'};
   if(ganadorPred===rb.ganador)
     return {pts:ronda.pts_res, tier:'resultado'};
