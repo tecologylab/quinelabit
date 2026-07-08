@@ -1251,6 +1251,38 @@ function chequeoSlot(bid,ronda,lado,team){
   return {wrong:false,reco:null};
 }
 
+// Puntos de una llave del bracket, con reglas por ronda. Devuelve {pts, tier}.
+//  tier: 'exacto' | 'resultado' | 'fallo' | 'none'(sin datos)
+// Reglas NUEVAS solo para Cuartos (qf), Semifinal (sf) y Final:
+//  - Empate real (penales): para puntos completos y para acertar, hay que
+//    predecir quién pasó (el que pasa manda).
+//  - SF y Final (no el 3er lugar, bid 103): si el jugador no acertó NINGUNO
+//    de los 2 participantes reales del partido, no genera puntos aunque el
+//    marcador coincida.
+// R32 y Octavos NO cambian: marcador exacto = puntos completos.
+function puntosBracket(bid, pb, rb, ronda, bracketRes){
+  if(!pb||!rb||pb.gl===undefined||pb.gv===undefined||rb.gl===undefined||rb.gv===undefined) return {pts:0,tier:'none'};
+  const ganadorPred=pb.gl>pb.gv?pb.l:pb.gv>pb.gl?pb.v:(pb.penales||null);
+  const reglaNueva = ronda.id==='qf'||ronda.id==='sf'||ronda.id==='final';
+  // Gate de participantes: solo SF y Final (excluye 3er lugar bid 103)
+  if((ronda.id==='sf'||ronda.id==='final') && bid!==103){
+    const bres=bracketRes||{};
+    const fL=feederDe(bid,'l'), fV=feederDe(bid,'v');
+    const realL=fL&&bres[fL]?bres[fL].ganador:null;
+    const realV=fV&&bres[fV]?bres[fV].ganador:null;
+    let aciertos=0;
+    if(realL&&pb.l===realL)aciertos++;
+    if(realV&&pb.v===realV)aciertos++;
+    if(aciertos===0) return {pts:0,tier:'fallo'}; // no acertó ningún finalista → 0
+  }
+  const empateReal=(rb.gl===rb.gv);
+  if(pb.gl===rb.gl && pb.gv===rb.gv && (!reglaNueva || !empateReal || ganadorPred===rb.ganador))
+    return {pts:ronda.pts_ex, tier:'exacto'};
+  if(ganadorPred===rb.ganador)
+    return {pts:ronda.pts_res, tier:'resultado'};
+  return {pts:0, tier:'fallo'};
+}
+
 // Obtener todos los equipos ya usados en R32 (para validar duplicados)
 function getEquiposEnR32(){
   const r32bids=[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88];
@@ -1279,12 +1311,13 @@ function matchCard(m,ronda){
   // Calcular puntos bracket si hay resultado real
   let bracketPtsBadge=''; let cardBg=''; let cardBorder='';
   if(resB&&b.gl!==undefined&&b.gv!==undefined){
-    const ganPred=b.gl>b.gv?lN:b.gv>b.gl?vN:(b.penales||null);
-    if(b.gl===resB.gl&&b.gv===resB.gv){
-      bracketPtsBadge=`<span class='res-badge' style='background:#0a5c2e;color:#fff'>+${ronda.pts_ex}pts ✓</span>`;
+    const bres=(resultadosAdmin&&resultadosAdmin._bracketRes)||(rankingSimulado&&rankingSimulado._resultados&&rankingSimulado._resultados._bracketRes)||(window._resOficiales&&window._resOficiales._bracketRes)||{};
+    const {pts,tier}=puntosBracket(m.bid,b,resB,ronda,bres);
+    if(tier==='exacto'){
+      bracketPtsBadge=`<span class='res-badge' style='background:#0a5c2e;color:#fff'>+${pts}pts ✓</span>`;
       cardBg='background:#eaf5ee';cardBorder='border-color:#9fd4b0';
-    } else if(ganPred===resB.ganador){
-      bracketPtsBadge=`<span class='res-badge' style='background:#f0cb6a;color:#7a5500'>+${ronda.pts_res}pts</span>`;
+    } else if(tier==='resultado'){
+      bracketPtsBadge=`<span class='res-badge' style='background:#f0cb6a;color:#7a5500'>+${pts}pts</span>`;
       cardBg='background:#fffbf0';cardBorder='border-color:#f0cb6a';
     } else {
       bracketPtsBadge=`<span class='res-badge' style='background:#c0392b;color:#fff'>0pts ✗</span>`;
@@ -1920,9 +1953,9 @@ async function verPerfilPublico(pid){
           const resOf=bracketRes[m.bid];
           let badge='',bgColor='',txtColor='';
           if(resOf&&b.gl!==undefined){
-            const ganPred=b.gl>b.gv?b.l:b.gv>b.gl?b.v:(b.penales||null);
-            if(b.gl===resOf.gl&&b.gv===resOf.gv){badge='+'+ronda.pts_ex+'pts ✓';bgColor='#0a5c2e';txtColor='#fff';}
-            else if(ganPred===resOf.ganador){badge='+'+ronda.pts_res+'pts';bgColor='#f0cb6a';txtColor='#7a5500';}
+            const {pts,tier}=puntosBracket(m.bid,b,resOf,ronda,bracketRes);
+            if(tier==='exacto'){badge='+'+pts+'pts ✓';bgColor='#0a5c2e';txtColor='#fff';}
+            else if(tier==='resultado'){badge='+'+pts+'pts';bgColor='#f0cb6a';txtColor='#7a5500';}
             else{badge='0pts ✗';bgColor='#c0392b';txtColor='#fff';}
           }
           bracketHtml+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid var(--borde);font-size:12px">
@@ -2102,10 +2135,9 @@ function calcPuntosConDesglose(preds,brac,gol,resultados){
       ronda.partidos.forEach(m=>{
         const pb=brac[m.bid]; const rb=resultados._bracketRes[m.bid];
         if(!pb||!rb)return;
-        const ganadorPred=pb.gl>pb.gv?pb.l:pb.gv>pb.gl?pb.v:(pb.penales||null);
-        if(pb.gl===rb.gl&&pb.gv===rb.gv){total+=ronda.pts_ex;exactos++;}
-        else if(ganadorPred===rb.ganador){total+=ronda.pts_res;correctos++;}
-        else fallos++;
+        const {pts,tier}=puntosBracket(m.bid, pb, rb, ronda, resultados._bracketRes);
+        total+=pts;
+        if(tier==='exacto')exactos++; else if(tier==='resultado')correctos++; else if(tier==='fallo')fallos++;
       });
     });
   }
@@ -2474,9 +2506,10 @@ async function verPerfil(pid){
       const resOf=(resultadosAdmin._bracketRes&&resultadosAdmin._bracketRes[m.bid])||(resOfi._bracketRes&&resOfi._bracketRes[m.bid]);
       let badge='',bgColor='',txtColor='';
       if(resOf&&b.gl!==undefined){
-        const ganPred=b.gl>b.gv?b.l:b.gv>b.gl?b.v:(b.penales||null);
-        if(b.gl===resOf.gl&&b.gv===resOf.gv){badge='+'+ronda.pts_ex+'pts ✓';bgColor='#0a5c2e';txtColor='#fff';}
-        else if(ganPred===resOf.ganador){badge='+'+ronda.pts_res+'pts';bgColor='#f0cb6a';txtColor='#7a5500';}
+        const bres=(resultadosAdmin&&resultadosAdmin._bracketRes)||(resOfi&&resOfi._bracketRes)||{};
+        const {pts,tier}=puntosBracket(m.bid,b,resOf,ronda,bres);
+        if(tier==='exacto'){badge='+'+pts+'pts ✓';bgColor='#0a5c2e';txtColor='#fff';}
+        else if(tier==='resultado'){badge='+'+pts+'pts';bgColor='#f0cb6a';txtColor='#7a5500';}
         else{badge='0pts ✗';bgColor='#c0392b';txtColor='#fff';}
       }
       const tB=(b&&b.t)?new Date(b.t).toLocaleString('es-PA',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'America/Panama'}):'';
